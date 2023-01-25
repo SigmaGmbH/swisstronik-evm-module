@@ -12,10 +12,11 @@ option go_package = "github.com/evmos/ethermint/x/evm/types";
 
 // Msg defines the evm Msg service.
 service Msg {
-  // EthereumTx defines a method submitting Ethereum transactions.
-  rpc EthereumTx(MsgEthereumTx) returns (MsgEthereumTxResponse) {
+  // HandleTx defines a method submitting Ethereum transactions.
+  rpc HandleTx(MsgEthereumTx) returns (MsgEthereumTxResponse) {
     option (google.api.http).post = "/ethermint/evm/v1/ethereum_tx";
-  };
+  }
+
   // UpdateParams defined a governance operation for updating the x/evm module parameters.
   // The authority is hard-coded to the Cosmos SDK x/gov module account
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
