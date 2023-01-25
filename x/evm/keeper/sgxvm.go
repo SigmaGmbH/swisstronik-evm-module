@@ -4,6 +4,7 @@ import (
 	"context"
 	errorsmod "cosmossdk.io/errors"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/SigmaGmbH/librustgo"
 	"github.com/armon/go-metrics"
@@ -11,10 +12,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/evmos/ethermint/x/evm/types"
+	"github.com/golang/protobuf/proto"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"strconv"
 )
+
+// Connector allows our VM interact with existing Cosmos application.
+// It is passed by pointer into SGX to make it accessible for our VM.
+type Connector struct {
+	Ctx    sdk.Context
+	Keeper Keeper
+}
 
 // HandleTx receives a transaction which is then
 // executed (applied) against the SGX-protected EVM. The provided SDK Context is set to the Keeper
@@ -41,8 +50,12 @@ func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgEthereumTx) (*typ
 
 	// TODO: librustgo should accept all types of txs, such as LegacyTx, EIP1159, EIP2930 tx.
 	// TODO: Need to check it in tests
+	connector := Connector{
+		Ctx:    ctx,
+		Keeper: *k, // TODO: Check how to avoid moving keeper
+	}
 	execResult, execError := librustgo.HandleTx(
-		querier, // TODO: Construct querier
+		connector,
 		sender,
 		tx.To().Bytes(),
 		tx.Data(),
@@ -151,4 +164,56 @@ func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgEthereumTx) (*typ
 		GasUsed: execResult.GasUsed,
 	}
 	return response, nil
+}
+
+func (q Connector) Query(req []byte) ([]byte, error) {
+	// Decode protobuf
+	decodedRequest := &librustgo.CosmosRequest{}
+	if err := proto.Unmarshal(req, decodedRequest); err != nil {
+		return nil, err
+	}
+	//switch request := decodedRequest.Req.(type) {
+	switch decodedRequest.Req.(type) {
+	// Handle request for account data such as balance and nonce
+	case *librustgo.CosmosRequest_GetAccount:
+		return nil, nil
+	// Handles request for updating account data
+	case *librustgo.CosmosRequest_InsertAccount:
+		return nil, nil
+	// Handles request if such account exists
+	case *librustgo.CosmosRequest_ContainsKey:
+		return nil, nil
+	// Handles contract code request
+	case *librustgo.CosmosRequest_AccountCode:
+		return nil, nil
+	// Handles storage cell data request
+	case *librustgo.CosmosRequest_StorageCell:
+		return nil, nil
+	// Handles inserting storage cell
+	case *librustgo.CosmosRequest_InsertStorageCell:
+		return nil, nil
+	// Handles updating contract code
+	case *librustgo.CosmosRequest_InsertAccountCode:
+		return nil, nil
+	// Handles remove storage cell request
+	case *librustgo.CosmosRequest_RemoveStorageCell:
+		return nil, nil
+	// Handles removing account storage, account record, etc.
+	case *librustgo.CosmosRequest_Remove:
+		return nil, nil
+	// Returns block hash
+	case *librustgo.CosmosRequest_BlockHash:
+		return nil, nil
+	// Returns block timestamp
+	case *librustgo.CosmosRequest_BlockTimestamp:
+		return nil, nil
+	// Returns block number
+	case *librustgo.CosmosRequest_BlockNumber:
+		return nil, nil
+	// Returns chain id
+	case *librustgo.CosmosRequest_ChainId:
+		return nil, nil
+	}
+
+	return nil, errors.New("wrong query received")
 }
