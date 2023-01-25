@@ -10,6 +10,7 @@ import (
 	"github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/evmos/ethermint/x/evm/types"
 	"github.com/golang/protobuf/proto"
@@ -172,11 +173,11 @@ func (q Connector) Query(req []byte) ([]byte, error) {
 	if err := proto.Unmarshal(req, decodedRequest); err != nil {
 		return nil, err
 	}
-	//switch request := decodedRequest.Req.(type) {
-	switch decodedRequest.Req.(type) {
+
+	switch request := decodedRequest.Req.(type) {
 	// Handle request for account data such as balance and nonce
 	case *librustgo.CosmosRequest_GetAccount:
-		return nil, nil
+		return q.GetAccount(request)
 	// Handles request for updating account data
 	case *librustgo.CosmosRequest_InsertAccount:
 		return nil, nil
@@ -216,4 +217,32 @@ func (q Connector) Query(req []byte) ([]byte, error) {
 	}
 
 	return nil, errors.New("wrong query received")
+}
+
+// GetAccount handles incoming protobuf-encoded request for account data such as balance and nonce.
+// Returns data in protobuf-encoded format
+func (q Connector) GetAccount(req *librustgo.CosmosRequest_GetAccount) ([]byte, error) {
+	q.Ctx.Logger().Debug("Connector::Query GetAccount invoked")
+	address := common.BytesToAddress(req.GetAccount.Address)
+	account := q.Keeper.GetAccount(q.Ctx, address)
+
+	if account == nil {
+		// If there is no such account return zero balance and nonce
+		return proto.Marshal(&librustgo.QueryGetAccountResponse{
+			Balance: make([]byte, 0),
+			Nonce:   make([]byte, 0),
+		})
+	}
+
+	return proto.Marshal(&librustgo.QueryGetAccountResponse{
+		Balance: account.Balance.Bytes(),
+		Nonce:   sdk.Uint64ToBigEndian(account.Nonce),
+	})
+}
+
+// InsertAccount handles incoming protobuf-encoded request for adding or modifying existing account data.
+func (q Connector) InsertAccount(req *librustgo.CosmosRequest_InsertAccount) ([]byte, error) {
+	q.Ctx.Logger().Debug("Connector::Query InsertAccount invoked")
+	//address := common.BytesToAddress(req.InsertAccount.Address)
+	return nil, nil
 }
