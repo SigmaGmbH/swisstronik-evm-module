@@ -214,7 +214,7 @@ func (q Connector) Query(req []byte) ([]byte, error) {
 		return q.BlockNumber(request)
 	// Returns chain id
 	case *librustgo.CosmosRequest_ChainId:
-		return nil, nil
+		return q.ChainId(request)
 	}
 
 	return nil, errors.New("wrong query received")
@@ -253,4 +253,11 @@ func (q Connector) BlockNumber(req *librustgo.CosmosRequest_BlockNumber) ([]byte
 	q.Ctx.Logger().Debug("Connector::Query BlockNumber invoked")
 	blockHeight := big.NewInt(q.Ctx.BlockHeight())
 	return proto.Marshal(&librustgo.QueryBlockNumberResponse{Number: blockHeight.Bytes()})
+}
+
+// ChainId handles incoming protobuf-encoded request for getting network chain id
+func (q Connector) ChainId(req *librustgo.CosmosRequest_ChainId) ([]byte, error) {
+	q.Ctx.Logger().Debug("Connector::Query ChainId invoked")
+	chainId := q.Keeper.ChainID()
+	return proto.Marshal(&librustgo.QueryChainIdResponse{ChainId: chainId.Bytes()})
 }
