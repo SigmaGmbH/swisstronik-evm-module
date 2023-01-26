@@ -208,7 +208,7 @@ func (q Connector) Query(req []byte) ([]byte, error) {
 		return nil, nil
 	// Returns block timestamp
 	case *librustgo.CosmosRequest_BlockTimestamp:
-		return nil, nil
+		return q.BlockTimestamp(request)
 	// Returns block number
 	case *librustgo.CosmosRequest_BlockNumber:
 		return q.BlockNumber(request)
@@ -246,6 +246,13 @@ func (q Connector) InsertAccount(req *librustgo.CosmosRequest_InsertAccount) ([]
 	q.Ctx.Logger().Debug("Connector::Query InsertAccount invoked")
 	//address := common.BytesToAddress(req.InsertAccount.Address)
 	return nil, nil
+}
+
+// BlockTimestamp handles incoming protobuf-encoded request for getting last block timestamp
+func (q Connector) BlockTimestamp(req *librustgo.CosmosRequest_BlockTimestamp) ([]byte, error) {
+	q.Ctx.Logger().Debug("Connector::Query BlockTimestamp invoked")
+	t := big.NewInt(q.Ctx.BlockTime().Unix())
+	return proto.Marshal(&librustgo.QueryBlockTimestampResponse{Timestamp: t.Bytes()})
 }
 
 // BlockNumber handles incoming protobuf-encoded request for getting current block height
