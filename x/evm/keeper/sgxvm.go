@@ -16,6 +16,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
+	"math/big"
 	"strconv"
 )
 
@@ -210,7 +211,7 @@ func (q Connector) Query(req []byte) ([]byte, error) {
 		return nil, nil
 	// Returns block number
 	case *librustgo.CosmosRequest_BlockNumber:
-		return nil, nil
+		return q.BlockNumber(request)
 	// Returns chain id
 	case *librustgo.CosmosRequest_ChainId:
 		return nil, nil
@@ -245,4 +246,11 @@ func (q Connector) InsertAccount(req *librustgo.CosmosRequest_InsertAccount) ([]
 	q.Ctx.Logger().Debug("Connector::Query InsertAccount invoked")
 	//address := common.BytesToAddress(req.InsertAccount.Address)
 	return nil, nil
+}
+
+// BlockNumber handles incoming protobuf-encoded request for getting current block height
+func (q Connector) BlockNumber(req *librustgo.CosmosRequest_BlockNumber) ([]byte, error) {
+	q.Ctx.Logger().Debug("Connector::Query BlockNumber invoked")
+	blockHeight := big.NewInt(q.Ctx.BlockHeight())
+	return proto.Marshal(&librustgo.QueryBlockNumberResponse{Number: blockHeight.Bytes()})
 }
