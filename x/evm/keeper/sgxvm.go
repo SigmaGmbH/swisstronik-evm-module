@@ -14,6 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	ethermint "github.com/evmos/ethermint/types"
+	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/evmos/ethermint/x/evm/types"
 	"github.com/golang/protobuf/proto"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
@@ -183,8 +184,7 @@ func (q Connector) Query(req []byte) ([]byte, error) {
 		return q.GetAccount(request)
 	// Handles request for updating account data
 	case *librustgo.CosmosRequest_InsertAccount:
-		// TODO: Implement
-		return nil, nil
+		return q.InsertAccount(request)
 	// Handles request if such account exists
 	case *librustgo.CosmosRequest_ContainsKey:
 		return q.ContainsKey(request)
@@ -250,13 +250,6 @@ func (q Connector) ContainsKey(req *librustgo.CosmosRequest_ContainsKey) ([]byte
 	address := common.BytesToAddress(req.ContainsKey.Key)
 	acc := q.Keeper.GetAccountWithoutBalance(q.Ctx, address)
 	return proto.Marshal(&librustgo.QueryContainsKeyResponse{Contains: acc != nil})
-}
-
-// InsertAccount handles incoming protobuf-encoded request for adding or modifying existing account data.
-func (q Connector) InsertAccount(req *librustgo.CosmosRequest_InsertAccount) ([]byte, error) {
-	q.Ctx.Logger().Debug("Connector::Query InsertAccount invoked")
-	//address := common.BytesToAddress(req.InsertAccount.Address)
-	return nil, nil
 }
 
 // InsertAccountCode handles incoming protobuf-encoded request for adding or modifying existing account code
@@ -371,4 +364,37 @@ func (q Connector) GetAccountCode(req *librustgo.CosmosRequest_AccountCode) ([]b
 	return proto.Marshal(&librustgo.QueryGetAccountCodeResponse{
 		Code: q.Keeper.GetCode(q.Ctx, common.BytesToHash(account.CodeHash)),
 	})
+}
+
+// InsertAccount handles incoming protobuf-encoded request for inserting new account data
+// such as balance and nonce. If there is deployed contract behind given address, its bytecode
+// or code hash won't be changed
+func (q Connector) InsertAccount(req *librustgo.CosmosRequest_InsertAccount) ([]byte, error) {
+	q.Ctx.Logger().Debug("Connector::Query Request to insert account code")
+	ethAddress := common.BytesToAddress(req.InsertAccount.Address)
+	account := q.Keeper.GetAccountWithoutBalance(q.Ctx, ethAddress)
+
+	balance := &big.Int{}
+	balance.SetBytes(req.InsertAccount.Balance)
+
+	var accountData statedb.Account
+	if account == nil {
+		accountData = statedb.Account{
+			Nonce:    sdk.BigEndianToUint64(req.InsertAccount.Nonce),
+			Balance:  balance,
+			CodeHash: nil,
+		}
+	} else {
+		accountData = statedb.Account{
+			Nonce:    sdk.BigEndianToUint64(req.InsertAccount.Nonce),
+			Balance:  balance,
+			CodeHash: account.CodeHash,
+		}
+	}
+
+	if err := q.Keeper.SetAccount(q.Ctx, ethAddress, accountData); err != nil {
+		return nil, errorsmod.Wrap(err, "Cannot set account")
+	}
+
+	return proto.Marshal(&librustgo.QueryInsertAccountResponse{})
 }
