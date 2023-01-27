@@ -185,8 +185,7 @@ func (q Connector) Query(req []byte) ([]byte, error) {
 		return nil, nil
 	// Handles request if such account exists
 	case *librustgo.CosmosRequest_ContainsKey:
-		// TODO: Implement
-		return nil, nil
+		return q.ContainsKey(request)
 	// Handles contract code request
 	case *librustgo.CosmosRequest_AccountCode:
 		// TODO: Implement
@@ -242,6 +241,13 @@ func (q Connector) GetAccount(req *librustgo.CosmosRequest_GetAccount) ([]byte, 
 		Balance: account.Balance.Bytes(),
 		Nonce:   sdk.Uint64ToBigEndian(account.Nonce),
 	})
+}
+
+func (q Connector) ContainsKey(req *librustgo.CosmosRequest_ContainsKey) ([]byte, error) {
+	q.Ctx.Logger().Debug("Connector::Query ContainsKey invoked")
+	address := common.BytesToAddress(req.ContainsKey.Key)
+	acc := q.Keeper.GetAccountWithoutBalance(q.Ctx, address)
+	return proto.Marshal(&librustgo.QueryContainsKeyResponse{Contains: acc != nil})
 }
 
 // InsertAccount handles incoming protobuf-encoded request for adding or modifying existing account data.
