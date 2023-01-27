@@ -205,7 +205,7 @@ func (q Connector) Query(req []byte) ([]byte, error) {
 		return nil, nil
 	// Returns block hash
 	case *librustgo.CosmosRequest_BlockHash:
-		return nil, nil
+		return q.BlockHash(request)
 	// Returns block timestamp
 	case *librustgo.CosmosRequest_BlockTimestamp:
 		return q.BlockTimestamp(request)
@@ -246,6 +246,13 @@ func (q Connector) InsertAccount(req *librustgo.CosmosRequest_InsertAccount) ([]
 	q.Ctx.Logger().Debug("Connector::Query InsertAccount invoked")
 	//address := common.BytesToAddress(req.InsertAccount.Address)
 	return nil, nil
+}
+
+// BlockHash handles incoming protobuf-encoded request for getting block hash
+func (q Connector) BlockHash(req *librustgo.CosmosRequest_BlockHash) ([]byte, error) {
+	q.Ctx.Logger().Debug("Connector::Query BlockHash invoked")
+	h := q.Ctx.HeaderHash()
+	return proto.Marshal(&librustgo.QueryBlockHashResponse{Hash: h.Bytes()})
 }
 
 // BlockTimestamp handles incoming protobuf-encoded request for getting last block timestamp
