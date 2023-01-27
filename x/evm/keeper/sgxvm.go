@@ -248,6 +248,16 @@ func (q Connector) InsertAccount(req *librustgo.CosmosRequest_InsertAccount) ([]
 	return nil, nil
 }
 
+//// InsertAccountCode handles incoming protobuf-encoded request for adding or modifying existing account code
+//func (q Connector) InsertAccountCode(req *librustgo.CosmosRequest_InsertAccountCode) ([]byte, error) {
+//	q.Ctx.Logger().Debug("Connector::Query InsertAccountCode invoked")
+//	address := common.BytesToAddress(req.InsertAccountCode.Address)
+//	q.Keeper.SetCode(q.Ctx)
+//
+//	//address := common.BytesToAddress(req.InsertAccount.Address)
+//	return nil, nil
+//}
+
 // RemoveStorageCell handles incoming protobuf-encoded request for removing contract storage cell for given key (index)
 func (q Connector) RemoveStorageCell(req *librustgo.CosmosRequest_RemoveStorageCell) ([]byte, error) {
 	q.Ctx.Logger().Debug("Connector::Query RemoveStorageCell invoked")
