@@ -202,7 +202,7 @@ func (q Connector) Query(req []byte) ([]byte, error) {
 		return nil, nil
 	// Handles removing account storage, account record, etc.
 	case *librustgo.CosmosRequest_Remove:
-		return nil, nil
+		return q.Remove(request)
 	// Returns block hash
 	case *librustgo.CosmosRequest_BlockHash:
 		return q.BlockHash(request)
@@ -246,6 +246,17 @@ func (q Connector) InsertAccount(req *librustgo.CosmosRequest_InsertAccount) ([]
 	q.Ctx.Logger().Debug("Connector::Query InsertAccount invoked")
 	//address := common.BytesToAddress(req.InsertAccount.Address)
 	return nil, nil
+}
+
+// Remove handles incoming protobuf-encoded request for removing account
+func (q Connector) Remove(req *librustgo.CosmosRequest_Remove) ([]byte, error) {
+	q.Ctx.Logger().Debug("Connector::Query Remove invoked")
+	address := common.BytesToAddress(req.Remove.Address)
+	err := q.Keeper.DeleteAccount(q.Ctx, address)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "failed to remove account")
+	}
+	return proto.Marshal(&librustgo.QueryRemoveResponse{})
 }
 
 // BlockHash handles incoming protobuf-encoded request for getting block hash
