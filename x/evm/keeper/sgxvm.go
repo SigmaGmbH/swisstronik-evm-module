@@ -190,8 +190,7 @@ func (q Connector) Query(req []byte) ([]byte, error) {
 		return q.IsAccountExists(request)
 	// Handles contract code request
 	case *librustgo.CosmosRequest_AccountCode:
-		// TODO: Implement
-		return nil, nil
+		return q.GetAccountCode(request)
 	// Handles storage cell data request
 	case *librustgo.CosmosRequest_StorageCell:
 		return q.GetStorageCell(request)
@@ -356,4 +355,17 @@ func (q Connector) IsAccountExists(req *librustgo.CosmosRequest_ContainsKey) ([]
 	q.Ctx.Logger().Debug("Connector::Query Request to check if account exists")
 	accountPtr := q.Keeper.GetAccount(q.Ctx, common.BytesToAddress(req.ContainsKey.Key))
 	return proto.Marshal(&librustgo.QueryContainsKeyResponse{Contains: accountPtr != nil})
+}
+
+// GetAccountCode handles incoming protobuf-encoded request and returns bytecode associated
+// with given account. If account does not exist, it returns empty response
+func (q Connector) GetAccountCode(req *librustgo.CosmosRequest_AccountCode) ([]byte, error) {
+	q.Ctx.Logger().Debug("Connector::Query Request account code")
+	account := q.Keeper.GetAccountWithoutBalance(q.Ctx, common.BytesToAddress(req.AccountCode.Address))
+	if account == nil {
+		return proto.Marshal(&librustgo.QueryGetAccountCodeResponse{})
+	}
+	return proto.Marshal(&librustgo.QueryGetAccountCodeResponse{
+		Code: q.Keeper.GetCode(q.Ctx, common.BytesToHash(account.CodeHash)),
+	})
 }
