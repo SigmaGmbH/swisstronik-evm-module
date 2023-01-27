@@ -187,7 +187,7 @@ func (q Connector) Query(req []byte) ([]byte, error) {
 		return nil, nil
 	// Handles request if such account exists
 	case *librustgo.CosmosRequest_ContainsKey:
-		return q.IsAccountExists(request)
+		return q.ContainsKey(request)
 	// Handles contract code request
 	case *librustgo.CosmosRequest_AccountCode:
 		return q.GetAccountCode(request)
@@ -242,6 +242,14 @@ func (q Connector) GetAccount(req *librustgo.CosmosRequest_GetAccount) ([]byte, 
 		Balance: account.Balance.Bytes(),
 		Nonce:   sdk.Uint64ToBigEndian(account.Nonce),
 	})
+}
+
+// ContainsKey handles incoming protobuf-encoded request to check whether specified address exists
+func (q Connector) ContainsKey(req *librustgo.CosmosRequest_ContainsKey) ([]byte, error) {
+	q.Ctx.Logger().Debug("Connector::Query ContainsKey invoked")
+	address := common.BytesToAddress(req.ContainsKey.Key)
+	acc := q.Keeper.GetAccountWithoutBalance(q.Ctx, address)
+	return proto.Marshal(&librustgo.QueryContainsKeyResponse{Contains: acc != nil})
 }
 
 // InsertAccount handles incoming protobuf-encoded request for adding or modifying existing account data.
@@ -336,6 +344,7 @@ func (q Connector) InsertStorageCell(req *librustgo.CosmosRequest_InsertStorageC
 		common.BytesToHash(req.InsertStorageCell.Index),
 		req.InsertStorageCell.Value,
 	)
+
 	return proto.Marshal(&librustgo.QueryInsertStorageCellResponse{})
 }
 
@@ -347,14 +356,8 @@ func (q Connector) GetStorageCell(req *librustgo.CosmosRequest_StorageCell) ([]b
 		common.BytesToAddress(req.StorageCell.Address),
 		common.BytesToHash(req.StorageCell.Index),
 	)
-	return proto.Marshal(&librustgo.QueryGetAccountStorageCellResponse{Value: value.Bytes()})
-}
 
-// IsAccountExists handles incoming protobuf-encoded request to check if account exists
-func (q Connector) IsAccountExists(req *librustgo.CosmosRequest_ContainsKey) ([]byte, error) {
-	q.Ctx.Logger().Debug("Connector::Query Request to check if account exists")
-	accountPtr := q.Keeper.GetAccount(q.Ctx, common.BytesToAddress(req.ContainsKey.Key))
-	return proto.Marshal(&librustgo.QueryContainsKeyResponse{Contains: accountPtr != nil})
+	return proto.Marshal(&librustgo.QueryGetAccountStorageCellResponse{Value: value.Bytes()})
 }
 
 // GetAccountCode handles incoming protobuf-encoded request and returns bytecode associated
