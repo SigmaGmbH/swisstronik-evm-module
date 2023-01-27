@@ -243,6 +243,7 @@ func (q Connector) GetAccount(req *librustgo.CosmosRequest_GetAccount) ([]byte, 
 	})
 }
 
+// ContainsKey handles incoming protobuf-encoded request to check whether specified address exists
 func (q Connector) ContainsKey(req *librustgo.CosmosRequest_ContainsKey) ([]byte, error) {
 	q.Ctx.Logger().Debug("Connector::Query ContainsKey invoked")
 	address := common.BytesToAddress(req.ContainsKey.Key)
