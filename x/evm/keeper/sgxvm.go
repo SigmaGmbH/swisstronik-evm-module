@@ -181,19 +181,23 @@ func (q Connector) Query(req []byte) ([]byte, error) {
 		return q.GetAccount(request)
 	// Handles request for updating account data
 	case *librustgo.CosmosRequest_InsertAccount:
+		// TODO: Implement
 		return nil, nil
 	// Handles request if such account exists
 	case *librustgo.CosmosRequest_ContainsKey:
+		// TODO: Implement
 		return nil, nil
 	// Handles contract code request
 	case *librustgo.CosmosRequest_AccountCode:
+		// TODO: Implement
 		return nil, nil
 	// Handles storage cell data request
 	case *librustgo.CosmosRequest_StorageCell:
+		// TODO: Implement
 		return nil, nil
 	// Handles inserting storage cell
 	case *librustgo.CosmosRequest_InsertStorageCell:
-		return nil, nil
+		return q.InsertStorageCell(request)
 	// Handles updating contract code
 	case *librustgo.CosmosRequest_InsertAccountCode:
 		return nil, nil
@@ -306,4 +310,17 @@ func (q Connector) ChainId(req *librustgo.CosmosRequest_ChainId) ([]byte, error)
 	q.Ctx.Logger().Debug("Connector::Query ChainId invoked")
 	chainId := q.Keeper.ChainID()
 	return proto.Marshal(&librustgo.QueryChainIdResponse{ChainId: chainId.Bytes()})
+}
+
+// InsertStorageCell handles incoming protobuf-encoded request for updating state of storage cell
+func (q Connector) InsertStorageCell(req *librustgo.CosmosRequest_InsertStorageCell) ([]byte, error) {
+	q.Ctx.Logger().Debug("Connector::Query InsertStorageCell invoked")
+	q.Keeper.SetState(
+		q.Ctx,
+		common.BytesToAddress(req.InsertStorageCell.Address),
+		common.BytesToHash(req.InsertStorageCell.Index),
+		req.InsertStorageCell.Value,
+	)
+
+	return proto.Marshal(&librustgo.QueryInsertStorageCellResponse{})
 }
