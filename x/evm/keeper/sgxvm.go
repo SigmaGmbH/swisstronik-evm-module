@@ -199,7 +199,7 @@ func (q Connector) Query(req []byte) ([]byte, error) {
 		return nil, nil
 	// Handles remove storage cell request
 	case *librustgo.CosmosRequest_RemoveStorageCell:
-		return nil, nil
+		return q.RemoveStorageCell(request)
 	// Handles removing account storage, account record, etc.
 	case *librustgo.CosmosRequest_Remove:
 		return q.Remove(request)
@@ -248,7 +248,18 @@ func (q Connector) InsertAccount(req *librustgo.CosmosRequest_InsertAccount) ([]
 	return nil, nil
 }
 
-// Remove handles incoming protobuf-encoded request for removing account
+// RemoveStorageCell handles incoming protobuf-encoded request for removing contract storage cell for given key (index)
+func (q Connector) RemoveStorageCell(req *librustgo.CosmosRequest_RemoveStorageCell) ([]byte, error) {
+	q.Ctx.Logger().Debug("Connector::Query RemoveStorageCell invoked")
+	address := common.BytesToAddress(req.RemoveStorageCell.Address)
+	index := common.BytesToHash(req.RemoveStorageCell.Index)
+
+	q.Keeper.SetState(q.Ctx, address, index, nil)
+
+	return proto.Marshal(&librustgo.QueryRemoveStorageCellResponse{})
+}
+
+// Remove handles incoming protobuf-encoded request for removing smart contract (selfdestruct)
 func (q Connector) Remove(req *librustgo.CosmosRequest_Remove) ([]byte, error) {
 	q.Ctx.Logger().Debug("Connector::Query Remove invoked")
 	address := common.BytesToAddress(req.Remove.Address)
