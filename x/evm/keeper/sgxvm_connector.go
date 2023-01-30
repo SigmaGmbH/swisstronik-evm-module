@@ -226,18 +226,21 @@ func (q Connector) InsertAccount(req *librustgo.CosmosRequest_InsertAccount) ([]
 	balance := &big.Int{}
 	balance.SetBytes(req.InsertAccount.Balance)
 
+	nonce := &big.Int{}
+	nonce.SetBytes(req.InsertAccount.Nonce)
+
 	println("Insert balance: ", balance.String(), ", To address: ", ethAddress.String(), "\n")
 
 	var accountData statedb.Account
 	if account == nil {
 		accountData = statedb.Account{
-			Nonce:    sdk.BigEndianToUint64(req.InsertAccount.Nonce),
+			Nonce:    nonce.Uint64(),
 			Balance:  balance,
 			CodeHash: nil,
 		}
 	} else {
 		accountData = statedb.Account{
-			Nonce:    sdk.BigEndianToUint64(req.InsertAccount.Nonce),
+			Nonce:    nonce.Uint64(),
 			Balance:  balance,
 			CodeHash: account.CodeHash,
 		}
