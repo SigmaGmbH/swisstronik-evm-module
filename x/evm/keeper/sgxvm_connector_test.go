@@ -142,15 +142,55 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 			},
 		},
 		{
-			"Should be able to set account code",
+			"Should be able to set & get account code",
 			func() {
+				addressToSet := common.BigToAddress(big.NewInt(rand.Int63n(100000)))
+				bytecode := make([]byte, 128)
+				rand.Read(bytecode)
 
-			},
-		},
-		{
-			"Should be able to get account code",
-			func() {
+				suite.Require().NoError(
+					insertAccount(&connector, addressToSet, big.NewInt(0), big.NewInt(0)),
+				)
 
+				//
+				// Insert account code
+				//
+				request, encodeErr := proto.Marshal(&librustgo.CosmosRequest{
+					Req: &librustgo.CosmosRequest_InsertAccountCode{
+						InsertAccountCode: &librustgo.QueryInsertAccountCode{
+							Address: addressToSet.Bytes(),
+							Code:    bytecode,
+						},
+					},
+				})
+				suite.Require().NoError(encodeErr)
+
+				responseBytes, queryErr := connector.Query(request)
+				suite.Require().NoError(queryErr)
+
+				response := &librustgo.QueryInsertAccountCodeResponse{}
+				decodingError := proto.Unmarshal(responseBytes, response)
+				suite.Require().NoError(decodingError)
+
+				//
+				// Request inserted account code
+				//
+				getRequest, getRequestErr := proto.Marshal(&librustgo.CosmosRequest{
+					Req: &librustgo.CosmosRequest_AccountCode{
+						AccountCode: &librustgo.QueryGetAccountCode{
+							Address: addressToSet.Bytes(),
+						},
+					},
+				})
+				suite.Require().NoError(getRequestErr)
+
+				responseAccountCodeBytes, queryAccountCodeErr := connector.Query(getRequest)
+				suite.Require().NoError(queryAccountCodeErr)
+
+				accountCodeResponse := &librustgo.QueryGetAccountCodeResponse{}
+				accCodeDecodingErr := proto.Unmarshal(responseAccountCodeBytes, accountCodeResponse)
+				suite.Require().NoError(accCodeDecodingErr)
+				suite.Require().Equal(accountCodeResponse.Code, bytecode)
 			},
 		},
 	}
