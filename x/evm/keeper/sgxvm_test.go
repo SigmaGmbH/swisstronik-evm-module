@@ -46,6 +46,28 @@ func (suite *KeeperTestSuite) TestNativeCurrencyTransfer() {
 			},
 			false,
 		},
+		{
+			"Exceeding balance transfer tx",
+			func() {
+				transferAmount = 1000
+				wrongAmount := int64(100000)
+				msg, _, err = newEthMsgTx(
+					vmdb.GetNonce(suite.address),
+					suite.ctx.BlockHeight(),
+					suite.address,
+					chainCfg,
+					suite.signer,
+					signer,
+					ethtypes.AccessListTxType,
+					nil,
+					nil,
+					big.NewInt(wrongAmount),
+				)
+				suite.Require().NoError(err)
+				expectedGasUsed = params.TxGas
+			},
+			true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -59,7 +81,7 @@ func (suite *KeeperTestSuite) TestNativeCurrencyTransfer() {
 
 			tc.malleate()
 
-			err := suite.app.EvmKeeper.SetBalance(suite.ctx, suite.address, big.NewInt(100000))
+			err := suite.app.EvmKeeper.SetBalance(suite.ctx, suite.address, big.NewInt(transferAmount))
 			suite.Require().NoError(err)
 
 			balanceBefore := suite.app.EvmKeeper.GetBalance(suite.ctx, suite.address)
@@ -67,25 +89,26 @@ func (suite *KeeperTestSuite) TestNativeCurrencyTransfer() {
 
 			res, err := suite.app.EvmKeeper.HandleTx(suite.ctx, msg)
 			if tc.expErr {
-				suite.Require().Error(err)
+				suite.Require().Equal(res.VmError, "evm error: OutOfFund")
+				suite.Require().NoError(err)
 				return
+			} else {
+				// Check sender's balance
+				expectedBalance := balanceBefore.Sub(balanceBefore, big.NewInt(transferAmount))
+				balanceAfter := suite.app.EvmKeeper.GetBalance(suite.ctx, suite.address)
+				isSenderBalanceCorrect := expectedBalance.Cmp(balanceAfter)
+				suite.Require().True(isSenderBalanceCorrect == 0, "Incorrect sender's balance")
+
+				// Check receiver's balance
+				receiverBalanceAfter := suite.app.EvmKeeper.GetBalance(suite.ctx, common.Address{})
+				expectedReceiverBalance := receiverBalanceBefore.Add(receiverBalanceBefore, big.NewInt(transferAmount))
+				isReceiverBalanceCorrect := expectedReceiverBalance.Cmp(receiverBalanceAfter)
+				suite.Require().True(isReceiverBalanceCorrect == 0, "Incorrect receiver's balance")
+
+				suite.Require().NoError(err)
+				suite.Require().Equal(expectedGasUsed, res.GasUsed)
+				suite.Require().False(res.Failed())
 			}
-
-			balanceAfter := suite.app.EvmKeeper.GetBalance(suite.ctx, suite.address)
-			suite.Require().Equal(
-				balanceBefore.Sub(balanceBefore, big.NewInt(transferAmount)),
-				balanceAfter,
-			)
-
-			receiverBalanceAfter := suite.app.EvmKeeper.GetBalance(suite.ctx, common.Address{})
-			suite.Require().Equal(
-				receiverBalanceBefore.Add(receiverBalanceBefore, big.NewInt(transferAmount)),
-				receiverBalanceAfter,
-			)
-
-			suite.Require().NoError(err)
-			suite.Require().Equal(expectedGasUsed, res.GasUsed)
-			suite.Require().False(res.Failed())
 		})
 	}
 }

@@ -135,8 +135,6 @@ func newEthMsgTx(
 		return nil, baseFee, errors.New("unsupport tx type")
 	}
 
-	println("DEBUG DEBUG: CREATED TX WITH VALUE: ", ethTx.Value().String())
-
 	msg := &evmtypes.MsgEthereumTx{}
 	msg.FromEthereumTx(ethTx)
 	msg.From = address.Hex()
