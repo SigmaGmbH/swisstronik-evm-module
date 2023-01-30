@@ -6,6 +6,7 @@ import (
 	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	"github.com/golang/protobuf/proto"
 	"math/big"
+	"math/rand"
 )
 
 func insertAccount(
@@ -59,7 +60,7 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 		{
 			"Should be able to insert account",
 			func() {
-				addressToSet := common.BigToAddress(big.NewInt(100))
+				addressToSet := common.BigToAddress(big.NewInt(rand.Int63n(100000)))
 				balanceToSet := big.NewInt(10000)
 				nonceToSet := big.NewInt(1)
 
@@ -77,13 +78,67 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 		{
 			"Should be able to check if account exists",
 			func() {
+				addressToSet := common.BigToAddress(big.NewInt(rand.Int63n(100000)))
+				balanceToSet := big.NewInt(10000)
+				nonceToSet := big.NewInt(1)
 
+				err := insertAccount(&connector, addressToSet, balanceToSet, nonceToSet)
+				suite.Require().NoError(err)
+
+				// Encode request
+				request, encodeErr := proto.Marshal(&librustgo.CosmosRequest{
+					Req: &librustgo.CosmosRequest_ContainsKey{
+						ContainsKey: &librustgo.QueryContainsKey{
+							Key: addressToSet.Bytes(),
+						},
+					},
+				})
+				suite.Require().NoError(encodeErr)
+
+				responseBytes, queryErr := connector.Query(request)
+				suite.Require().NoError(queryErr)
+
+				response := &librustgo.QueryContainsKeyResponse{}
+				decodingError := proto.Unmarshal(responseBytes, response)
+				suite.Require().NoError(decodingError)
+
+				suite.Require().True(response.Contains)
 			},
 		},
 		{
 			"Should be able to get account data",
 			func() {
+				addressToSet := common.BigToAddress(big.NewInt(rand.Int63n(100000)))
+				balanceToSet := big.NewInt(1400)
+				nonceToSet := big.NewInt(22)
 
+				err := insertAccount(&connector, addressToSet, balanceToSet, nonceToSet)
+				suite.Require().NoError(err)
+
+				// Encode request
+				request, encodeErr := proto.Marshal(&librustgo.CosmosRequest{
+					Req: &librustgo.CosmosRequest_GetAccount{
+						GetAccount: &librustgo.QueryGetAccount{
+							Address: addressToSet.Bytes(),
+						},
+					},
+				})
+				suite.Require().NoError(encodeErr)
+
+				responseBytes, queryErr := connector.Query(request)
+				suite.Require().NoError(queryErr)
+
+				response := &librustgo.QueryGetAccountResponse{}
+				decodingError := proto.Unmarshal(responseBytes, response)
+				suite.Require().NoError(decodingError)
+
+				returnedBalance := &big.Int{}
+				returnedBalance.SetBytes(response.Balance)
+				suite.Require().Equal(balanceToSet, returnedBalance)
+
+				returnedNonce := &big.Int{}
+				returnedNonce.SetBytes(response.Nonce)
+				suite.Require().Equal(nonceToSet, returnedNonce)
 			},
 		},
 		{
