@@ -51,38 +51,37 @@ func (suite *KeeperTestSuite) TestNativeCurrencyTransfer() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
+
 			keeperParams := suite.app.EvmKeeper.GetParams(suite.ctx)
 			chainCfg = keeperParams.ChainConfig.EthereumConfig(suite.app.EvmKeeper.ChainID())
 			signer = ethtypes.LatestSignerForChainID(suite.app.EvmKeeper.ChainID())
 			vmdb = suite.StateDB()
 
-			// Set balance
-			setBalanceErr := suite.app.EvmKeeper.SetBalance(suite.ctx, suite.address, big.NewInt(transferAmount))
-			suite.Require().NoError(setBalanceErr)
-
-			// TODO: Test fails
-			receiver := common.Address{}
-			//receiverBalanceBefore := suite.app.EvmKeeper.GetBalance(suite.ctx, receiver)
-			receiverBalanceBefore := vmdb.GetBalance(receiver)
-			//senderBalanceBefore := suite.app.EvmKeeper.GetBalance(suite.ctx, suite.address) // TODO: Why balance is 0
-			//println("DEBUG BLAAN CE BEFORE: ", senderBalanceBefore.String())
-
 			tc.malleate()
+
+			err := suite.app.EvmKeeper.SetBalance(suite.ctx, suite.address, big.NewInt(100000))
+			suite.Require().NoError(err)
+
+			balanceBefore := suite.app.EvmKeeper.GetBalance(suite.ctx, suite.address)
+			receiverBalanceBefore := suite.app.EvmKeeper.GetBalance(suite.ctx, common.Address{})
+
 			res, err := suite.app.EvmKeeper.HandleTx(suite.ctx, msg)
 			if tc.expErr {
 				suite.Require().Error(err)
 				return
 			}
 
-			receiverBalanceAfter := suite.app.EvmKeeper.GetBalance(suite.ctx, receiver)
-			suite.Require().EqualValues(
-				receiverBalanceBefore.Add(receiverBalanceBefore, big.NewInt(transferAmount)), receiverBalanceAfter,
+			balanceAfter := suite.app.EvmKeeper.GetBalance(suite.ctx, suite.address)
+			suite.Require().Equal(
+				balanceBefore.Sub(balanceBefore, big.NewInt(transferAmount)),
+				balanceAfter,
 			)
 
-			//senderBalanceAfter := suite.app.EvmKeeper.GetBalance(suite.ctx, suite.address)
-			//suite.Require().EqualValues(
-			//	senderBalanceBefore.Sub(senderBalanceBefore, big.NewInt(transferAmount)), senderBalanceAfter,
-			//)
+			receiverBalanceAfter := suite.app.EvmKeeper.GetBalance(suite.ctx, common.Address{})
+			suite.Require().Equal(
+				receiverBalanceBefore.Add(receiverBalanceBefore, big.NewInt(transferAmount)),
+				receiverBalanceAfter,
+			)
 
 			suite.Require().NoError(err)
 			suite.Require().Equal(expectedGasUsed, res.GasUsed)
