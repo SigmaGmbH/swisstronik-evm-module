@@ -16,8 +16,8 @@ import (
 // Connector allows our VM interact with existing Cosmos application.
 // It is passed by pointer into SGX to make it accessible for our VM.
 type Connector struct {
-	Ctx    sdk.Context
-	Keeper Keeper
+	Ctx    sdk.Context // TODO: Decide how to pass context as a reference
+	Keeper *Keeper
 }
 
 func (q Connector) Query(req []byte) ([]byte, error) {

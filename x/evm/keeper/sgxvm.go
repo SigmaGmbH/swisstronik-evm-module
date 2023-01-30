@@ -43,7 +43,7 @@ func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgEthereumTx) (*typ
 	// TODO: Need to check it in tests
 	connector := Connector{
 		Ctx:    ctx,
-		Keeper: *k, // TODO: Check how to avoid moving keeper
+		Keeper: k, // TODO: Check how to avoid moving keeper
 	}
 	var destination []byte
 	if tx.To() != nil {

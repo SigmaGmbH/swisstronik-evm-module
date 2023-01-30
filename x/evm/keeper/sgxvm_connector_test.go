@@ -15,7 +15,7 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 
 	connector = evmkeeper.Connector{
 		Ctx:    suite.ctx,
-		Keeper: *suite.app.EvmKeeper,
+		Keeper: suite.app.EvmKeeper,
 	}
 
 	testCases := []struct {
@@ -51,8 +51,8 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 				suite.Require().NoError(decodingError)
 
 				// Check if account was inserted correctly
-				balance := suite.app.EvmKeeper.GetBalance(suite.ctx, addressToSet)
-				nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, addressToSet)
+				balance := connector.Keeper.GetBalance(connector.Ctx, addressToSet)
+				nonce := connector.Keeper.GetNonce(connector.Ctx, addressToSet)
 
 				suite.Require().Equal(balanceToSet, balance)
 				suite.Require().Equal(nonceToSet.Uint64(), nonce)
