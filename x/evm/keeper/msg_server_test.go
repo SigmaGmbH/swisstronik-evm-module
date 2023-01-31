@@ -1,10 +1,9 @@
 package keeper_test
 
 import (
-	"math/big"
-
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"math/big"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
@@ -73,6 +72,7 @@ func (suite *KeeperTestSuite) TestEthereumTx() {
 			tc.malleate()
 			res, err := suite.app.EvmKeeper.HandleTx(suite.ctx, msg)
 			if tc.expErr {
+				println("DEBUG: ", res.VmError)
 				suite.Require().Error(err)
 				return
 			}
