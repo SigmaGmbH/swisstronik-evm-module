@@ -108,6 +108,7 @@ func (q Connector) InsertAccountCode(req *librustgo.CosmosRequest_InsertAccountC
 
 	// Calculate code hash
 	codeHash := crypto.Keccak256(req.InsertAccountCode.Code)
+	println("DEBUG: Expected code hash: ", common.BytesToHash(codeHash).String())
 	q.Keeper.SetCode(q.Ctx, codeHash, req.InsertAccountCode.Code)
 
 	// Link address with code hash
@@ -117,9 +118,10 @@ func (q Connector) InsertAccountCode(req *librustgo.CosmosRequest_InsertAccountC
 
 	// Set code hash if account exists
 	if ethAccount != nil {
-		if err := ethAccount.SetCodeHash(common.BytesToHash(codeHash)); err != nil { // TODO: SetCode is working, but it doesn't set code hash
+		if err := ethAccount.SetCodeHash(common.BytesToHash(codeHash)); err != nil {
 			return nil, err
 		}
+		q.Keeper.accountKeeper.SetAccount(q.Ctx, cosmosAccount)
 	} else {
 		return nil, errors.New("cannot insert account code. Account does not exist")
 	}
