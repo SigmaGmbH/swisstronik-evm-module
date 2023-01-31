@@ -3,8 +3,10 @@ package keeper_test
 import (
 	"github.com/SigmaGmbH/librustgo"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	"github.com/golang/protobuf/proto"
+	"github.com/status-im/keycard-go/hexutils"
 	"math/big"
 	"math/rand"
 )
@@ -146,8 +148,10 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 			func() {
 				// Arrange
 				addressToSet := common.BigToAddress(big.NewInt(rand.Int63n(100000)))
-				bytecode := make([]byte, 128)
+				bytecode := make([]byte, 32)
 				rand.Read(bytecode)
+
+				println("TEST: Bytecode to set: ", hexutils.BytesToHex(bytecode))
 
 				err := insertAccount(&connector, addressToSet, big.NewInt(0), big.NewInt(1))
 				suite.Require().NoError(err)
@@ -168,9 +172,14 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 				suite.Require().NoError(queryErr)
 
 				// Check if account code was set correctly
+				codeHash := crypto.Keccak256(bytecode)
+				recoveredCode := connector.Keeper.GetCode(connector.Ctx, common.BytesToHash(codeHash))
+				suite.Require().Equal(bytecode, recoveredCode)
+
+				// Check if code hash was set correctly
 				account := connector.Keeper.GetAccount(connector.Ctx, addressToSet)
 				suite.Require().NotNil(account)
-				println("DEBUG: ", account.Nonce, common.BytesToHash(account.CodeHash).String())
+				suite.Require().Equal(codeHash, account.CodeHash)
 			},
 		},
 		//{

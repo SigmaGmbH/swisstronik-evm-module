@@ -117,7 +117,7 @@ func (q Connector) InsertAccountCode(req *librustgo.CosmosRequest_InsertAccountC
 
 	// Set code hash if account exists
 	if ethAccount != nil {
-		if err := ethAccount.SetCodeHash(common.BytesToHash(codeHash)); err != nil { // TODO: Seems like it does not set code hash correctly
+		if err := ethAccount.SetCodeHash(common.BytesToHash(codeHash)); err != nil { // TODO: SetCode is working, but it doesn't set code hash
 			return nil, err
 		}
 	} else {
