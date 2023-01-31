@@ -29,7 +29,7 @@ func (suite *KeeperTestSuite) TestEthereumTx() {
 		{
 			"Deploy contract tx - insufficient gas",
 			func() {
-				msg, err = suite.createContractMsgTx(
+				msg, err = suite.createContractMsgTx( // FIXME. Strange error with invalid opcode (95) but should be OutOfGas
 					vmdb.GetNonce(suite.address),
 					signer,
 					chainCfg,
