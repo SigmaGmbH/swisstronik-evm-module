@@ -148,9 +148,8 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 				bytecode := make([]byte, 128)
 				rand.Read(bytecode)
 
-				suite.Require().NoError(
-					insertAccount(&connector, addressToSet, big.NewInt(0), big.NewInt(0)),
-				)
+				err := insertAccount(&connector, addressToSet, big.NewInt(0), big.NewInt(1))
+				suite.Require().NoError(err)
 
 				//
 				// Insert account code
@@ -190,7 +189,7 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 				accountCodeResponse := &librustgo.QueryGetAccountCodeResponse{}
 				accCodeDecodingErr := proto.Unmarshal(responseAccountCodeBytes, accountCodeResponse)
 				suite.Require().NoError(accCodeDecodingErr)
-				suite.Require().Equal(accountCodeResponse.Code, bytecode)
+				suite.Require().Equal(bytecode, accountCodeResponse.Code)
 			},
 		},
 	}
