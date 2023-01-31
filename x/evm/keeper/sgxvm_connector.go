@@ -16,7 +16,7 @@ import (
 // Connector allows our VM interact with existing Cosmos application.
 // It is passed by pointer into SGX to make it accessible for our VM.
 type Connector struct {
-	Ctx    sdk.Context // TODO: Decide how to pass context as a reference
+	Ctx    sdk.Context
 	Keeper *Keeper
 }
 
@@ -117,7 +117,7 @@ func (q Connector) InsertAccountCode(req *librustgo.CosmosRequest_InsertAccountC
 
 	// Set code hash if account exists
 	if ethAccount != nil {
-		if err := ethAccount.SetCodeHash(common.BytesToHash(codeHash)); err != nil {
+		if err := ethAccount.SetCodeHash(common.BytesToHash(codeHash)); err != nil { // TODO: Seems like it does not set code hash correctly
 			return nil, err
 		}
 	} else {
