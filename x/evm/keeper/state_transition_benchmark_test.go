@@ -168,6 +168,43 @@ func newNativeMessage(
 	return m, nil
 }
 
+func BenchmarkHandleTx(b *testing.B) {
+	suite := KeeperTestSuite{enableLondonHF: true}
+	suite.SetupTestWithT(b)
+
+	signer := ethtypes.LatestSignerForChainID(suite.app.EvmKeeper.ChainID())
+
+	setBalanceError := suite.app.EvmKeeper.SetBalance(suite.ctx, suite.address, big.NewInt(10000000000000))
+	require.NoError(b, setBalanceError)
+	keeperParams := suite.app.EvmKeeper.GetParams(suite.ctx)
+	chainCfg := keeperParams.ChainConfig.EthereumConfig(suite.app.EvmKeeper.ChainID())
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		msg, _, _ := newEthMsgTx(
+			suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address),
+			suite.ctx.BlockHeight(),
+			suite.address,
+			chainCfg,
+			suite.signer,
+			signer,
+			ethtypes.AccessListTxType,
+			nil,
+			nil,
+			big.NewInt(100),
+		)
+
+		b.StartTimer()
+		resp, err := suite.app.EvmKeeper.HandleTx(suite.ctx, msg)
+		b.StopTimer()
+		require.NoError(b, err)
+		require.Empty(b, resp.VmError)
+	}
+}
+
 func BenchmarkApplyTransaction(b *testing.B) {
 	suite := KeeperTestSuite{enableLondonHF: true}
 	suite.SetupTestWithT(b)
