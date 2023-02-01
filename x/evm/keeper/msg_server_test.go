@@ -27,17 +27,18 @@ func (suite *KeeperTestSuite) TestEthereumTx() {
 		expErr   bool
 	}{
 		{
-			"Deploy contract tx - insufficient gas",
+			"Deploy contract tx",
 			func() {
-				msg, err = suite.createContractMsgTx( // FIXME. Strange error with invalid opcode (95) but should be OutOfGas
+				msg, err = suite.createContractMsgTx(
 					vmdb.GetNonce(suite.address),
 					signer,
 					chainCfg,
 					big.NewInt(1),
 				)
 				suite.Require().NoError(err)
+				expectedGasUsed = params.TxGasContractCreation
 			},
-			true,
+			false,
 		},
 		{
 			"Transfer funds tx",
@@ -72,7 +73,6 @@ func (suite *KeeperTestSuite) TestEthereumTx() {
 			tc.malleate()
 			res, err := suite.app.EvmKeeper.HandleTx(suite.ctx, msg)
 			if tc.expErr {
-				println("DEBUG: ", res.VmError)
 				suite.Require().Error(err)
 				return
 			}
