@@ -6,9 +6,9 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	"github.com/golang/protobuf/proto"
-	"github.com/status-im/keycard-go/hexutils"
 	"math/big"
 	"math/rand"
+	"time"
 )
 
 func insertAccount(
@@ -50,8 +50,11 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 		connector evmkeeper.Connector
 	)
 
+	headerHash := common.BigToHash(big.NewInt(1234))
+	timestamp := time.Now()
+
 	connector = evmkeeper.Connector{
-		Ctx:    suite.ctx,
+		Ctx:    suite.ctx.WithHeaderHash(headerHash.Bytes()).WithBlockTime(timestamp), // TODO: There is a problem with implicit copying of suite.ctx
 		Keeper: suite.app.EvmKeeper,
 	}
 
@@ -151,8 +154,6 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 				bytecode := make([]byte, 32)
 				rand.Read(bytecode)
 
-				println("TEST: Bytecode to set: ", hexutils.BytesToHex(bytecode))
-
 				err := insertAccount(&connector, addressToSet, big.NewInt(0), big.NewInt(1))
 				suite.Require().NoError(err)
 
@@ -231,6 +232,51 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 				accCodeDecodingErr := proto.Unmarshal(responseAccountCodeBytes, accountCodeResponse)
 				suite.Require().NoError(accCodeDecodingErr)
 				suite.Require().Equal(bytecode, accountCodeResponse.Code)
+			},
+		},
+		{
+			"Should return correct block hash",
+			func() {
+				req, encodingErr := proto.Marshal(&librustgo.CosmosRequest{
+					Req: &librustgo.CosmosRequest_BlockHash{
+						BlockHash: &librustgo.QueryBlockHash{
+							Number: make([]byte, 32),
+						},
+					},
+				})
+				suite.Require().NoError(encodingErr)
+
+				responseBytes, err := connector.Query(req)
+				suite.Require().NoError(err)
+
+				response := &librustgo.QueryBlockHashResponse{}
+				decodingErr := proto.Unmarshal(responseBytes, response)
+				suite.Require().NoError(decodingErr)
+
+				// TODO: For now BlockHash request returns header hash and ignores provided BlockNumber
+				suite.Require().Equal(headerHash.Bytes(), response.Hash)
+			},
+		},
+		{
+			"Should be able to get block.timestamp",
+			func() {
+				request, encodingErr := proto.Marshal(&librustgo.CosmosRequest{
+					Req: &librustgo.CosmosRequest_BlockTimestamp{
+						BlockTimestamp: &librustgo.QueryBlockTimestamp{},
+					},
+				})
+				suite.Require().NoError(encodingErr)
+
+				responseBytes, err := connector.Query(request)
+				suite.Require().NoError(err)
+
+				response := &librustgo.QueryBlockTimestampResponse{}
+				decodingErr := proto.Unmarshal(responseBytes, response)
+				suite.Require().NoError(decodingErr)
+
+				decodedTimestamp := big.Int{}
+				decodedTimestamp.SetBytes(response.Timestamp)
+				suite.Require().Equal(timestamp.Unix(), decodedTimestamp.Int64())
 			},
 		},
 	}
