@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/evmos/ethermint/x/evm/types"
@@ -34,11 +34,6 @@ func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgHandleTx) (*types
 	tx := msg.AsTransaction()
 	txIndex := k.GetTxIndexTransient(ctx)
 
-	sender, err := hexutil.Decode(msg.From)
-	if err != nil {
-		return nil, errorsmod.Wrap(err, "cannot decode transaction sender")
-	}
-
 	labels := []metrics.Label{
 		telemetry.NewLabel("tx_type", fmt.Sprintf("%d", tx.Type())),
 	}
@@ -48,7 +43,7 @@ func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgHandleTx) (*types
 		labels = append(labels, telemetry.NewLabel("execution", "call"))
 	}
 
-	response, err := k.ApplySGXVMTransaction(ctx, tx, sender, txIndex)
+	response, err := k.ApplySGXVMTransaction(ctx, tx)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "failed to apply transaction")
 	}
@@ -145,18 +140,24 @@ func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgHandleTx) (*types
 	return response, nil
 }
 
-func (k *Keeper) ApplySGXVMTransaction(
-	ctx sdk.Context,
-	tx *ethtypes.Transaction,
-	sender []byte,
-	txIndex uint64,
-) (*types.MsgEthereumTxResponse, error) {
-	// TODO: Copy implementation from ApplyTransaction
+func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction) (*types.MsgEthereumTxResponse, error) {
 	var (
 		bloom        *big.Int
 		bloomReceipt ethtypes.Bloom
 		err          error
 	)
+
+	cfg, err := k.EVMConfig(ctx, ctx.BlockHeader().ProposerAddress, k.eip155ChainID)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "failed to load evm config")
+	}
+
+	// get the signer according to the chain rules from the config and block height
+	signer := ethtypes.MakeSigner(cfg.ChainConfig, big.NewInt(ctx.BlockHeight()))
+	msg, err := tx.AsMessage(signer, cfg.BaseFee)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "failed to return ethereum transaction as core message")
+	}
 
 	txContext, err := createSGXVMConfig(ctx, k, tx)
 	if err != nil {
@@ -165,23 +166,33 @@ func (k *Keeper) ApplySGXVMTransaction(
 
 	// convert `to` field to bytes
 	var destination []byte
-	if tx.To() != nil {
-		destination = tx.To().Bytes()
+	if msg.To() != nil {
+		destination = msg.To().Bytes()
 	}
 
-	// TODO: Add tmpCtx
+	// snapshot to contain the tx processing and post processing in same scope
+	var commit func()
+	tmpCtx := ctx
+	if k.hooks != nil {
+		// Create a cache context to revert state when tx hooks fails,
+		// the cache context is only committed when both tx and hooks executed successfully.
+		// Didn't use `Snapshot` because the context stack has exponential complexity on certain operations,
+		// thus restricted to be used only inside `ApplyMessage`.
+		tmpCtx, commit = ctx.CacheContext()
+	}
+
 	connector := Connector{
-		Ctx:    ctx,
+		Ctx:    tmpCtx,
 		Keeper: k,
 	}
 
 	res, err := librustgo.HandleTx(
 		connector,
-		sender,
+		msg.From().Bytes(),
 		destination,
-		tx.Data(),
-		tx.Value().Bytes(),
-		tx.Gas(),
+		msg.Data(),
+		msg.Value().Bytes(),
+		msg.Gas(),
 		txContext,
 	)
 	if err != nil {
@@ -190,6 +201,77 @@ func (k *Keeper) ApplySGXVMTransaction(
 
 	txConfig := k.TxConfig(ctx, tx.Hash())
 	logs := SGXVMLogsToEthereum(res.Logs, tx, txConfig, txContext.BlockNumber)
+
+	// Compute block bloom filter
+	if len(logs) > 0 {
+		bloom = k.GetBlockBloomTransient(ctx)
+		bloom.Or(bloom, big.NewInt(0).SetBytes(ethtypes.LogsBloom(logs)))
+		bloomReceipt = ethtypes.BytesToBloom(bloom.Bytes())
+	}
+
+	cumulativeGasUsed := res.GasUsed
+	if ctx.BlockGasMeter() != nil {
+		limit := ctx.BlockGasMeter().Limit()
+		cumulativeGasUsed += ctx.BlockGasMeter().GasConsumed()
+		if cumulativeGasUsed > limit {
+			cumulativeGasUsed = limit
+		}
+	}
+
+	var contractAddr common.Address
+	if msg.To() == nil {
+		contractAddr = crypto.CreateAddress(msg.From(), msg.Nonce())
+	}
+
+	receipt := &ethtypes.Receipt{
+		Type:              tx.Type(),
+		PostState:         nil, // TODO: intermediate state root
+		CumulativeGasUsed: cumulativeGasUsed,
+		Bloom:             bloomReceipt,
+		Logs:              logs,
+		TxHash:            txConfig.TxHash,
+		ContractAddress:   contractAddr,
+		GasUsed:           res.GasUsed,
+		BlockHash:         txConfig.BlockHash,
+		BlockNumber:       big.NewInt(ctx.BlockHeight()),
+		TransactionIndex:  txConfig.TxIndex,
+	}
+
+	if res.VmError != "" {
+		receipt.Status = ethtypes.ReceiptStatusSuccessful
+		// Only call hooks if tx executed successfully.
+		if err = k.PostTxProcessing(tmpCtx, msg, receipt); err != nil {
+			// If hooks return error, revert the whole tx.
+			res.VmError = types.ErrPostTxProcessing.Error()
+			k.Logger(ctx).Error("tx post processing failed", "error", err)
+
+			// If the tx failed in post-processing hooks, we should clear the logs
+			res.Logs = nil
+		} else if commit != nil {
+			// PostTxProcessing is successful, commit the tmpCtx
+			commit()
+			// Since the post-processing can alter the log, we need to update the result
+			//res.Logs = types.NewLogsFromEth(receipt.Logs) // TODO: Handle incompatible types of Ethermint's log and our log
+			ctx.EventManager().EmitEvents(tmpCtx.EventManager().Events())
+		}
+	}
+
+	if len(receipt.Logs) > 0 {
+		// Update transient block bloom filter
+		k.SetBlockBloomTransient(ctx, receipt.Bloom.Big())
+		k.SetLogSizeTransient(ctx, uint64(txConfig.LogIndex)+uint64(len(receipt.Logs)))
+	}
+
+	k.SetTxIndexTransient(ctx, uint64(txConfig.TxIndex)+1)
+
+	totalGasUsed, err := k.AddTransientGasUsed(ctx, res.GasUsed)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "failed to add transient gas used")
+	}
+
+	// reset the gas meter for current cosmos transaction
+	k.ResetGasMeterAndConsumeGas(ctx, totalGasUsed)
+	return res, nil
 }
 
 func createSGXVMConfig(ctx sdk.Context, k *Keeper, tx *ethtypes.Transaction) (*librustgo.TransactionContext, error) {
