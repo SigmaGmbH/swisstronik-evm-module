@@ -30,6 +30,9 @@ func NewHandler(server types.MsgServer) sdk.Handler {
 
 		switch msg := msg.(type) {
 		case *types.MsgEthereumTx:
+			res, err := server.EthereumTx(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgHandleTx:
 			res, err := server.HandleTx(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgUpdateParams:

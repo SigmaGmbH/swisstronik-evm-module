@@ -57,6 +57,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgEthereumTx{},
 		&MsgUpdateParams{},
+		&MsgHandleTx{},
 	)
 	registry.RegisterInterface(
 		"ethermint.evm.v1.TxData",

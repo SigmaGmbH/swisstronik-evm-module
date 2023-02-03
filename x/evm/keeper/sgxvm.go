@@ -21,7 +21,7 @@ import (
 // executed (applied) against the SGX-protected EVM. The provided SDK Context is set to the Keeper
 // so that it can implement and call the StateDB methods without receiving it as a function
 // parameter.
-func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgEthereumTx) (*types.MsgEthereumTxResponse, error) {
+func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgHandleTx) (*types.MsgEthereumTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	tx := msg.AsTransaction()
 	txIndex := k.GetTxIndexTransient(ctx)
