@@ -37,17 +37,17 @@ const (
 	TypeMsgHandleTx = "handle_tx"
 )
 
-// NewTx returns a reference to a new Ethereum transaction message.
-func NewHandleTx(
+// NewSGXVMTx returns a reference to a new Ethereum transaction message.
+func NewSGXVMTx(
 	chainID *big.Int, nonce uint64, to *common.Address, amount *big.Int,
 	gasLimit uint64, gasPrice, gasFeeCap, gasTipCap *big.Int, input []byte, accesses *ethtypes.AccessList,
 ) *MsgHandleTx {
 	return newMsgHandleTx(chainID, nonce, to, amount, gasLimit, gasPrice, gasFeeCap, gasTipCap, input, accesses)
 }
 
-// NewTxContract returns a reference to a new Ethereum transaction
+// NewSGXVMTxContract returns a reference to a new Ethereum transaction
 // message designated for contract creation.
-func NewHandleTxContract(
+func NewSGXVMTxContract(
 	chainID *big.Int,
 	nonce uint64,
 	amount *big.Int,

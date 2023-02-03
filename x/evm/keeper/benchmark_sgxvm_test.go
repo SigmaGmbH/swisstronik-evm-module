@@ -18,7 +18,7 @@ import (
 
 func SetupContractSGXVM(b *testing.B) (*KeeperTestSuite, common.Address) {
 	suite := KeeperTestSuite{}
-	suite.SetupTestWithT(b)
+	suite.SetupSGXVMTestWithT(b)
 
 	amt := sdk.Coins{ethermint.NewPhotonCoinInt64(1000000000000000000)}
 	err := suite.app.BankKeeper.MintCoins(suite.ctx, types.ModuleName, amt)
@@ -26,15 +26,15 @@ func SetupContractSGXVM(b *testing.B) (*KeeperTestSuite, common.Address) {
 	err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, suite.address.Bytes(), amt)
 	require.NoError(b, err)
 
-	contractAddr := suite.DeployTestContract(b, suite.address, sdkmath.NewIntWithDecimal(1000, 18).BigInt()) // TODO: Create SGXVM version of DeployTestContract
+	contractAddr := suite.DeploySGXVMTestContract(b, suite.address, sdkmath.NewIntWithDecimal(1000, 18).BigInt())
 	suite.Commit()
 
 	return &suite, contractAddr
 }
 
-func SetupTestMessageCallSGXVM(b *testing.B) (*KeeperTestSuite, common.Address) {
+func SetupSGXVMTestMessageCall(b *testing.B) (*KeeperTestSuite, common.Address) {
 	suite := KeeperTestSuite{}
-	suite.SetupTestWithT(b)
+	suite.SetupSGXVMTestWithT(b)
 
 	amt := sdk.Coins{ethermint.NewPhotonCoinInt64(1000000000000000000)}
 	err := suite.app.BankKeeper.MintCoins(suite.ctx, types.ModuleName, amt)
@@ -42,7 +42,7 @@ func SetupTestMessageCallSGXVM(b *testing.B) (*KeeperTestSuite, common.Address) 
 	err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, suite.address.Bytes(), amt)
 	require.NoError(b, err)
 
-	contractAddr := suite.DeployTestMessageCall(b)
+	contractAddr := suite.DeploySGXVMTestMessageCall(b)
 	suite.Commit()
 
 	return &suite, contractAddr
@@ -82,7 +82,7 @@ func BenchmarkTokenTransferSGXVM(b *testing.B) {
 		input, err := types.ERC20Contract.ABI.Pack("transfer", common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), big.NewInt(1000))
 		require.NoError(b, err)
 		nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
-		return types.NewHandleTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 410000, big.NewInt(1), nil, nil, input, nil)
+		return types.NewSGXVMTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 410000, big.NewInt(1), nil, nil, input, nil)
 	})
 }
 
@@ -91,7 +91,7 @@ func BenchmarkEmitLogsSGXVM(b *testing.B) {
 		input, err := types.ERC20Contract.ABI.Pack("benchmarkLogs", big.NewInt(1000))
 		require.NoError(b, err)
 		nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
-		return types.NewHandleTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 4100000, big.NewInt(1), nil, nil, input, nil)
+		return types.NewSGXVMTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 4100000, big.NewInt(1), nil, nil, input, nil)
 	})
 }
 
@@ -100,7 +100,7 @@ func BenchmarkTokenTransferFromSGXVM(b *testing.B) {
 		input, err := types.ERC20Contract.ABI.Pack("transferFrom", suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), big.NewInt(0))
 		require.NoError(b, err)
 		nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
-		return types.NewHandleTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 410000, big.NewInt(1), nil, nil, input, nil)
+		return types.NewSGXVMTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 410000, big.NewInt(1), nil, nil, input, nil)
 	})
 }
 
@@ -109,17 +109,17 @@ func BenchmarkTokenMintSGXVM(b *testing.B) {
 		input, err := types.ERC20Contract.ABI.Pack("mint", common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), big.NewInt(1000))
 		require.NoError(b, err)
 		nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
-		return types.NewHandleTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 410000, big.NewInt(1), nil, nil, input, nil)
+		return types.NewSGXVMTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 410000, big.NewInt(1), nil, nil, input, nil)
 	})
 }
 
 func BenchmarkMessageCallSGXVM(b *testing.B) {
-	suite, contract := SetupTestMessageCall(b)
+	suite, contract := SetupSGXVMTestMessageCall(b)
 
 	input, err := types.TestMessageCall.ABI.Pack("benchmarkMessageCall", big.NewInt(10000))
 	require.NoError(b, err)
 	nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
-	msg := types.NewHandleTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 25000000, big.NewInt(1), nil, nil, input, nil)
+	msg := types.NewSGXVMTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 25000000, big.NewInt(1), nil, nil, input, nil)
 
 	msg.From = suite.address.Hex()
 	err = msg.Sign(ethtypes.LatestSignerForChainID(suite.app.EvmKeeper.ChainID()), suite.signer)
