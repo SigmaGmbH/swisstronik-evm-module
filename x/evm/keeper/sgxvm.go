@@ -11,6 +11,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm/types"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -22,13 +24,17 @@ import (
 // so that it can implement and call the StateDB methods without receiving it as a function
 // parameter.
 func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgHandleTx) (*types.MsgEthereumTxResponse, error) {
+	var (
+		err error
+	)
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	tx := msg.AsTransaction()
 	txIndex := k.GetTxIndexTransient(ctx)
 
-	sender, decodingError := hexutil.Decode(msg.From)
-	if decodingError != nil {
-		return nil, decodingError
+	sender, err := hexutil.Decode(msg.From)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "cannot decode transaction sender")
 	}
 
 	labels := []metrics.Label{
@@ -51,6 +57,10 @@ func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgHandleTx) (*types
 		destination = tx.To().Bytes()
 	}
 
+	txContext, err := createSGXVMConfig(ctx, k, tx)
+	if err != nil {
+		return nil, err
+	}
 	execResult, execError := librustgo.HandleTx(
 		connector,
 		sender,
@@ -58,6 +68,7 @@ func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgHandleTx) (*types
 		tx.Data(),
 		tx.Value().Bytes(),
 		tx.Gas(),
+		txContext,
 	)
 	if execError != nil {
 		return nil, errorsmod.Wrap(execError, "failed to apply transaction")
@@ -169,4 +180,22 @@ func logTopicsToStringArray(topics []*librustgo.Topic) []string {
 		stringTopics = append(stringTopics, common.BytesToHash(topic.Inner).String())
 	}
 	return stringTopics
+}
+
+func createSGXVMConfig(ctx sdk.Context, k *Keeper, tx *ethtypes.Transaction) (*librustgo.TransactionContext, error) {
+	cfg, err := k.EVMConfig(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress), k.eip155ChainID)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "failed to load evm config")
+	}
+
+	return &librustgo.TransactionContext{
+		BlockCoinbase:      cfg.CoinBase.Bytes(),
+		BlockNumber:        uint64(ctx.BlockHeight()),
+		BlockBaseFeePerGas: cfg.BaseFee.Bytes(),
+		Timestamp:          uint64(ctx.BlockHeader().Time.Unix()),
+		BlockGasLimit:      ethermint.BlockGasLimit(ctx),
+		ChainId:            k.eip155ChainID.Uint64(),
+		GasPrice:           tx.GasPrice().Bytes(),
+		BlockHash:          common.Hash{}.Bytes(), // TODO: Decide if we need this field
+	}, nil
 }

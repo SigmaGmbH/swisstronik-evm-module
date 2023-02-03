@@ -96,6 +96,8 @@ github.com/SigmaGmbH/librustgo v0.0.0-20230203121238-ea650aeb8b73 h1:X4yv7DmDAPo
 github.com/SigmaGmbH/librustgo v0.0.0-20230203121238-ea650aeb8b73/go.mod h1:ugppH+kBiV2tLpb+pfi4Jggz+demVTLQDL8Tj3+vuVI=
 github.com/SigmaGmbH/librustgo v0.0.0-20230203122515-f3e0c3c6b553 h1:xPuvl/7U9ft0G49YOAx2Dw5hKi4OZDHvlXI6V482W/w=
 github.com/SigmaGmbH/librustgo v0.0.0-20230203122515-f3e0c3c6b553/go.mod h1:ugppH+kBiV2tLpb+pfi4Jggz+demVTLQDL8Tj3+vuVI=
+github.com/SigmaGmbH/librustgo v0.0.0-20230203165242-198305131c3d h1:QHpBbqwKS+0YA9vzeXzuX5C/Zorlxw2Cj2f1CFkTOho=
+github.com/SigmaGmbH/librustgo v0.0.0-20230203165242-198305131c3d/go.mod h1:ugppH+kBiV2tLpb+pfi4Jggz+demVTLQDL8Tj3+vuVI=
 github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 h1:fLjPD/aNc3UIOA6tDi6QXUemppXK3P9BI7mr2hd6gx8=
 github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6/go.mod h1:3eOhrUMpNV+6aFIbp5/iudMxNCF27Vw2OZgy4xEx0Fg=
 github.com/VictoriaMetrics/fastcache v1.6.0 h1:C/3Oi3EiBCqufydp1neRZkqcwmEiuRT9c3fqvvgKm5o=
