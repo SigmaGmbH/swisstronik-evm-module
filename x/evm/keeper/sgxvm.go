@@ -13,9 +13,11 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	ethermint "github.com/evmos/ethermint/types"
+	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/evmos/ethermint/x/evm/types"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
+	"math/big"
 	"strconv"
 )
 
@@ -46,7 +48,7 @@ func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgHandleTx) (*types
 		labels = append(labels, telemetry.NewLabel("execution", "call"))
 	}
 
-	response, err := k.ApplySGXVMTransaction(ctx, tx, sender)
+	response, err := k.ApplySGXVMTransaction(ctx, tx, sender, txIndex)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "failed to apply transaction")
 	}
@@ -143,30 +145,37 @@ func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgHandleTx) (*types
 	return response, nil
 }
 
-func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction, sender []byte) (*types.MsgEthereumTxResponse, error) {
-	var (
-		err error
-	)
-
+func (k *Keeper) ApplySGXVMTransaction(
+	ctx sdk.Context,
+	tx *ethtypes.Transaction,
+	sender []byte,
+	txIndex uint64,
+) (*types.MsgEthereumTxResponse, error) {
 	// TODO: Copy implementation from ApplyTransaction
-
-	// Convert `to` field to bytes
-	var destination []byte
-	if tx.To() != nil {
-		destination = tx.To().Bytes()
-	}
-
-	connector := Connector{
-		Ctx:    ctx,
-		Keeper: k,
-	}
+	var (
+		bloom        *big.Int
+		bloomReceipt ethtypes.Bloom
+		err          error
+	)
 
 	txContext, err := createSGXVMConfig(ctx, k, tx)
 	if err != nil {
 		return nil, err
 	}
 
-	response, err := librustgo.HandleTx(
+	// convert `to` field to bytes
+	var destination []byte
+	if tx.To() != nil {
+		destination = tx.To().Bytes()
+	}
+
+	// TODO: Add tmpCtx
+	connector := Connector{
+		Ctx:    ctx,
+		Keeper: k,
+	}
+
+	res, err := librustgo.HandleTx(
 		connector,
 		sender,
 		destination,
@@ -178,18 +187,13 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 	if err != nil {
 		return nil, err
 	}
-}
 
-func logTopicsToStringArray(topics []*librustgo.Topic) []string {
-	var stringTopics []string
-	for _, topic := range topics {
-		stringTopics = append(stringTopics, common.BytesToHash(topic.Inner).String())
-	}
-	return stringTopics
+	txConfig := k.TxConfig(ctx, tx.Hash())
+	logs := SGXVMLogsToEthereum(res.Logs, tx, txConfig, txContext.BlockNumber)
 }
 
 func createSGXVMConfig(ctx sdk.Context, k *Keeper, tx *ethtypes.Transaction) (*librustgo.TransactionContext, error) {
-	cfg, err := k.EVMConfig(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress), k.eip155ChainID)
+	cfg, err := k.EVMConfig(ctx, ctx.BlockHeader().ProposerAddress, k.eip155ChainID)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "failed to load evm config")
 	}
@@ -204,4 +208,32 @@ func createSGXVMConfig(ctx sdk.Context, k *Keeper, tx *ethtypes.Transaction) (*l
 		GasPrice:           tx.GasPrice().Bytes(),
 		BlockHash:          common.Hash{}.Bytes(), // TODO: Decide if we need this field
 	}, nil
+}
+
+// SGXVMLogsToEthereum converts logs from SGXVM to ethereum format
+func SGXVMLogsToEthereum(logs []*librustgo.Log, tx *ethtypes.Transaction, txConfig statedb.TxConfig, blockNumber uint64) []*ethtypes.Log {
+	var ethLogs []*ethtypes.Log
+	for i := range logs {
+		ethLogs = append(ethLogs, SGXVMLogToEthereum(logs[i], tx, txConfig, blockNumber))
+	}
+	return ethLogs
+}
+
+func SGXVMLogToEthereum(log *librustgo.Log, tx *ethtypes.Transaction, txConfig statedb.TxConfig, blockNumber uint64) *ethtypes.Log {
+	var topics []common.Hash
+	for _, topic := range log.Topics {
+		topics = append(topics, common.BytesToHash(topic.Inner))
+	}
+
+	return &ethtypes.Log{
+		Address:     common.BytesToAddress(log.Address),
+		Topics:      topics,
+		Data:        log.Data,
+		BlockNumber: blockNumber,
+		TxHash:      tx.Hash(),
+		TxIndex:     txConfig.TxIndex,
+		BlockHash:   txConfig.BlockHash,
+		Index:       txConfig.LogIndex,
+		Removed:     false,
+	}
 }
