@@ -504,7 +504,7 @@ func (suite *EvmTestSuite) TestErrorWhenDeployContract() {
 
 	_ = proto.Unmarshal(result.Data, &res)
 
-	suite.Require().Equal("evm error: InvalidCode(Opcode(166))", res.VmError, "correct evm error")
+	suite.Require().Equal("invalid opcode: opcode 0xa6 not defined", res.VmError, "correct evm error")
 
 	// TODO: snapshot checking
 }

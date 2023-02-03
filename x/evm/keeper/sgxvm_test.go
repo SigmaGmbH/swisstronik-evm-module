@@ -12,7 +12,7 @@ import (
 func (suite *KeeperTestSuite) TestNativeCurrencyTransfer() {
 	var (
 		err             error
-		msg             *types.MsgEthereumTx
+		msg             *types.MsgHandleTx
 		signer          ethtypes.Signer
 		vmdb            *statedb.StateDB
 		chainCfg        *params.ChainConfig
@@ -29,7 +29,7 @@ func (suite *KeeperTestSuite) TestNativeCurrencyTransfer() {
 			"Transfer funds tx",
 			func() {
 				transferAmount = 1000
-				msg, _, err = newEthMsgTx(
+				msg, _, err = newHandleMsgTx(
 					vmdb.GetNonce(suite.address),
 					suite.ctx.BlockHeight(),
 					suite.address,
@@ -51,7 +51,7 @@ func (suite *KeeperTestSuite) TestNativeCurrencyTransfer() {
 			func() {
 				transferAmount = 1000
 				wrongAmount := int64(100000)
-				msg, _, err = newEthMsgTx(
+				msg, _, err = newHandleMsgTx(
 					vmdb.GetNonce(suite.address),
 					suite.ctx.BlockHeight(),
 					suite.address,
