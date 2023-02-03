@@ -46,32 +46,9 @@ func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgHandleTx) (*types
 		labels = append(labels, telemetry.NewLabel("execution", "call"))
 	}
 
-	// TODO: librustgo should accept all types of txs, such as LegacyTx, EIP1159, EIP2930 tx.
-	// TODO: Need to check it in tests
-	connector := Connector{
-		Ctx:    ctx,
-		Keeper: k,
-	}
-	var destination []byte
-	if tx.To() != nil {
-		destination = tx.To().Bytes()
-	}
-
-	txContext, err := createSGXVMConfig(ctx, k, tx)
+	response, err := k.ApplySGXVMTransaction(ctx, tx, sender)
 	if err != nil {
-		return nil, err
-	}
-	execResult, execError := librustgo.HandleTx(
-		connector,
-		sender,
-		destination,
-		tx.Data(),
-		tx.Value().Bytes(),
-		tx.Gas(),
-		txContext,
-	)
-	if execError != nil {
-		return nil, errorsmod.Wrap(execError, "failed to apply transaction")
+		return nil, errorsmod.Wrap(err, "failed to apply transaction")
 	}
 
 	defer func() {
@@ -81,17 +58,17 @@ func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgHandleTx) (*types
 			labels,
 		)
 
-		if execResult.GasUsed != 0 {
+		if response.GasUsed != 0 {
 			telemetry.IncrCounterWithLabels(
 				[]string{"tx", "msg", "ethereum_tx", "gas_used", "total"},
-				float32(execResult.GasUsed),
+				float32(response.GasUsed),
 				labels,
 			)
 
 			// Observe which users define a gas limit >> gas used. Note, that
 			// gas_limit and gas_used are always > 0
 			gasLimit := sdk.NewDec(int64(tx.Gas()))
-			gasRatio, err := gasLimit.QuoInt64(int64(execResult.GasUsed)).Float64()
+			gasRatio, err := gasLimit.QuoInt64(int64(response.GasUsed)).Float64()
 			if err == nil {
 				telemetry.SetGaugeWithLabels(
 					[]string{"tx", "msg", "ethereum_tx", "gas_limit", "per", "gas_used"},
@@ -109,7 +86,7 @@ func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgHandleTx) (*types
 		// add event for index of valid ethereum tx
 		sdk.NewAttribute(types.AttributeKeyTxIndex, strconv.FormatUint(txIndex, 10)),
 		// add event for eth tx gas used, we can't get it from cosmos tx result when it contains multiple eth tx msgs.
-		sdk.NewAttribute(types.AttributeKeyTxGasUsed, strconv.FormatUint(execResult.GasUsed, 10)),
+		sdk.NewAttribute(types.AttributeKeyTxGasUsed, strconv.FormatUint(response.GasUsed, 10)),
 	}
 
 	if len(ctx.TxBytes()) > 0 {
@@ -122,12 +99,12 @@ func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgHandleTx) (*types
 		attrs = append(attrs, sdk.NewAttribute(types.AttributeKeyRecipient, to.Hex()))
 	}
 
-	if execResult.VmError != "" {
-		attrs = append(attrs, sdk.NewAttribute(types.AttributeKeyEthereumTxFailed, execResult.VmError))
+	if response.Failed() {
+		attrs = append(attrs, sdk.NewAttribute(types.AttributeKeyEthereumTxFailed, response.VmError))
 	}
 
-	txLogAttrs := make([]sdk.Attribute, len(execResult.Logs))
-	for i, log := range execResult.Logs {
+	txLogAttrs := make([]sdk.Attribute, len(response.Logs))
+	for i, log := range response.Logs {
 		value, err := json.Marshal(log)
 		if err != nil {
 			return nil, errorsmod.Wrap(err, "failed to encode log")
@@ -153,24 +130,54 @@ func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgHandleTx) (*types
 		),
 	})
 
-	logs := make([]*types.Log, len(execResult.Logs))
-	for i, log := range execResult.Logs {
+	logs := make([]*types.Log, len(response.Logs))
+	for i, log := range response.Logs {
 		protoLog := &types.Log{
-			Address: common.BytesToAddress(log.Address).String(),
-			Topics:  logTopicsToStringArray(log.Topics),
+			Address: log.Address,
+			Topics:  log.Topics,
 			Data:    log.Data,
 		}
 		logs[i] = protoLog
 	}
 
-	response := &types.MsgEthereumTxResponse{
-		Hash:    tx.Hash().String(), // TODO: Maybe we should cache tx.Hash somewhere
-		Logs:    logs,
-		Ret:     execResult.Ret,
-		VmError: execResult.VmError,
-		GasUsed: execResult.GasUsed,
-	}
 	return response, nil
+}
+
+func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction, sender []byte) (*types.MsgEthereumTxResponse, error) {
+	var (
+		err error
+	)
+
+	// TODO: Copy implementation from ApplyTransaction
+
+	// Convert `to` field to bytes
+	var destination []byte
+	if tx.To() != nil {
+		destination = tx.To().Bytes()
+	}
+
+	connector := Connector{
+		Ctx:    ctx,
+		Keeper: k,
+	}
+
+	txContext, err := createSGXVMConfig(ctx, k, tx)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := librustgo.HandleTx(
+		connector,
+		sender,
+		destination,
+		tx.Data(),
+		tx.Value().Bytes(),
+		tx.Gas(),
+		txContext,
+	)
+	if err != nil {
+		return nil, err
+	}
 }
 
 func logTopicsToStringArray(topics []*librustgo.Topic) []string {
