@@ -9,6 +9,7 @@ import (
 	"github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/evmos/ethermint/x/evm/types"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
@@ -145,8 +146,8 @@ func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgEthereumTx) (*typ
 	logs := make([]*types.Log, len(execResult.Logs))
 	for i, log := range execResult.Logs {
 		protoLog := &types.Log{
-			Address: log.Address,
-			Topics:  log.Topics,
+			Address: common.BytesToAddress(log.Address).String(),
+			Topics:  logTopicsToStringArray(log.Topics),
 			Data:    log.Data,
 		}
 		logs[i] = protoLog
@@ -160,4 +161,12 @@ func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgEthereumTx) (*typ
 		GasUsed: execResult.GasUsed,
 	}
 	return response, nil
+}
+
+func logTopicsToStringArray(topics []*librustgo.Topic) []string {
+	var stringTopics []string
+	for _, topic := range topics {
+		stringTopics = append(stringTopics, common.BytesToHash(topic.Inner).String())
+	}
+	return stringTopics
 }
