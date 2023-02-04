@@ -174,7 +174,7 @@ func (suite *EvmTestSuite) TestHandleMsgHandleTx() {
 			true,
 		},
 		{
-			"insufficient balance",
+			"insufficient balance", // FIXME: Fix this test case
 			func() {
 				tx = types.NewSGXVMTxContract(suite.chainID, 0, big.NewInt(100), 0, big.NewInt(10000), nil, nil, nil, nil)
 				suite.SignSGXVMTx(tx)
@@ -500,6 +500,7 @@ func (suite *EvmTestSuite) deploySGXVMERC20Contract() common.Address {
 	return crypto.CreateAddress(suite.from, nonce)
 }
 
+// FIXME: Restore this test
 // TestERC20TransferReverted checks:
 // - when transaction reverted, gas refund works.
 // - when transaction reverted, nonce is still increased.

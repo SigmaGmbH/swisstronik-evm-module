@@ -243,6 +243,7 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 		Ret:     res.Ret,
 		GasUsed: res.GasUsed,
 		Logs:    types.NewLogsFromEth(logs),
+		VmError: res.VmError,
 	}
 
 	if res.VmError != "" {
