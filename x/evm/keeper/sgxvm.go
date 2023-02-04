@@ -237,21 +237,29 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 		TransactionIndex:  txConfig.TxIndex,
 	}
 
+	// Construct transaction response
+	txResponse := &types.MsgEthereumTxResponse{
+		Hash:    tx.Hash().String(),
+		Ret:     res.Ret,
+		GasUsed: res.GasUsed,
+		Logs:    types.NewLogsFromEth(logs),
+	}
+
 	if res.VmError != "" {
 		receipt.Status = ethtypes.ReceiptStatusSuccessful
 		// Only call hooks if tx executed successfully.
 		if err = k.PostTxProcessing(tmpCtx, msg, receipt); err != nil {
 			// If hooks return error, revert the whole tx.
-			res.VmError = types.ErrPostTxProcessing.Error()
+			txResponse.VmError = types.ErrPostTxProcessing.Error()
 			k.Logger(ctx).Error("tx post processing failed", "error", err)
 
 			// If the tx failed in post-processing hooks, we should clear the logs
-			res.Logs = nil
+			txResponse.Logs = nil
 		} else if commit != nil {
 			// PostTxProcessing is successful, commit the tmpCtx
 			commit()
 			// Since the post-processing can alter the log, we need to update the result
-			//res.Logs = types.NewLogsFromEth(receipt.Logs) // TODO: Handle incompatible types of Ethermint's log and our log
+			txResponse.Logs = types.NewLogsFromEth(receipt.Logs) // TODO: Handle incompatible types of Ethermint's log and our log
 			ctx.EventManager().EmitEvents(tmpCtx.EventManager().Events())
 		}
 	}
@@ -271,7 +279,7 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 
 	// reset the gas meter for current cosmos transaction
 	k.ResetGasMeterAndConsumeGas(ctx, totalGasUsed)
-	return res, nil
+	return txResponse, nil
 }
 
 func createSGXVMConfig(ctx sdk.Context, k *Keeper, tx *ethtypes.Transaction) (*librustgo.TransactionContext, error) {
