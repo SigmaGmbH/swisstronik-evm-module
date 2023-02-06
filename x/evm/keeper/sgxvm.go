@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/params"
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/evmos/ethermint/x/evm/types"
@@ -304,6 +305,96 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 	return txResponse, nil
 }
 
+func (k *Keeper) ApplySGXVMMessage(
+	ctx sdk.Context,
+	msg core.Message,
+	commit bool,
+	cfg *statedb.EVMConfig,
+	txConfig statedb.TxConfig,
+	txContext *librustgo.TransactionContext,
+) (*types.MsgEthereumTxResponse, error) {
+	// convert `to` field to bytes
+	var destination []byte
+	if msg.To() != nil {
+		destination = msg.To().Bytes()
+	}
+
+	stateDB := statedb.New(ctx, k, txConfig) // TODO: Use stateDB to be able to revert changes
+	leftoverGas := msg.Gas()
+	contractCreation := msg.To() == nil
+	intrinsicGas, err := k.GetEthIntrinsicGas(ctx, msg, cfg.ChainConfig, contractCreation)
+	if err != nil {
+		// should have already been checked on Ante Handler
+		return nil, errorsmod.Wrap(err, "intrinsic gas failed")
+	}
+
+	// Should check again even if it is checked on Ante Handler, because eth_call don't go through Ante Handler.
+	if leftoverGas < intrinsicGas {
+		// eth_estimateGas will check for this exact error
+		return nil, errorsmod.Wrap(core.ErrIntrinsicGas, "apply message")
+	}
+	leftoverGas -= intrinsicGas
+
+	connector := Connector{
+		Ctx:    ctx,
+		Keeper: k,
+	}
+
+	res, err := librustgo.HandleTx(
+		connector,
+		msg.From().Bytes(),
+		destination,
+		msg.Data(),
+		msg.Value().Bytes(),
+		leftoverGas,
+		txContext,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// calculate gas refund
+	if msg.Gas() < leftoverGas {
+		return nil, errorsmod.Wrap(types.ErrGasOverflow, "apply message")
+	}
+	// refund gas
+	temporaryGasUsed := msg.Gas() - leftoverGas
+	refundQuotient := params.RefundQuotientEIP3529
+	leftoverGas += GasToRefund(stateDB.GetRefund(), temporaryGasUsed, refundQuotient) // TODO: Check how to obtain gasToRefund from SGXVM
+
+	// TODO: Check how to revert state if case of revert
+	// The dirty states in `StateDB` is either committed or discarded after return
+	if commit {
+		if err := stateDB.Commit(); err != nil {
+			return nil, errorsmod.Wrap(err, "failed to commit stateDB")
+		}
+	}
+
+	// calculate a minimum amount of gas to be charged to sender if GasLimit
+	// is considerably higher than GasUsed to stay more aligned with Tendermint gas mechanics
+	// for more info https://github.com/evmos/ethermint/issues/1085
+	gasLimit := sdk.NewDec(int64(msg.Gas()))
+	minGasMultiplier := k.GetMinGasMultiplier(ctx)
+	minimumGasUsed := gasLimit.Mul(minGasMultiplier)
+
+	if msg.Gas() < leftoverGas {
+		return nil, errorsmod.Wrapf(types.ErrGasOverflow, "message gas limit < leftover gas (%d < %d)", msg.Gas(), leftoverGas)
+	}
+
+	gasUsed := sdk.MaxDec(minimumGasUsed, sdk.NewDec(int64(temporaryGasUsed))).TruncateInt().Uint64()
+	// reset leftoverGas, to be used by the tracer
+	leftoverGas = msg.Gas() - gasUsed
+
+	logs := SGXVMLogsToEthereum_NEW(res.Logs, txConfig, txContext.BlockNumber)
+	return &types.MsgEthereumTxResponse{
+		GasUsed: gasUsed,
+		VmError: res.VmError,
+		Ret:     res.Ret,
+		Logs:    types.NewLogsFromEth(logs),
+		Hash:    txConfig.TxHash.Hex(),
+	}, nil
+}
+
 func createSGXVMConfig(ctx sdk.Context, k *Keeper, tx *ethtypes.Transaction) (*librustgo.TransactionContext, error) {
 	cfg, err := k.EVMConfig(ctx, ctx.BlockHeader().ProposerAddress, k.eip155ChainID)
 	if err != nil {
@@ -329,6 +420,34 @@ func SGXVMLogsToEthereum(logs []*librustgo.Log, tx *ethtypes.Transaction, txConf
 		ethLogs = append(ethLogs, SGXVMLogToEthereum(logs[i], tx, txConfig, blockNumber))
 	}
 	return ethLogs
+}
+
+// SGXVMLogsToEthereum converts logs from SGXVM to ethereum format
+func SGXVMLogsToEthereum_NEW(logs []*librustgo.Log, txConfig statedb.TxConfig, blockNumber uint64) []*ethtypes.Log {
+	var ethLogs []*ethtypes.Log
+	for i := range logs {
+		ethLogs = append(ethLogs, SGXVMLogToEthereum_NEW(logs[i], txConfig, blockNumber))
+	}
+	return ethLogs
+}
+
+func SGXVMLogToEthereum_NEW(log *librustgo.Log, txConfig statedb.TxConfig, blockNumber uint64) *ethtypes.Log {
+	var topics []common.Hash
+	for _, topic := range log.Topics {
+		topics = append(topics, common.BytesToHash(topic.Inner))
+	}
+
+	return &ethtypes.Log{
+		Address:     common.BytesToAddress(log.Address),
+		Topics:      topics,
+		Data:        log.Data,
+		BlockNumber: blockNumber,
+		TxHash:      txConfig.TxHash,
+		TxIndex:     txConfig.TxIndex,
+		BlockHash:   txConfig.BlockHash,
+		Index:       txConfig.LogIndex,
+		Removed:     false,
+	}
 }
 
 func SGXVMLogToEthereum(log *librustgo.Log, tx *ethtypes.Transaction, txConfig statedb.TxConfig, blockNumber uint64) *ethtypes.Log {
