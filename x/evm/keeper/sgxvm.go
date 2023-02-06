@@ -150,6 +150,7 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 	)
 
 	cfg, err := k.EVMConfig(ctx, ctx.BlockHeader().ProposerAddress, k.eip155ChainID)
+	txConfig := k.TxConfig(ctx, tx.Hash())
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "failed to load evm config")
 	}
@@ -164,12 +165,6 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 	txContext, err := createSGXVMConfig(ctx, k, tx)
 	if err != nil {
 		return nil, err
-	}
-
-	// convert `to` field to bytes
-	var destination []byte
-	if msg.To() != nil {
-		destination = msg.To().Bytes()
 	}
 
 	// Check if there is enough gas limit for intrinsic gas
@@ -198,26 +193,12 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 		tmpCtx, commit = ctx.CacheContext()
 	}
 
-	connector := Connector{
-		Ctx:    tmpCtx,
-		Keeper: k,
-	}
-
-	res, err := librustgo.HandleTx(
-		connector,
-		msg.From().Bytes(),
-		destination,
-		msg.Data(),
-		msg.Value().Bytes(),
-		leftoverGas,
-		txContext,
-	)
+	res, err := k.ApplySGXVMMessage(ctx, msg, true, cfg, txConfig, txContext)
 	if err != nil {
-		return nil, err
+		return nil, errorsmod.Wrap(err, "failed to apply ethereum core message")
 	}
 
-	txConfig := k.TxConfig(ctx, tx.Hash())
-	logs := SGXVMLogsToEthereum(res.Logs, tx, txConfig, txContext.BlockNumber)
+	logs := types.LogsToEthereum(res.Logs)
 
 	// Compute block bloom filter
 	if len(logs) > 0 {
@@ -254,30 +235,21 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 		TransactionIndex:  txConfig.TxIndex,
 	}
 
-	// Construct transaction response
-	txResponse := &types.MsgEthereumTxResponse{
-		Hash:    tx.Hash().String(),
-		Ret:     res.Ret,
-		GasUsed: res.GasUsed,
-		Logs:    types.NewLogsFromEth(logs),
-		VmError: res.VmError,
-	}
-
-	if res.VmError == "" {
+	if !res.Failed() {
 		receipt.Status = ethtypes.ReceiptStatusSuccessful
 		// Only call hooks if tx executed successfully.
 		if err = k.PostTxProcessing(tmpCtx, msg, receipt); err != nil {
 			// If hooks return error, revert the whole tx.
-			txResponse.VmError = types.ErrPostTxProcessing.Error()
+			res.VmError = types.ErrPostTxProcessing.Error()
 			k.Logger(ctx).Error("tx post processing failed", "error", err)
 
 			// If the tx failed in post-processing hooks, we should clear the logs
-			txResponse.Logs = nil
+			res.Logs = nil
 		} else if commit != nil {
 			// PostTxProcessing is successful, commit the tmpCtx
 			commit()
 			// Since the post-processing can alter the log, we need to update the result
-			txResponse.Logs = types.NewLogsFromEth(receipt.Logs)
+			res.Logs = types.NewLogsFromEth(receipt.Logs)
 			ctx.EventManager().EmitEvents(tmpCtx.EventManager().Events())
 		}
 	}
@@ -302,7 +274,7 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 
 	// reset the gas meter for current cosmos transaction
 	k.ResetGasMeterAndConsumeGas(ctx, totalGasUsed)
-	return txResponse, nil
+	return res, nil
 }
 
 func (k *Keeper) ApplySGXVMMessage(
@@ -385,7 +357,7 @@ func (k *Keeper) ApplySGXVMMessage(
 	// reset leftoverGas, to be used by the tracer
 	leftoverGas = msg.Gas() - gasUsed
 
-	logs := SGXVMLogsToEthereum_NEW(res.Logs, txConfig, txContext.BlockNumber)
+	logs := SGXVMLogsToEthereum(res.Logs, txConfig, txContext.BlockNumber)
 	return &types.MsgEthereumTxResponse{
 		GasUsed: gasUsed,
 		VmError: res.VmError,
@@ -414,24 +386,15 @@ func createSGXVMConfig(ctx sdk.Context, k *Keeper, tx *ethtypes.Transaction) (*l
 }
 
 // SGXVMLogsToEthereum converts logs from SGXVM to ethereum format
-func SGXVMLogsToEthereum(logs []*librustgo.Log, tx *ethtypes.Transaction, txConfig statedb.TxConfig, blockNumber uint64) []*ethtypes.Log {
+func SGXVMLogsToEthereum(logs []*librustgo.Log, txConfig statedb.TxConfig, blockNumber uint64) []*ethtypes.Log {
 	var ethLogs []*ethtypes.Log
 	for i := range logs {
-		ethLogs = append(ethLogs, SGXVMLogToEthereum(logs[i], tx, txConfig, blockNumber))
+		ethLogs = append(ethLogs, SGXVMLogToEthereum(logs[i], txConfig, blockNumber))
 	}
 	return ethLogs
 }
 
-// SGXVMLogsToEthereum converts logs from SGXVM to ethereum format
-func SGXVMLogsToEthereum_NEW(logs []*librustgo.Log, txConfig statedb.TxConfig, blockNumber uint64) []*ethtypes.Log {
-	var ethLogs []*ethtypes.Log
-	for i := range logs {
-		ethLogs = append(ethLogs, SGXVMLogToEthereum_NEW(logs[i], txConfig, blockNumber))
-	}
-	return ethLogs
-}
-
-func SGXVMLogToEthereum_NEW(log *librustgo.Log, txConfig statedb.TxConfig, blockNumber uint64) *ethtypes.Log {
+func SGXVMLogToEthereum(log *librustgo.Log, txConfig statedb.TxConfig, blockNumber uint64) *ethtypes.Log {
 	var topics []common.Hash
 	for _, topic := range log.Topics {
 		topics = append(topics, common.BytesToHash(topic.Inner))
@@ -443,25 +406,6 @@ func SGXVMLogToEthereum_NEW(log *librustgo.Log, txConfig statedb.TxConfig, block
 		Data:        log.Data,
 		BlockNumber: blockNumber,
 		TxHash:      txConfig.TxHash,
-		TxIndex:     txConfig.TxIndex,
-		BlockHash:   txConfig.BlockHash,
-		Index:       txConfig.LogIndex,
-		Removed:     false,
-	}
-}
-
-func SGXVMLogToEthereum(log *librustgo.Log, tx *ethtypes.Transaction, txConfig statedb.TxConfig, blockNumber uint64) *ethtypes.Log {
-	var topics []common.Hash
-	for _, topic := range log.Topics {
-		topics = append(topics, common.BytesToHash(topic.Inner))
-	}
-
-	return &ethtypes.Log{
-		Address:     common.BytesToAddress(log.Address),
-		Topics:      topics,
-		Data:        log.Data,
-		BlockNumber: blockNumber,
-		TxHash:      tx.Hash(),
 		TxIndex:     txConfig.TxIndex,
 		BlockHash:   txConfig.BlockHash,
 		Index:       txConfig.LogIndex,
