@@ -208,7 +208,7 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 		destination,
 		msg.Data(),
 		msg.Value().Bytes(),
-		msg.Gas(),
+		leftoverGas,
 		txContext,
 	)
 	if err != nil {

@@ -517,19 +517,19 @@ func (suite *EvmTestSuite) TestSGXVMERC20TransferReverted() {
 			"no hooks",
 			intrinsicGas, // enough for intrinsicGas, but not enough for execution
 			nil,
-			"out of gas",
+			"evm error: OutOfGas",
 		},
 		{
 			"success hooks",
 			intrinsicGas, // enough for intrinsicGas, but not enough for execution
 			&DummyHook{},
-			"out of gas",
+			"evm error: OutOfGas",
 		},
 		{
 			"failure hooks",
 			1000000, // enough gas limit, but hooks fails.
 			&FailureHook{},
-			"failed to execute post processing",
+			"failed to execute post processing", // FIXME: Recover this test
 		},
 	}
 
@@ -585,7 +585,7 @@ func (suite *EvmTestSuite) TestSGXVMERC20TransferReverted() {
 
 			after := k.GetBalance(suite.ctx, suite.from)
 
-			if tc.expErr == "out of gas" {
+			if tc.expErr == "evm error: OutOfGas" {
 				suite.Require().Equal(tc.gasLimit, res.GasUsed)
 			} else {
 				suite.Require().Greater(tc.gasLimit, res.GasUsed)
