@@ -500,7 +500,6 @@ func (suite *EvmTestSuite) deploySGXVMERC20Contract() common.Address {
 	return crypto.CreateAddress(suite.from, nonce)
 }
 
-// FIXME: Restore this test
 // TestERC20TransferReverted checks:
 // - when transaction reverted, gas refund works.
 // - when transaction reverted, nonce is still increased.
@@ -529,7 +528,7 @@ func (suite *EvmTestSuite) TestSGXVMERC20TransferReverted() {
 			"failure hooks",
 			1000000, // enough gas limit, but hooks fails.
 			&FailureHook{},
-			"failed to execute post processing", // FIXME: Recover this test
+			"failed to execute post processing",
 		},
 	}
 
@@ -592,7 +591,7 @@ func (suite *EvmTestSuite) TestSGXVMERC20TransferReverted() {
 			}
 
 			// check gas refund works: only deducted fee for gas used, rather than gas limit.
-			suite.Require().Equal(new(big.Int).Mul(gasPrice, big.NewInt(int64(res.GasUsed))), new(big.Int).Sub(before, after)) // FIXME: Incorrect gas refund
+			suite.Require().Equal(new(big.Int).Mul(gasPrice, big.NewInt(int64(res.GasUsed))), new(big.Int).Sub(before, after))
 
 			// nonce should not be increased.
 			nonce2 := k.GetNonce(suite.ctx, suite.from)

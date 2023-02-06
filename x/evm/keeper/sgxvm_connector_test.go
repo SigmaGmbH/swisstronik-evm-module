@@ -54,7 +54,7 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 	timestamp := time.Now()
 
 	connector = evmkeeper.Connector{
-		Ctx:    suite.ctx.WithHeaderHash(headerHash.Bytes()).WithBlockTime(timestamp), // TODO: There is a problem with implicit copying of suite.ctx
+		Ctx:    suite.ctx.WithHeaderHash(headerHash.Bytes()).WithBlockTime(timestamp),
 		Keeper: suite.app.EvmKeeper,
 	}
 
