@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	ethermint "github.com/evmos/ethermint/types"
@@ -170,7 +171,22 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 		destination = msg.To().Bytes()
 	}
 
-	// snapshot to contain the tx processing and post processing in same scope
+	// Check if there is enough gas limit for intrinsic gas
+	isContractCreation := msg.To() == nil
+	intrinsicGas, err := k.GetEthIntrinsicGas(ctx, msg, cfg.ChainConfig, isContractCreation)
+	if err != nil {
+		// should have already been checked on Ante Handler
+		return nil, errorsmod.Wrap(err, "intrinsic gas failed")
+	}
+
+	leftoverGas := msg.Gas()
+	if leftoverGas < intrinsicGas {
+		// eth_estimateGas will check for this exact error
+		return nil, errorsmod.Wrap(core.ErrIntrinsicGas, "failed to apply message")
+	}
+	leftoverGas -= intrinsicGas
+
+	// snapshot to contain the tx processing and post-processing in same scope
 	var commit func()
 	tmpCtx := ctx
 	if k.hooks != nil {

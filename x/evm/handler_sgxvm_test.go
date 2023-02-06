@@ -174,7 +174,7 @@ func (suite *EvmTestSuite) TestHandleMsgHandleTx() {
 			true,
 		},
 		{
-			"insufficient balance", // FIXME: Fix this test case
+			"insufficient gas limit",
 			func() {
 				tx = types.NewSGXVMTxContract(suite.chainID, 0, big.NewInt(100), 0, big.NewInt(10000), nil, nil, nil, nil)
 				suite.SignSGXVMTx(tx)
