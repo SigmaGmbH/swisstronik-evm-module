@@ -262,7 +262,7 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 		VmError: res.VmError,
 	}
 
-	if res.VmError != "" {
+	if res.VmError == "" {
 		receipt.Status = ethtypes.ReceiptStatusSuccessful
 		// Only call hooks if tx executed successfully.
 		if err = k.PostTxProcessing(tmpCtx, msg, receipt); err != nil {
