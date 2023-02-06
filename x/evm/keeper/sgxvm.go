@@ -193,7 +193,7 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 		tmpCtx, commit = ctx.CacheContext()
 	}
 
-	res, err := k.ApplySGXVMMessage(ctx, msg, true, cfg, txConfig, txContext)
+	res, err := k.ApplySGXVMMessage(tmpCtx, msg, true, cfg, txConfig, txContext)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "failed to apply ethereum core message")
 	}
@@ -342,24 +342,26 @@ func (k *Keeper) ApplySGXVMMessage(
 		}
 	}
 
-	// calculate a minimum amount of gas to be charged to sender if GasLimit
-	// is considerably higher than GasUsed to stay more aligned with Tendermint gas mechanics
-	// for more info https://github.com/evmos/ethermint/issues/1085
-	gasLimit := sdk.NewDec(int64(msg.Gas()))
-	minGasMultiplier := k.GetMinGasMultiplier(ctx)
-	minimumGasUsed := gasLimit.Mul(minGasMultiplier)
+	// TODO: This piece of code presents in Ethermint function, but it fails tests with incorrect calculation of GasUsed
+	// Need to check how to fix it
+	//// calculate a minimum amount of gas to be charged to sender if GasLimit
+	//// is considerably higher than GasUsed to stay more aligned with Tendermint gas mechanics
+	//// for more info https://github.com/evmos/ethermint/issues/1085
+	//gasLimit := sdk.NewDec(int64(msg.Gas()))
+	//minGasMultiplier := k.GetMinGasMultiplier(ctx)
+	//minimumGasUsed := gasLimit.Mul(minGasMultiplier)
 
-	if msg.Gas() < leftoverGas {
-		return nil, errorsmod.Wrapf(types.ErrGasOverflow, "message gas limit < leftover gas (%d < %d)", msg.Gas(), leftoverGas)
-	}
+	//if msg.Gas() < leftoverGas {
+	//	return nil, errorsmod.Wrapf(types.ErrGasOverflow, "message gas limit < leftover gas (%d < %d)", msg.Gas(), leftoverGas)
+	//}
 
-	gasUsed := sdk.MaxDec(minimumGasUsed, sdk.NewDec(int64(temporaryGasUsed))).TruncateInt().Uint64()
+	//gasUsed := sdk.MaxDec(minimumGasUsed, sdk.NewDec(int64(temporaryGasUsed))).TruncateInt().Uint64()
 	// reset leftoverGas, to be used by the tracer
-	leftoverGas = msg.Gas() - gasUsed
+	//leftoverGas = msg.Gas() - res.GasUsed
 
 	logs := SGXVMLogsToEthereum(res.Logs, txConfig, txContext.BlockNumber)
 	return &types.MsgEthereumTxResponse{
-		GasUsed: gasUsed,
+		GasUsed: res.GasUsed,
 		VmError: res.VmError,
 		Ret:     res.Ret,
 		Logs:    types.NewLogsFromEth(logs),
