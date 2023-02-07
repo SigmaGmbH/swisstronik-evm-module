@@ -364,7 +364,6 @@ func createSGXVMConfig(ctx sdk.Context, k *Keeper, tx *ethtypes.Transaction) (*l
 		BlockGasLimit:      ethermint.BlockGasLimit(ctx),
 		ChainId:            k.eip155ChainID.Uint64(),
 		GasPrice:           tx.GasPrice().Bytes(),
-		BlockHash:          common.Hash{}.Bytes(), // TODO: Decide if we need this field
 	}, nil
 }
 
