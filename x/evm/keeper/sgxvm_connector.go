@@ -197,7 +197,6 @@ func (q Connector) GetAccountCode(req *librustgo.CosmosRequest_AccountCode) ([]b
 func (q Connector) InsertAccount(req *librustgo.CosmosRequest_InsertAccount) ([]byte, error) {
 	println("Connector::Query Request to insert account code")
 	ethAddress := common.BytesToAddress(req.InsertAccount.Address)
-	account := q.Keeper.GetAccountWithoutBalance(q.Ctx, ethAddress)
 
 	balance := &big.Int{}
 	balance.SetBytes(req.InsertAccount.Balance)
@@ -205,26 +204,8 @@ func (q Connector) InsertAccount(req *librustgo.CosmosRequest_InsertAccount) ([]
 	nonce := &big.Int{}
 	nonce.SetBytes(req.InsertAccount.Nonce)
 
-	println("Insert balance: ", balance.String(), ", To address: ", ethAddress.String(), "\n")
-
-	var accountData statedb.Account
-	if account == nil {
-		accountData = statedb.Account{
-			Nonce:    nonce.Uint64(),
-			Balance:  balance,
-			CodeHash: nil,
-		}
-	} else {
-		accountData = statedb.Account{
-			Nonce:    nonce.Uint64(),
-			Balance:  balance,
-			CodeHash: account.CodeHash,
-		}
-	}
-
-	if err := q.Keeper.SetAccount(q.Ctx, ethAddress, accountData); err != nil {
-		return nil, errorsmod.Wrap(err, "Cannot set account")
-	}
+	q.StateDB.SetBalance(ethAddress, balance)
+	q.StateDB.SetNonce(ethAddress, nonce.Uint64())
 
 	return proto.Marshal(&librustgo.QueryInsertAccountResponse{})
 }

@@ -66,11 +66,16 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 		{
 			"Should be able to insert account",
 			func() {
+				var err error
+
 				addressToSet := common.BigToAddress(big.NewInt(rand.Int63n(100000)))
 				balanceToSet := big.NewInt(10000)
 				nonceToSet := big.NewInt(1)
 
-				err := insertAccount(&connector, addressToSet, balanceToSet, nonceToSet)
+				err = insertAccount(&connector, addressToSet, balanceToSet, nonceToSet)
+				suite.Require().NoError(err)
+
+				err = connector.StateDB.Commit()
 				suite.Require().NoError(err)
 
 				// Check if account was inserted correctly
@@ -150,16 +155,18 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 		{
 			"Should be able to set account code",
 			func() {
+				var err error
+
 				// Arrange
 				addressToSet := common.BigToAddress(big.NewInt(rand.Int63n(100000)))
 				bytecode := make([]byte, 32)
 				rand.Read(bytecode)
 
-				err := insertAccount(&connector, addressToSet, big.NewInt(0), big.NewInt(1))
+				err = insertAccount(&connector, addressToSet, big.NewInt(0), big.NewInt(1))
 				suite.Require().NoError(err)
 
 				// Encode request
-				request, encodeErr := proto.Marshal(&librustgo.CosmosRequest{
+				request, err := proto.Marshal(&librustgo.CosmosRequest{
 					Req: &librustgo.CosmosRequest_InsertAccountCode{
 						InsertAccountCode: &librustgo.QueryInsertAccountCode{
 							Address: addressToSet.Bytes(),
@@ -167,11 +174,15 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 						},
 					},
 				})
-				suite.Require().NoError(encodeErr)
+				suite.Require().NoError(err)
 
 				// Make a query
-				_, queryErr := connector.Query(request)
-				suite.Require().NoError(queryErr)
+				_, err = connector.Query(request)
+				suite.Require().NoError(err)
+
+				// Commit changes
+				err = connector.StateDB.Commit()
+				suite.Require().NoError(err)
 
 				// Check if account code was set correctly
 				codeHash := crypto.Keccak256(bytecode)
