@@ -5,7 +5,7 @@ go 1.19
 require (
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0-beta.4
-	github.com/SigmaGmbH/librustgo v0.0.0-20230203165242-198305131c3d
+	github.com/SigmaGmbH/librustgo v0.0.0-20230207160645-f424a52ff4e1
 	github.com/armon/go-metrics v0.4.1
 	github.com/btcsuite/btcd v0.22.1
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
@@ -181,7 +181,7 @@ require (
 	golang.org/x/mod v0.7.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.4.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/term v0.4.0 // indirect
 	golang.org/x/tools v0.5.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect

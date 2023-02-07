@@ -98,6 +98,8 @@ github.com/SigmaGmbH/librustgo v0.0.0-20230203122515-f3e0c3c6b553 h1:xPuvl/7U9ft
 github.com/SigmaGmbH/librustgo v0.0.0-20230203122515-f3e0c3c6b553/go.mod h1:ugppH+kBiV2tLpb+pfi4Jggz+demVTLQDL8Tj3+vuVI=
 github.com/SigmaGmbH/librustgo v0.0.0-20230203165242-198305131c3d h1:QHpBbqwKS+0YA9vzeXzuX5C/Zorlxw2Cj2f1CFkTOho=
 github.com/SigmaGmbH/librustgo v0.0.0-20230203165242-198305131c3d/go.mod h1:ugppH+kBiV2tLpb+pfi4Jggz+demVTLQDL8Tj3+vuVI=
+github.com/SigmaGmbH/librustgo v0.0.0-20230207160645-f424a52ff4e1 h1:vt0q4a3sHL3hus5VISQlT1wyJVgySq4LTJ4ga9THW6s=
+github.com/SigmaGmbH/librustgo v0.0.0-20230207160645-f424a52ff4e1/go.mod h1:ugppH+kBiV2tLpb+pfi4Jggz+demVTLQDL8Tj3+vuVI=
 github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 h1:fLjPD/aNc3UIOA6tDi6QXUemppXK3P9BI7mr2hd6gx8=
 github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6/go.mod h1:3eOhrUMpNV+6aFIbp5/iudMxNCF27Vw2OZgy4xEx0Fg=
 github.com/VictoriaMetrics/fastcache v1.6.0 h1:C/3Oi3EiBCqufydp1neRZkqcwmEiuRT9c3fqvvgKm5o=
@@ -1326,6 +1328,8 @@ golang.org/x/sys v0.0.0-20220908164124-27713097b956/go.mod h1:oPkhp1MJrh7nUepCBc
 golang.org/x/sys v0.0.0-20221010170243-090e33056c14/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.4.0 h1:Zr2JFtRQNX3BCZ8YtxRE9hNJYC8J6I1MVbMg6owUp18=
 golang.org/x/sys v0.4.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.5.0 h1:MUK/U/4lj1t1oPg0HfuXDN/Z1wv31ZJ/YcPiGccS4DU=
+golang.org/x/sys v0.5.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/term v0.0.0-20201117132131-f5c789dd3221/go.mod h1:Nr5EML6q2oocZ2LXRh80K7BxOlk5/8JxuGnuhpl+muw=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/term v0.0.0-20210927222741-03fcf44c2211/go.mod h1:jbD1KX2456YbFQfuXm/mYQcufACuNUgVhRMnK/tPxf8=

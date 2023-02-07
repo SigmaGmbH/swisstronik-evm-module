@@ -57,15 +57,6 @@ func (q Connector) Query(req []byte) ([]byte, error) {
 	// Returns block hash
 	case *librustgo.CosmosRequest_BlockHash:
 		return q.BlockHash(request)
-	// Returns block timestamp
-	case *librustgo.CosmosRequest_BlockTimestamp:
-		return q.BlockTimestamp(request)
-	// Returns block number
-	case *librustgo.CosmosRequest_BlockNumber:
-		return q.BlockNumber(request)
-	// Returns chain id
-	case *librustgo.CosmosRequest_ChainId:
-		return q.ChainId(request)
 	}
 
 	return nil, errors.New("wrong query received")
@@ -132,27 +123,6 @@ func (q Connector) BlockHash(req *librustgo.CosmosRequest_BlockHash) ([]byte, er
 	println("Connector::Query BlockHash invoked")
 	h := q.Ctx.HeaderHash()
 	return proto.Marshal(&librustgo.QueryBlockHashResponse{Hash: h.Bytes()})
-}
-
-// BlockTimestamp handles incoming protobuf-encoded request for getting last block timestamp
-func (q Connector) BlockTimestamp(req *librustgo.CosmosRequest_BlockTimestamp) ([]byte, error) {
-	println("Connector::Query BlockTimestamp invoked")
-	t := big.NewInt(q.Ctx.BlockTime().Unix())
-	return proto.Marshal(&librustgo.QueryBlockTimestampResponse{Timestamp: t.Bytes()})
-}
-
-// BlockNumber handles incoming protobuf-encoded request for getting current block height
-func (q Connector) BlockNumber(req *librustgo.CosmosRequest_BlockNumber) ([]byte, error) {
-	println("Connector::Query BlockNumber invoked")
-	blockHeight := big.NewInt(q.Ctx.BlockHeight())
-	return proto.Marshal(&librustgo.QueryBlockNumberResponse{Number: blockHeight.Bytes()})
-}
-
-// ChainId handles incoming protobuf-encoded request for getting network chain id
-func (q Connector) ChainId(req *librustgo.CosmosRequest_ChainId) ([]byte, error) {
-	println("Connector::Query ChainId invoked")
-	chainId := q.Keeper.ChainID()
-	return proto.Marshal(&librustgo.QueryChainIdResponse{ChainId: chainId.Bytes()})
 }
 
 // InsertStorageCell handles incoming protobuf-encoded request for updating state of storage cell

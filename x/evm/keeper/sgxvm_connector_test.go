@@ -274,28 +274,6 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 				suite.Require().Equal(headerHash.Bytes(), response.Hash)
 			},
 		},
-		{
-			"Should be able to get block.timestamp",
-			func() {
-				request, encodingErr := proto.Marshal(&librustgo.CosmosRequest{
-					Req: &librustgo.CosmosRequest_BlockTimestamp{
-						BlockTimestamp: &librustgo.QueryBlockTimestamp{},
-					},
-				})
-				suite.Require().NoError(encodingErr)
-
-				responseBytes, err := connector.Query(request)
-				suite.Require().NoError(err)
-
-				response := &librustgo.QueryBlockTimestampResponse{}
-				decodingErr := proto.Unmarshal(responseBytes, response)
-				suite.Require().NoError(decodingErr)
-
-				decodedTimestamp := big.Int{}
-				decodedTimestamp.SetBytes(response.Timestamp)
-				suite.Require().Equal(timestamp.Unix(), decodedTimestamp.Int64())
-			},
-		},
 	}
 
 	for _, tc := range testCases {
