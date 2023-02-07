@@ -75,20 +75,14 @@ func (q Connector) Query(req []byte) ([]byte, error) {
 // Returns data in protobuf-encoded format
 func (q Connector) GetAccount(req *librustgo.CosmosRequest_GetAccount) ([]byte, error) {
 	println("Connector::Query GetAccount invoked")
-	address := common.BytesToAddress(req.GetAccount.Address)
-	account := q.Keeper.GetAccount(q.Ctx, address)
 
-	if account == nil {
-		// If there is no such account return zero balance and nonce
-		return proto.Marshal(&librustgo.QueryGetAccountResponse{
-			Balance: make([]byte, 0),
-			Nonce:   make([]byte, 0),
-		})
-	}
+	ethAddress := common.BytesToAddress(req.GetAccount.Address)
+	balance := q.StateDB.GetBalance(ethAddress)
+	nonce := q.StateDB.GetNonce(ethAddress)
 
 	return proto.Marshal(&librustgo.QueryGetAccountResponse{
-		Balance: account.Balance.Bytes(),
-		Nonce:   sdk.Uint64ToBigEndian(account.Nonce),
+		Balance: balance.Bytes(),
+		Nonce:   sdk.Uint64ToBigEndian(nonce),
 	})
 }
 
@@ -105,29 +99,9 @@ func (q Connector) ContainsKey(req *librustgo.CosmosRequest_ContainsKey) ([]byte
 func (q Connector) InsertAccountCode(req *librustgo.CosmosRequest_InsertAccountCode) ([]byte, error) {
 	println("Connector::Query InsertAccountCode invoked")
 
-	// Calculate code hash
-	//codeHash := crypto.Keccak256(req.InsertAccountCode.Code)
 	ethAddress := common.BytesToAddress(req.InsertAccountCode.Address)
 	q.StateDB.SetCode(ethAddress, req.InsertAccountCode.Code)
-	//q.StateDB.CreateAccount()
-	//q.StateDB.SetCode(common.BytesToAddress(req.InsertAccountCode.Address), req.InsertAccountCode)
-	//q.Keeper.SetCode(q.Ctx, codeHash, req.InsertAccountCode.Code)
-	//
-	//// Link address with code hash
-	//cosmosAddr := sdk.AccAddress(req.InsertAccountCode.Address)
-	//cosmosAccount := q.Keeper.accountKeeper.GetAccount(q.Ctx, cosmosAddr)
-	//ethAccount := cosmosAccount.(ethermint.EthAccountI)
-	//
-	//// Set code hash if account exists
-	//if ethAccount != nil {
-	//	if err := ethAccount.SetCodeHash(common.BytesToHash(codeHash)); err != nil {
-	//		return nil, err
-	//	}
-	//	q.Keeper.accountKeeper.SetAccount(q.Ctx, cosmosAccount)
-	//} else {
-	//	return nil, errors.New("cannot insert account code. Account does not exist")
-	//}
-	//
+
 	return proto.Marshal(&librustgo.QueryInsertAccountCodeResponse{})
 }
 
@@ -216,14 +190,6 @@ func (q Connector) GetAccountCode(req *librustgo.CosmosRequest_AccountCode) ([]b
 	return proto.Marshal(&librustgo.QueryGetAccountCodeResponse{
 		Code: code,
 	})
-
-	//account := q.Keeper.GetAccountWithoutBalance(q.Ctx, common.BytesToAddress(req.AccountCode.Address))
-	//if account == nil {
-	//	return proto.Marshal(&librustgo.QueryGetAccountCodeResponse{})
-	//}
-	//return proto.Marshal(&librustgo.QueryGetAccountCodeResponse{
-	//	Code: q.Keeper.GetCode(q.Ctx, common.BytesToHash(account.CodeHash)),
-	//})
 }
 
 // InsertAccount handles incoming protobuf-encoded request for inserting new account data
