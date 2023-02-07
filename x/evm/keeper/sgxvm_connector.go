@@ -171,11 +171,10 @@ func (q Connector) InsertStorageCell(req *librustgo.CosmosRequest_InsertStorageC
 // GetStorageCell handles incoming protobuf-encoded request of storage cell value
 func (q Connector) GetStorageCell(req *librustgo.CosmosRequest_StorageCell) ([]byte, error) {
 	println("Connector::Query Request value of storage cell")
-	value := q.Keeper.GetState(
-		q.Ctx,
-		common.BytesToAddress(req.StorageCell.Address),
-		common.BytesToHash(req.StorageCell.Index),
-	)
+
+	ethAddress := common.BytesToAddress(req.StorageCell.Address)
+	index := common.BytesToHash(req.StorageCell.Index)
+	value := q.StateDB.GetState(ethAddress, index)
 
 	return proto.Marshal(&librustgo.QueryGetAccountStorageCellResponse{Value: value.Bytes()})
 }
