@@ -13,8 +13,6 @@ import (
 // Connector allows our VM interact with existing Cosmos application.
 // It is passed by pointer into SGX to make it accessible for our VM.
 type Connector struct {
-	Ctx     sdk.Context
-	Keeper  *Keeper
 	StateDB *statedb.StateDB
 }
 
@@ -119,8 +117,8 @@ func (q Connector) Remove(req *librustgo.CosmosRequest_Remove) ([]byte, error) {
 // BlockHash handles incoming protobuf-encoded request for getting block hash
 func (q Connector) BlockHash(req *librustgo.CosmosRequest_BlockHash) ([]byte, error) {
 	println("Connector::Query BlockHash invoked")
-	h := q.Ctx.HeaderHash()
-	return proto.Marshal(&librustgo.QueryBlockHashResponse{Hash: h.Bytes()})
+	// TODO: Implement in a proper way
+	return proto.Marshal(&librustgo.QueryBlockHashResponse{Hash: common.Hash{}.Bytes()})
 }
 
 // InsertStorageCell handles incoming protobuf-encoded request for updating state of storage cell

@@ -291,7 +291,7 @@ func (k *Keeper) ApplySGXVMMessage(
 		destination = msg.To().Bytes()
 	}
 
-	stateDB := statedb.New(ctx, k, txConfig) // TODO: Use stateDB to be able to revert changes
+	stateDB := statedb.New(ctx, k, txConfig)
 	leftoverGas := msg.Gas()
 	contractCreation := msg.To() == nil
 	intrinsicGas, err := k.GetEthIntrinsicGas(ctx, msg, cfg.ChainConfig, contractCreation)
@@ -308,8 +308,6 @@ func (k *Keeper) ApplySGXVMMessage(
 	leftoverGas -= intrinsicGas
 
 	connector := Connector{
-		Ctx:     ctx,
-		Keeper:  k,
 		StateDB: stateDB,
 	}
 
@@ -333,9 +331,8 @@ func (k *Keeper) ApplySGXVMMessage(
 	// refund gas
 	temporaryGasUsed := msg.Gas() - leftoverGas
 	refundQuotient := params.RefundQuotientEIP3529
-	leftoverGas += GasToRefund(stateDB.GetRefund(), temporaryGasUsed, refundQuotient) // TODO: Check how to obtain gasToRefund from SGXVM
+	leftoverGas += GasToRefund(stateDB.GetRefund(), temporaryGasUsed, refundQuotient)
 
-	// TODO: Check how to revert state if case of revert
 	// The dirty states in `StateDB` is either committed or discarded after return
 	if commit {
 		if err := stateDB.Commit(); err != nil {
