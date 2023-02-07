@@ -101,7 +101,7 @@ func (q Connector) RemoveStorageCell(req *librustgo.CosmosRequest_RemoveStorageC
 	address := common.BytesToAddress(req.RemoveStorageCell.Address)
 	index := common.BytesToHash(req.RemoveStorageCell.Index)
 
-	q.Keeper.SetState(q.Ctx, address, index, nil)
+	q.StateDB.SetState(address, index, common.Hash{})
 
 	return proto.Marshal(&librustgo.QueryRemoveStorageCellResponse{})
 }
