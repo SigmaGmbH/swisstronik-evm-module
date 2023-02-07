@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"github.com/SigmaGmbH/librustgo"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -110,11 +109,10 @@ func (q Connector) RemoveStorageCell(req *librustgo.CosmosRequest_RemoveStorageC
 // Remove handles incoming protobuf-encoded request for removing smart contract (selfdestruct)
 func (q Connector) Remove(req *librustgo.CosmosRequest_Remove) ([]byte, error) {
 	println("Connector::Query Remove invoked")
-	address := common.BytesToAddress(req.Remove.Address)
-	err := q.Keeper.DeleteAccount(q.Ctx, address)
-	if err != nil {
-		return nil, errorsmod.Wrap(err, "failed to remove account")
-	}
+
+	ethAddress := common.BytesToAddress(req.Remove.Address)
+	q.StateDB.Suicide(ethAddress)
+
 	return proto.Marshal(&librustgo.QueryRemoveResponse{})
 }
 
