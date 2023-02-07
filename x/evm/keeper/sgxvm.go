@@ -308,8 +308,9 @@ func (k *Keeper) ApplySGXVMMessage(
 	leftoverGas -= intrinsicGas
 
 	connector := Connector{
-		Ctx:    ctx,
-		Keeper: k,
+		Ctx:     ctx,
+		Keeper:  k,
+		StateDB: stateDB,
 	}
 
 	res, err := librustgo.HandleTx(

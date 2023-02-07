@@ -16,8 +16,9 @@ import (
 // Connector allows our VM interact with existing Cosmos application.
 // It is passed by pointer into SGX to make it accessible for our VM.
 type Connector struct {
-	Ctx    sdk.Context
-	Keeper *Keeper
+	Ctx     sdk.Context
+	Keeper  *Keeper
+	StateDB *statedb.StateDB
 }
 
 func (q Connector) Query(req []byte) ([]byte, error) {
@@ -97,8 +98,8 @@ func (q Connector) GetAccount(req *librustgo.CosmosRequest_GetAccount) ([]byte, 
 func (q Connector) ContainsKey(req *librustgo.CosmosRequest_ContainsKey) ([]byte, error) {
 	println("Connector::Query ContainsKey invoked")
 	address := common.BytesToAddress(req.ContainsKey.Key)
-	acc := q.Keeper.GetAccountWithoutBalance(q.Ctx, address)
-	return proto.Marshal(&librustgo.QueryContainsKeyResponse{Contains: acc != nil})
+	contains := q.StateDB.Exist(address)
+	return proto.Marshal(&librustgo.QueryContainsKeyResponse{Contains: contains})
 }
 
 // InsertAccountCode handles incoming protobuf-encoded request for adding or modifying existing account code

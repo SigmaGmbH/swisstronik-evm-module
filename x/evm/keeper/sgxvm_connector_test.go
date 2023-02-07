@@ -54,8 +54,9 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 	timestamp := time.Now()
 
 	connector = evmkeeper.Connector{
-		Ctx:    suite.ctx.WithHeaderHash(headerHash.Bytes()).WithBlockTime(timestamp),
-		Keeper: suite.app.EvmKeeper,
+		Ctx:     suite.ctx.WithHeaderHash(headerHash.Bytes()).WithBlockTime(timestamp),
+		Keeper:  suite.app.EvmKeeper,
+		StateDB: suite.StateDB(),
 	}
 
 	testCases := []struct {
