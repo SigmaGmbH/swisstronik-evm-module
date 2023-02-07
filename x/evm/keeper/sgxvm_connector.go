@@ -5,6 +5,7 @@ import (
 	"github.com/SigmaGmbH/librustgo"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/golang/protobuf/proto"
 	"math/big"
@@ -13,7 +14,10 @@ import (
 // Connector allows our VM interact with existing Cosmos application.
 // It is passed by pointer into SGX to make it accessible for our VM.
 type Connector struct {
+	// StateDB used to store intermediate state
 	StateDB *statedb.StateDB
+	// GetHashFn returns the hash corresponding to n
+	GetHashFn vm.GetHashFunc
 }
 
 func (q Connector) Query(req []byte) ([]byte, error) {
@@ -117,8 +121,12 @@ func (q Connector) Remove(req *librustgo.CosmosRequest_Remove) ([]byte, error) {
 // BlockHash handles incoming protobuf-encoded request for getting block hash
 func (q Connector) BlockHash(req *librustgo.CosmosRequest_BlockHash) ([]byte, error) {
 	println("Connector::Query BlockHash invoked")
-	// TODO: Implement in a proper way
-	return proto.Marshal(&librustgo.QueryBlockHashResponse{Hash: common.Hash{}.Bytes()})
+
+	blockNumber := &big.Int{}
+	blockNumber.SetBytes(req.BlockHash.Number)
+	blockHash := q.GetHashFn(blockNumber.Uint64())
+
+	return proto.Marshal(&librustgo.QueryBlockHashResponse{Hash: blockHash.Bytes()})
 }
 
 // InsertStorageCell handles incoming protobuf-encoded request for updating state of storage cell
