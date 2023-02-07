@@ -158,12 +158,12 @@ func (q Connector) ChainId(req *librustgo.CosmosRequest_ChainId) ([]byte, error)
 // InsertStorageCell handles incoming protobuf-encoded request for updating state of storage cell
 func (q Connector) InsertStorageCell(req *librustgo.CosmosRequest_InsertStorageCell) ([]byte, error) {
 	println("Connector::Query InsertStorageCell invoked")
-	q.Keeper.SetState(
-		q.Ctx,
-		common.BytesToAddress(req.InsertStorageCell.Address),
-		common.BytesToHash(req.InsertStorageCell.Index),
-		req.InsertStorageCell.Value,
-	)
+
+	ethAddress := common.BytesToAddress(req.InsertStorageCell.Address)
+	index := common.BytesToHash(req.InsertStorageCell.Index)
+	value := common.BytesToHash(req.InsertStorageCell.Value)
+
+	q.StateDB.SetState(ethAddress, index, value)
 
 	return proto.Marshal(&librustgo.QueryInsertStorageCellResponse{})
 }
