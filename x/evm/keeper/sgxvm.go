@@ -162,7 +162,7 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 		return nil, errorsmod.Wrap(err, "failed to return ethereum transaction as core message")
 	}
 
-	txContext, err := createSGXVMConfig(ctx, k, tx)
+	txContext, err := CreateSGXVMConfig(ctx, k, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -350,7 +350,7 @@ func (k *Keeper) ApplySGXVMMessage(
 	}, nil
 }
 
-func createSGXVMConfig(ctx sdk.Context, k *Keeper, tx *ethtypes.Transaction) (*librustgo.TransactionContext, error) {
+func CreateSGXVMConfig(ctx sdk.Context, k *Keeper, tx *ethtypes.Transaction) (*librustgo.TransactionContext, error) {
 	cfg, err := k.EVMConfig(ctx, ctx.BlockHeader().ProposerAddress, k.eip155ChainID)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "failed to load evm config")
@@ -364,6 +364,23 @@ func createSGXVMConfig(ctx sdk.Context, k *Keeper, tx *ethtypes.Transaction) (*l
 		BlockGasLimit:      ethermint.BlockGasLimit(ctx),
 		ChainId:            k.eip155ChainID.Uint64(),
 		GasPrice:           tx.GasPrice().Bytes(),
+	}, nil
+}
+
+func CreateSGXVMConfigFromMessage(ctx sdk.Context, k *Keeper, msg core.Message) (*librustgo.TransactionContext, error) {
+	cfg, err := k.EVMConfig(ctx, ctx.BlockHeader().ProposerAddress, k.eip155ChainID)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "failed to load evm config")
+	}
+
+	return &librustgo.TransactionContext{
+		BlockCoinbase:      cfg.CoinBase.Bytes(),
+		BlockNumber:        uint64(ctx.BlockHeight()),
+		BlockBaseFeePerGas: cfg.BaseFee.Bytes(),
+		Timestamp:          uint64(ctx.BlockHeader().Time.Unix()),
+		BlockGasLimit:      ethermint.BlockGasLimit(ctx),
+		ChainId:            k.eip155ChainID.Uint64(),
+		GasPrice:           msg.GasPrice().Bytes(),
 	}, nil
 }
 
