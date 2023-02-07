@@ -187,17 +187,19 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 		{
 			"Should be able to set & get account code",
 			func() {
+				var err error
+
 				addressToSet := common.BigToAddress(big.NewInt(rand.Int63n(100000)))
 				bytecode := make([]byte, 128)
 				rand.Read(bytecode)
 
-				err := insertAccount(&connector, addressToSet, big.NewInt(0), big.NewInt(1))
+				err = insertAccount(&connector, addressToSet, big.NewInt(0), big.NewInt(1))
 				suite.Require().NoError(err)
 
 				//
 				// Insert account code
 				//
-				request, encodeErr := proto.Marshal(&librustgo.CosmosRequest{
+				request, err := proto.Marshal(&librustgo.CosmosRequest{
 					Req: &librustgo.CosmosRequest_InsertAccountCode{
 						InsertAccountCode: &librustgo.QueryInsertAccountCode{
 							Address: addressToSet.Bytes(),
@@ -205,26 +207,29 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 						},
 					},
 				})
-				suite.Require().NoError(encodeErr)
+				suite.Require().NoError(err)
 
-				responseBytes, queryErr := connector.Query(request)
-				suite.Require().NoError(queryErr)
+				responseBytes, err := connector.Query(request)
+				suite.Require().NoError(err)
 
 				response := &librustgo.QueryInsertAccountCodeResponse{}
-				decodingError := proto.Unmarshal(responseBytes, response)
-				suite.Require().NoError(decodingError)
+				err = proto.Unmarshal(responseBytes, response)
+				suite.Require().NoError(err)
+
+				err = connector.StateDB.Commit()
+				suite.Require().NoError(err)
 
 				//
 				// Request inserted account code
 				//
-				getRequest, getRequestErr := proto.Marshal(&librustgo.CosmosRequest{
+				getRequest, err := proto.Marshal(&librustgo.CosmosRequest{
 					Req: &librustgo.CosmosRequest_AccountCode{
 						AccountCode: &librustgo.QueryGetAccountCode{
 							Address: addressToSet.Bytes(),
 						},
 					},
 				})
-				suite.Require().NoError(getRequestErr)
+				suite.Require().NoError(err)
 
 				responseAccountCodeBytes, queryAccountCodeErr := connector.Query(getRequest)
 				suite.Require().NoError(queryAccountCodeErr)

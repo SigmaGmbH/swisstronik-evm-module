@@ -6,8 +6,6 @@ import (
 	"github.com/SigmaGmbH/librustgo"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/golang/protobuf/proto"
 	"math/big"
@@ -108,25 +106,28 @@ func (q Connector) InsertAccountCode(req *librustgo.CosmosRequest_InsertAccountC
 	println("Connector::Query InsertAccountCode invoked")
 
 	// Calculate code hash
-	codeHash := crypto.Keccak256(req.InsertAccountCode.Code)
-	println("DEBUG: Expected code hash: ", common.BytesToHash(codeHash).String())
-	q.Keeper.SetCode(q.Ctx, codeHash, req.InsertAccountCode.Code)
-
-	// Link address with code hash
-	cosmosAddr := sdk.AccAddress(req.InsertAccountCode.Address)
-	cosmosAccount := q.Keeper.accountKeeper.GetAccount(q.Ctx, cosmosAddr)
-	ethAccount := cosmosAccount.(ethermint.EthAccountI)
-
-	// Set code hash if account exists
-	if ethAccount != nil {
-		if err := ethAccount.SetCodeHash(common.BytesToHash(codeHash)); err != nil {
-			return nil, err
-		}
-		q.Keeper.accountKeeper.SetAccount(q.Ctx, cosmosAccount)
-	} else {
-		return nil, errors.New("cannot insert account code. Account does not exist")
-	}
-
+	//codeHash := crypto.Keccak256(req.InsertAccountCode.Code)
+	ethAddress := common.BytesToAddress(req.InsertAccountCode.Address)
+	q.StateDB.SetCode(ethAddress, req.InsertAccountCode.Code)
+	//q.StateDB.CreateAccount()
+	//q.StateDB.SetCode(common.BytesToAddress(req.InsertAccountCode.Address), req.InsertAccountCode)
+	//q.Keeper.SetCode(q.Ctx, codeHash, req.InsertAccountCode.Code)
+	//
+	//// Link address with code hash
+	//cosmosAddr := sdk.AccAddress(req.InsertAccountCode.Address)
+	//cosmosAccount := q.Keeper.accountKeeper.GetAccount(q.Ctx, cosmosAddr)
+	//ethAccount := cosmosAccount.(ethermint.EthAccountI)
+	//
+	//// Set code hash if account exists
+	//if ethAccount != nil {
+	//	if err := ethAccount.SetCodeHash(common.BytesToHash(codeHash)); err != nil {
+	//		return nil, err
+	//	}
+	//	q.Keeper.accountKeeper.SetAccount(q.Ctx, cosmosAccount)
+	//} else {
+	//	return nil, errors.New("cannot insert account code. Account does not exist")
+	//}
+	//
 	return proto.Marshal(&librustgo.QueryInsertAccountCodeResponse{})
 }
 
@@ -209,13 +210,20 @@ func (q Connector) GetStorageCell(req *librustgo.CosmosRequest_StorageCell) ([]b
 // with given account. If account does not exist, it returns empty response
 func (q Connector) GetAccountCode(req *librustgo.CosmosRequest_AccountCode) ([]byte, error) {
 	println("Connector::Query Request account code")
-	account := q.Keeper.GetAccountWithoutBalance(q.Ctx, common.BytesToAddress(req.AccountCode.Address))
-	if account == nil {
-		return proto.Marshal(&librustgo.QueryGetAccountCodeResponse{})
-	}
+	ethAddress := common.BytesToAddress(req.AccountCode.Address)
+	code := q.StateDB.GetCode(ethAddress)
+
 	return proto.Marshal(&librustgo.QueryGetAccountCodeResponse{
-		Code: q.Keeper.GetCode(q.Ctx, common.BytesToHash(account.CodeHash)),
+		Code: code,
 	})
+
+	//account := q.Keeper.GetAccountWithoutBalance(q.Ctx, common.BytesToAddress(req.AccountCode.Address))
+	//if account == nil {
+	//	return proto.Marshal(&librustgo.QueryGetAccountCodeResponse{})
+	//}
+	//return proto.Marshal(&librustgo.QueryGetAccountCodeResponse{
+	//	Code: q.Keeper.GetCode(q.Ctx, common.BytesToHash(account.CodeHash)),
+	//})
 }
 
 // InsertAccount handles incoming protobuf-encoded request for inserting new account data
