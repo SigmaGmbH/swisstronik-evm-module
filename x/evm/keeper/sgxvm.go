@@ -162,7 +162,7 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 		return nil, errorsmod.Wrap(err, "failed to return ethereum transaction as core message")
 	}
 
-	txContext, err := CreateSGXVMConfig(ctx, k, tx)
+	txContext, err := CreateSGXVMContext(ctx, k, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -350,7 +350,7 @@ func (k *Keeper) ApplySGXVMMessage(
 	}, nil
 }
 
-func CreateSGXVMConfig(ctx sdk.Context, k *Keeper, tx *ethtypes.Transaction) (*librustgo.TransactionContext, error) {
+func CreateSGXVMContext(ctx sdk.Context, k *Keeper, tx *ethtypes.Transaction) (*librustgo.TransactionContext, error) {
 	cfg, err := k.EVMConfig(ctx, ctx.BlockHeader().ProposerAddress, k.eip155ChainID)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "failed to load evm config")
@@ -367,7 +367,7 @@ func CreateSGXVMConfig(ctx sdk.Context, k *Keeper, tx *ethtypes.Transaction) (*l
 	}, nil
 }
 
-func CreateSGXVMConfigFromMessage(ctx sdk.Context, k *Keeper, msg core.Message) (*librustgo.TransactionContext, error) {
+func CreateSGXVMContextFromMessage(ctx sdk.Context, k *Keeper, msg core.Message) (*librustgo.TransactionContext, error) {
 	cfg, err := k.EVMConfig(ctx, ctx.BlockHeader().ProposerAddress, k.eip155ChainID)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "failed to load evm config")
