@@ -74,7 +74,7 @@ func (suite *KeeperTestSuite) TestNativeCurrencyTransfer() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			suite.SetupTest()
+			suite.SetupSGXVMTest()
 
 			keeperParams := suite.app.EvmKeeper.GetParams(suite.ctx)
 			chainCfg = keeperParams.ChainConfig.EthereumConfig(suite.app.EvmKeeper.ChainID())
@@ -115,7 +115,6 @@ func (suite *KeeperTestSuite) TestNativeCurrencyTransfer() {
 	}
 }
 
-// TODO: Fix NPE
 func (suite *KeeperTestSuite) TestDryRun() {
 	var (
 		signer   ethtypes.Signer
@@ -141,11 +140,15 @@ func (suite *KeeperTestSuite) TestDryRun() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			suite.SetupTest()
+			suite.SetupSGXVMTest()
 
 			keeperParams := suite.app.EvmKeeper.GetParams(suite.ctx)
 			chainCfg = keeperParams.ChainConfig.EthereumConfig(suite.app.EvmKeeper.ChainID())
 			signer = ethtypes.LatestSignerForChainID(suite.app.EvmKeeper.ChainID())
+			vmdb = suite.StateDB()
+
+			err := suite.app.EvmKeeper.SetBalance(suite.ctx, suite.address, big.NewInt(amountToTransfer))
+			suite.Require().NoError(err)
 
 			cfg, err := suite.app.EvmKeeper.EVMConfig(suite.ctx, sdk.ConsAddress(suite.ctx.BlockHeader().ProposerAddress), suite.app.EvmKeeper.ChainID())
 			suite.Require().NoError(err)
@@ -176,15 +179,18 @@ func (suite *KeeperTestSuite) TestDryRun() {
 			balanceBefore := suite.app.EvmKeeper.GetBalance(suite.ctx, suite.address)
 			receiverBalanceBefore := suite.app.EvmKeeper.GetBalance(suite.ctx, common.Address{})
 
-			_, err = suite.app.EvmKeeper.ApplySGXVMMessage(suite.ctx, ethMessage, tc.commit, cfg, txConfig, txContext)
+			res, err := suite.app.EvmKeeper.ApplySGXVMMessage(suite.ctx, ethMessage, tc.commit, cfg, txConfig, txContext)
 			suite.Require().NoError(err)
+			suite.Require().Empty(res.VmError)
 
 			if tc.commit {
 				// Check if balance & nonce were updated
+				suite.Commit()
 
 				// Check sender's balance
 				expectedBalance := balanceBefore.Sub(balanceBefore, big.NewInt(amountToTransfer))
 				balanceAfter := suite.app.EvmKeeper.GetBalance(suite.ctx, suite.address)
+
 				isSenderBalanceCorrect := expectedBalance.Cmp(balanceAfter)
 				suite.Require().True(isSenderBalanceCorrect == 0, "Incorrect sender's balance")
 
