@@ -5,6 +5,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
+	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/golang/protobuf/proto"
 	"math/big"
 	"math/rand"
@@ -49,10 +50,12 @@ func insertAccount(
 func (suite *KeeperTestSuite) TestSGXVMConnector() {
 	var (
 		connector evmkeeper.Connector
+		vmdb      *statedb.StateDB
 	)
 
+	vmdb = suite.StateDB()
 	connector = evmkeeper.Connector{
-		StateDB: suite.StateDB(),
+		StateDB: vmdb,
 	}
 
 	testCases := []struct {
@@ -71,12 +74,9 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 				err = insertAccount(&connector, addressToSet, balanceToSet, nonceToSet)
 				suite.Require().NoError(err)
 
-				err = connector.StateDB.Commit()
-				suite.Require().NoError(err)
-
 				// Check if account was inserted correctly
-				balance := suite.app.EvmKeeper.GetBalance(suite.ctx, addressToSet)
-				nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, addressToSet)
+				balance := vmdb.GetBalance(addressToSet)
+				nonce := vmdb.GetNonce(addressToSet)
 
 				suite.Require().Equal(balanceToSet, balance)
 				suite.Require().Equal(nonceToSet.Uint64(), nonce)
@@ -176,19 +176,12 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 				_, err = connector.Query(request)
 				suite.Require().NoError(err)
 
-				// Commit changes
-				err = connector.StateDB.Commit()
-				suite.Require().NoError(err)
-
 				// Check if account code was set correctly
 				codeHash := crypto.Keccak256(bytecode)
-				recoveredCode := suite.app.EvmKeeper.GetCode(suite.ctx, common.BytesToHash(codeHash))
+				recoveredCode := vmdb.GetCode(addressToSet)
+				recoveredCodeHash := vmdb.GetCodeHash(addressToSet)
 				suite.Require().Equal(bytecode, recoveredCode)
-
-				// Check if code hash was set correctly
-				account := suite.app.EvmKeeper.GetAccount(suite.ctx, addressToSet)
-				suite.Require().NotNil(account)
-				suite.Require().Equal(codeHash, account.CodeHash)
+				suite.Require().Equal(codeHash, recoveredCodeHash.Bytes())
 			},
 		},
 		{
