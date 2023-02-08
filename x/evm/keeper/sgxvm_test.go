@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
@@ -150,7 +149,7 @@ func (suite *KeeperTestSuite) TestDryRun() {
 			err := suite.app.EvmKeeper.SetBalance(suite.ctx, suite.address, big.NewInt(amountToTransfer))
 			suite.Require().NoError(err)
 
-			cfg, err := suite.app.EvmKeeper.EVMConfig(suite.ctx, sdk.ConsAddress(suite.ctx.BlockHeader().ProposerAddress), suite.app.EvmKeeper.ChainID())
+			cfg, err := suite.app.EvmKeeper.EVMConfig(suite.ctx, suite.ctx.BlockHeader().ProposerAddress, suite.app.EvmKeeper.ChainID())
 			suite.Require().NoError(err)
 
 			msg, baseFee, err := newHandleMsgTx(

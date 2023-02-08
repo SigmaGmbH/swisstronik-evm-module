@@ -53,7 +53,7 @@ func (suite *KeeperTestSuite) TestEthereumTx() {
 					ethtypes.AccessListTxType,
 					nil,
 					nil,
-					nil,
+					big.NewInt(0),
 				)
 				suite.Require().NoError(err)
 				expectedGasUsed = params.TxGas
