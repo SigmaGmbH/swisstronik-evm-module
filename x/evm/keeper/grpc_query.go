@@ -352,8 +352,13 @@ func (k Keeper) EstimateGas(c context.Context, req *types.EthCallRequest) (*type
 			msg.IsFake(),
 		)
 
+		txContext, err := CreateSGXVMContextFromMessage(ctx, &k, msg)
+		if err != nil {
+			return true, nil, err
+		}
+
 		// pass false to not commit StateDB
-		rsp, err = k.ApplyMessageWithConfig(ctx, msg, nil, false, cfg, txConfig)
+		rsp, err = k.ApplySGXVMMessage(ctx, msg, false, cfg, txConfig, txContext)
 		if err != nil {
 			if errors.Is(err, core.ErrIntrinsicGas) {
 				return true, nil, nil // Special case, raise gas limit
