@@ -5,7 +5,7 @@ go 1.19
 require (
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0-beta.4
-	github.com/SigmaGmbH/librustgo v0.0.0-20230207172631-3da1ae8881b2
+	github.com/SigmaGmbH/librustgo v0.0.0-20230209113653-0ce4d86b9f9e
 	github.com/armon/go-metrics v0.4.1
 	github.com/btcsuite/btcd v0.22.1
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
@@ -37,8 +37,8 @@ require (
 	github.com/tendermint/tendermint v0.34.24
 	github.com/tendermint/tm-db v0.6.7
 	github.com/tyler-smith/go-bip39 v1.1.0
-	golang.org/x/net v0.5.0
-	golang.org/x/text v0.6.0
+	golang.org/x/net v0.6.0
+	golang.org/x/text v0.7.0
 	google.golang.org/genproto v0.0.0-20221227171554-f9683d7f8bef
 	google.golang.org/grpc v1.52.0
 	sigs.k8s.io/yaml v1.3.0
@@ -182,7 +182,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
-	golang.org/x/term v0.4.0 // indirect
+	golang.org/x/term v0.5.0 // indirect
 	golang.org/x/tools v0.5.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.107.0 // indirect
