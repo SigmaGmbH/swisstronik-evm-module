@@ -66,7 +66,7 @@ func (q Connector) Query(req []byte) ([]byte, error) {
 // GetAccount handles incoming protobuf-encoded request for account data such as balance and nonce.
 // Returns data in protobuf-encoded format
 func (q Connector) GetAccount(req *librustgo.CosmosRequest_GetAccount) ([]byte, error) {
-	println("Connector::Query GetAccount invoked")
+	//println("Connector::Query GetAccount invoked")
 
 	ethAddress := common.BytesToAddress(req.GetAccount.Address)
 	balance := q.StateDB.GetBalance(ethAddress)
@@ -80,7 +80,7 @@ func (q Connector) GetAccount(req *librustgo.CosmosRequest_GetAccount) ([]byte, 
 
 // ContainsKey handles incoming protobuf-encoded request to check whether specified address exists
 func (q Connector) ContainsKey(req *librustgo.CosmosRequest_ContainsKey) ([]byte, error) {
-	println("Connector::Query ContainsKey invoked")
+	//println("Connector::Query ContainsKey invoked")
 	address := common.BytesToAddress(req.ContainsKey.Key)
 	contains := q.StateDB.Exist(address)
 	return proto.Marshal(&librustgo.QueryContainsKeyResponse{Contains: contains})
@@ -89,7 +89,7 @@ func (q Connector) ContainsKey(req *librustgo.CosmosRequest_ContainsKey) ([]byte
 // InsertAccountCode handles incoming protobuf-encoded request for adding or modifying existing account code
 // It will insert account code only if account exists, otherwise it returns an error
 func (q Connector) InsertAccountCode(req *librustgo.CosmosRequest_InsertAccountCode) ([]byte, error) {
-	println("Connector::Query InsertAccountCode invoked")
+	//println("Connector::Query InsertAccountCode invoked")
 
 	ethAddress := common.BytesToAddress(req.InsertAccountCode.Address)
 	q.StateDB.SetCode(ethAddress, req.InsertAccountCode.Code)
@@ -99,7 +99,7 @@ func (q Connector) InsertAccountCode(req *librustgo.CosmosRequest_InsertAccountC
 
 // RemoveStorageCell handles incoming protobuf-encoded request for removing contract storage cell for given key (index)
 func (q Connector) RemoveStorageCell(req *librustgo.CosmosRequest_RemoveStorageCell) ([]byte, error) {
-	println("Connector::Query RemoveStorageCell invoked")
+	//println("Connector::Query RemoveStorageCell invoked")
 	address := common.BytesToAddress(req.RemoveStorageCell.Address)
 	index := common.BytesToHash(req.RemoveStorageCell.Index)
 
@@ -110,7 +110,7 @@ func (q Connector) RemoveStorageCell(req *librustgo.CosmosRequest_RemoveStorageC
 
 // Remove handles incoming protobuf-encoded request for removing smart contract (selfdestruct)
 func (q Connector) Remove(req *librustgo.CosmosRequest_Remove) ([]byte, error) {
-	println("Connector::Query Remove invoked")
+	//println("Connector::Query Remove invoked")
 
 	ethAddress := common.BytesToAddress(req.Remove.Address)
 	q.StateDB.Suicide(ethAddress)
@@ -120,7 +120,7 @@ func (q Connector) Remove(req *librustgo.CosmosRequest_Remove) ([]byte, error) {
 
 // BlockHash handles incoming protobuf-encoded request for getting block hash
 func (q Connector) BlockHash(req *librustgo.CosmosRequest_BlockHash) ([]byte, error) {
-	println("Connector::Query BlockHash invoked")
+	//println("Connector::Query BlockHash invoked")
 
 	blockNumber := &big.Int{}
 	blockNumber.SetBytes(req.BlockHash.Number)
@@ -131,7 +131,7 @@ func (q Connector) BlockHash(req *librustgo.CosmosRequest_BlockHash) ([]byte, er
 
 // InsertStorageCell handles incoming protobuf-encoded request for updating state of storage cell
 func (q Connector) InsertStorageCell(req *librustgo.CosmosRequest_InsertStorageCell) ([]byte, error) {
-	println("Connector::Query InsertStorageCell invoked")
+	//println("Connector::Query InsertStorageCell invoked")
 
 	ethAddress := common.BytesToAddress(req.InsertStorageCell.Address)
 	index := common.BytesToHash(req.InsertStorageCell.Index)
@@ -144,7 +144,7 @@ func (q Connector) InsertStorageCell(req *librustgo.CosmosRequest_InsertStorageC
 
 // GetStorageCell handles incoming protobuf-encoded request of storage cell value
 func (q Connector) GetStorageCell(req *librustgo.CosmosRequest_StorageCell) ([]byte, error) {
-	println("Connector::Query Request value of storage cell")
+	//println("Connector::Query Request value of storage cell")
 
 	ethAddress := common.BytesToAddress(req.StorageCell.Address)
 	index := common.BytesToHash(req.StorageCell.Index)
@@ -156,7 +156,7 @@ func (q Connector) GetStorageCell(req *librustgo.CosmosRequest_StorageCell) ([]b
 // GetAccountCode handles incoming protobuf-encoded request and returns bytecode associated
 // with given account. If account does not exist, it returns empty response
 func (q Connector) GetAccountCode(req *librustgo.CosmosRequest_AccountCode) ([]byte, error) {
-	println("Connector::Query Request account code")
+	//println("Connector::Query Request account code")
 	ethAddress := common.BytesToAddress(req.AccountCode.Address)
 	code := q.StateDB.GetCode(ethAddress)
 
@@ -169,7 +169,7 @@ func (q Connector) GetAccountCode(req *librustgo.CosmosRequest_AccountCode) ([]b
 // such as balance and nonce. If there is deployed contract behind given address, its bytecode
 // or code hash won't be changed
 func (q Connector) InsertAccount(req *librustgo.CosmosRequest_InsertAccount) ([]byte, error) {
-	println("Connector::Query Request to insert account code")
+	//println("Connector::Query Request to insert account code")
 	ethAddress := common.BytesToAddress(req.InsertAccount.Address)
 
 	balance := &big.Int{}
