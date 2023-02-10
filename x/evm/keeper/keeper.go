@@ -130,6 +130,7 @@ func NewSGXVMKeeper(
 	bankKeeper types.BankKeeper,
 	sk types.StakingKeeper,
 	fmk types.FeeMarketKeeper,
+	ss paramstypes.Subspace,
 ) *Keeper {
 	// ensure evm module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
@@ -151,6 +152,7 @@ func NewSGXVMKeeper(
 		feeMarketKeeper: fmk,
 		storeKey:        storeKey,
 		transientKey:    transientKey,
+		ss:              ss,
 	}
 }
 
