@@ -3,11 +3,11 @@ package backend
 import (
 	"encoding/json"
 
+	"github.com/SigmaGmbH/evm-module/rpc/backend/mocks"
+	ethrpc "github.com/SigmaGmbH/evm-module/rpc/types"
+	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/evmos/ethermint/rpc/backend/mocks"
-	ethrpc "github.com/evmos/ethermint/rpc/types"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 

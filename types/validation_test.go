@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/SigmaGmbH/evm-module/tests"
+	"github.com/SigmaGmbH/evm-module/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/evmos/ethermint/types"
 	"github.com/stretchr/testify/require"
 )
 
