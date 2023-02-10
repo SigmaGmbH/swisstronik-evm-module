@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/evmos/ethermint/server/config"
+	"github.com/SigmaGmbH/evm-module/server/config"
 	"github.com/gorilla/mux"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/spf13/cobra"

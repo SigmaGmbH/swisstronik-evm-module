@@ -64,13 +64,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/evmos/ethermint/crypto/hd"
-	"github.com/evmos/ethermint/encoding"
-	"github.com/evmos/ethermint/server/config"
-	ethermint "github.com/evmos/ethermint/types"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/SigmaGmbH/evm-module/crypto/hd"
+	"github.com/SigmaGmbH/evm-module/encoding"
+	"github.com/SigmaGmbH/evm-module/server/config"
+	ethermint "github.com/SigmaGmbH/evm-module/types"
+	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 
-	"github.com/evmos/ethermint/app"
+	"github.com/SigmaGmbH/evm-module/app"
 )
 
 // network lock to only allow one test network at a time

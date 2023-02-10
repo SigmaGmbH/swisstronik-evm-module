@@ -27,7 +27,7 @@ import (
 	ibcante "github.com/cosmos/ibc-go/v6/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
 
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 )
 
 // HandlerOptions extend the SDK's AnteHandler options by requiring the IBC

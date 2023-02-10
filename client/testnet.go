@@ -53,13 +53,13 @@ import (
 	mintypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/evmos/ethermint/crypto/hd"
-	"github.com/evmos/ethermint/server/config"
-	srvflags "github.com/evmos/ethermint/server/flags"
-	ethermint "github.com/evmos/ethermint/types"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/SigmaGmbH/evm-module/crypto/hd"
+	"github.com/SigmaGmbH/evm-module/server/config"
+	srvflags "github.com/SigmaGmbH/evm-module/server/flags"
+	ethermint "github.com/SigmaGmbH/evm-module/types"
+	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 
-	"github.com/evmos/ethermint/testutil/network"
+	"github.com/SigmaGmbH/evm-module/testutil/network"
 )
 
 var (

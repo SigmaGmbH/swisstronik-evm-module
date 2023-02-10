@@ -16,9 +16,9 @@
 package keeper
 
 import (
+	v4 "github.com/SigmaGmbH/evm-module/x/feemarket/migrations/v4"
+	"github.com/SigmaGmbH/evm-module/x/feemarket/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v4 "github.com/evmos/ethermint/x/feemarket/migrations/v4"
-	"github.com/evmos/ethermint/x/feemarket/types"
 )
 
 // Migrator is a struct for handling in-place store migrations.

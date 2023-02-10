@@ -21,12 +21,12 @@ import (
 	"math/big"
 
 	sdkmath "cosmossdk.io/math"
+	rpctypes "github.com/SigmaGmbH/evm-module/rpc/types"
+	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	rpctypes "github.com/evmos/ethermint/rpc/types"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
 )
 
