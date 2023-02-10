@@ -59,13 +59,13 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 				switch typeURL := opts[0].GetTypeUrl(); typeURL {
 				case "/ethermint.evm.v1.ExtensionOptionsEthereumTx":
 					// handle as *evmtypes.MsgEthereumTx
-					anteHandler = newEthAnteHandler(options)
+					anteHandler = NewEthAnteHandler(options)
 				case "/ethermint.types.v1.ExtensionOptionsWeb3Tx":
 					// Deprecated: Handle as normal Cosmos SDK tx, except signature is checked for Legacy EIP712 representation
 					anteHandler = NewLegacyCosmosAnteHandlerEip712(options)
 				case "/ethermint.types.v1.ExtensionOptionDynamicFeeTx":
 					// cosmos-sdk tx with dynamic fee extension
-					anteHandler = newCosmosAnteHandler(options)
+					anteHandler = NewCosmosAnteHandler(options)
 				default:
 					return ctx, errorsmod.Wrapf(
 						errortypes.ErrUnknownExtensionOptions,
@@ -80,7 +80,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		// handle as totally normal Cosmos SDK tx
 		switch tx.(type) {
 		case sdk.Tx:
-			anteHandler = newCosmosAnteHandler(options)
+			anteHandler = NewCosmosAnteHandler(options)
 		default:
 			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid transaction type: %T", tx)
 		}

@@ -65,7 +65,7 @@ func (options HandlerOptions) validate() error {
 	return nil
 }
 
-func newEthAnteHandler(options HandlerOptions) sdk.AnteHandler {
+func NewEthAnteHandler(options HandlerOptions) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		NewEthSetUpContextDecorator(options.EvmKeeper),                         // outermost AnteDecorator. SetUpContext must be called first
 		NewEthMempoolFeeDecorator(options.EvmKeeper),                           // Check eth effective gas price against minimal-gas-prices
@@ -81,7 +81,7 @@ func newEthAnteHandler(options HandlerOptions) sdk.AnteHandler {
 	)
 }
 
-func newCosmosAnteHandler(options HandlerOptions) sdk.AnteHandler {
+func NewCosmosAnteHandler(options HandlerOptions) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		RejectMessagesDecorator{}, // reject MsgEthereumTxs
 		ante.NewSetUpContextDecorator(),
