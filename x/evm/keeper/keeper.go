@@ -121,6 +121,39 @@ func NewKeeper(
 	}
 }
 
+// NewSGXVMKeeper generates new evm module keeper for SGXVM (without tracing)
+func NewSGXVMKeeper(
+	cdc codec.BinaryCodec,
+	storeKey, transientKey storetypes.StoreKey,
+	authority sdk.AccAddress,
+	ak types.AccountKeeper,
+	bankKeeper types.BankKeeper,
+	sk types.StakingKeeper,
+	fmk types.FeeMarketKeeper,
+) *Keeper {
+	// ensure evm module account is set
+	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
+		panic("the EVM module account has not been set")
+	}
+
+	// ensure the authority account is correct
+	if err := sdk.VerifyAddressFormat(authority); err != nil {
+		panic(err)
+	}
+
+	// NOTE: we pass in the parameter space to the CommitStateDB in order to use custom denominations for the EVM operations
+	return &Keeper{
+		cdc:             cdc,
+		authority:       authority,
+		accountKeeper:   ak,
+		bankKeeper:      bankKeeper,
+		stakingKeeper:   sk,
+		feeMarketKeeper: fmk,
+		storeKey:        storeKey,
+		transientKey:    transientKey,
+	}
+}
+
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", types.ModuleName)
