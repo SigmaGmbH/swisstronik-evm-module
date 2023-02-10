@@ -1,11 +1,11 @@
 package keeper_test
 
 import (
+	evmkeeper "github.com/SigmaGmbH/evm-module/x/evm/keeper"
+	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/SigmaGmbH/librustgo"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
-	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/golang/protobuf/proto"
 	"math/big"
 	"math/rand"
