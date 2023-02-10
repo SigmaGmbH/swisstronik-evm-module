@@ -6,6 +6,12 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	"github.com/SigmaGmbH/evm-module/app"
+	"github.com/SigmaGmbH/evm-module/encoding"
+	"github.com/SigmaGmbH/evm-module/ethereum/eip712"
+	"github.com/SigmaGmbH/evm-module/tests"
+	"github.com/SigmaGmbH/evm-module/types"
+	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -13,12 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/evmos/ethermint/app"
-	"github.com/evmos/ethermint/encoding"
-	"github.com/evmos/ethermint/ethereum/eip712"
-	"github.com/evmos/ethermint/tests"
-	"github.com/evmos/ethermint/types"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/require"
 )
 
