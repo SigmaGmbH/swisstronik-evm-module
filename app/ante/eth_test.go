@@ -6,9 +6,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/evmos/ethermint/app/ante"
-	"github.com/evmos/ethermint/server/config"
-	"github.com/evmos/ethermint/tests"
+	"github.com/SigmaGmbH/evm-module/app/ante"
+	"github.com/SigmaGmbH/evm-module/server/config"
+	"github.com/SigmaGmbH/evm-module/tests"
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
