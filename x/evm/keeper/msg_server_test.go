@@ -5,10 +5,10 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"math/big"
 
+	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
+	"github.com/SigmaGmbH/evm-module/x/evm/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
-	"github.com/evmos/ethermint/x/evm/statedb"
-	"github.com/evmos/ethermint/x/evm/types"
 )
 
 func (suite *KeeperTestSuite) TestEthereumTx() {

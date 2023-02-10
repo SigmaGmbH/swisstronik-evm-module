@@ -1,12 +1,12 @@
 package keeper_test
 
 import (
+	"github.com/SigmaGmbH/evm-module/x/evm/keeper"
+	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
+	"github.com/SigmaGmbH/evm-module/x/evm/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
-	"github.com/evmos/ethermint/x/evm/keeper"
-	"github.com/evmos/ethermint/x/evm/statedb"
-	"github.com/evmos/ethermint/x/evm/types"
 	"math/big"
 )
 

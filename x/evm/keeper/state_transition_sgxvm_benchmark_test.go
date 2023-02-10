@@ -5,11 +5,11 @@ import (
 	"math/big"
 	"testing"
 
+	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/require"
 )
 

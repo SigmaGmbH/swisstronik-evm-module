@@ -12,14 +12,14 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	"github.com/SigmaGmbH/evm-module/crypto/ethsecp256k1"
+	"github.com/SigmaGmbH/evm-module/tests"
+	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
+	"github.com/SigmaGmbH/evm-module/x/evm/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/evmos/ethermint/crypto/ethsecp256k1"
-	"github.com/evmos/ethermint/tests"
-	"github.com/evmos/ethermint/x/evm/statedb"
-	"github.com/evmos/ethermint/x/evm/types"
 )
 
 func (suite *KeeperTestSuite) TestCreateAccount() {

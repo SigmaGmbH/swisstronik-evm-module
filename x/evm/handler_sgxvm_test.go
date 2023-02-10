@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/evmos/ethermint/x/evm/keeper"
+	"github.com/SigmaGmbH/evm-module/x/evm/keeper"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/gogo/protobuf/proto"
@@ -16,7 +16,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
+	feemarkettypes "github.com/SigmaGmbH/evm-module/x/feemarket/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,12 +26,12 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 
-	"github.com/evmos/ethermint/app"
-	"github.com/evmos/ethermint/crypto/ethsecp256k1"
-	"github.com/evmos/ethermint/tests"
-	ethermint "github.com/evmos/ethermint/types"
-	"github.com/evmos/ethermint/x/evm"
-	"github.com/evmos/ethermint/x/evm/types"
+	"github.com/SigmaGmbH/evm-module/app"
+	"github.com/SigmaGmbH/evm-module/crypto/ethsecp256k1"
+	"github.com/SigmaGmbH/evm-module/tests"
+	ethermint "github.com/SigmaGmbH/evm-module/types"
+	"github.com/SigmaGmbH/evm-module/x/evm"
+	"github.com/SigmaGmbH/evm-module/x/evm/types"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"

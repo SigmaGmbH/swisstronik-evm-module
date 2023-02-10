@@ -7,19 +7,19 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
+	"github.com/SigmaGmbH/evm-module/tests"
+	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
 	ethparams "github.com/ethereum/go-ethereum/params"
-	"github.com/evmos/ethermint/tests"
-	"github.com/evmos/ethermint/x/evm/statedb"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/evmos/ethermint/server/config"
-	ethermint "github.com/evmos/ethermint/types"
-	"github.com/evmos/ethermint/x/evm/types"
+	"github.com/SigmaGmbH/evm-module/server/config"
+	ethermint "github.com/SigmaGmbH/evm-module/types"
+	"github.com/SigmaGmbH/evm-module/x/evm/types"
 )
 
 // Not valid Ethereum address

@@ -5,12 +5,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/SigmaGmbH/evm-module/crypto/ethsecp256k1"
+	etherminttypes "github.com/SigmaGmbH/evm-module/types"
+	"github.com/SigmaGmbH/evm-module/x/evm"
+	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
+	"github.com/SigmaGmbH/evm-module/x/evm/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/evmos/ethermint/crypto/ethsecp256k1"
-	etherminttypes "github.com/evmos/ethermint/types"
-	"github.com/evmos/ethermint/x/evm"
-	"github.com/evmos/ethermint/x/evm/statedb"
-	"github.com/evmos/ethermint/x/evm/types"
 )
 
 func (suite *EvmTestSuite) TestInitGenesis() {

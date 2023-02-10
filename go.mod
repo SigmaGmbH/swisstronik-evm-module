@@ -1,4 +1,4 @@
-module github.com/evmos/ethermint
+module github.com/SigmaGmbH/evm-module
 
 go 1.19
 

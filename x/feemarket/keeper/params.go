@@ -18,7 +18,7 @@ package keeper
 import (
 	"math/big"
 
-	"github.com/evmos/ethermint/x/feemarket/types"
+	"github.com/SigmaGmbH/evm-module/x/feemarket/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
