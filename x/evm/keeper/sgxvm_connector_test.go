@@ -1,14 +1,14 @@
 package keeper_test
 
 import (
+	evmkeeper "github.com/SigmaGmbH/evm-module/x/evm/keeper"
+	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/SigmaGmbH/librustgo"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	"github.com/golang/protobuf/proto"
 	"math/big"
 	"math/rand"
-	"time"
 )
 
 func insertAccount(
@@ -36,6 +36,8 @@ func insertAccount(
 		return queryErr
 	}
 
+	_ = connector.StateDB.Commit()
+
 	response := &librustgo.QueryInsertAccountResponse{}
 	decodingError := proto.Unmarshal(responseBytes, response)
 	if decodingError != nil {
@@ -48,14 +50,12 @@ func insertAccount(
 func (suite *KeeperTestSuite) TestSGXVMConnector() {
 	var (
 		connector evmkeeper.Connector
+		vmdb      *statedb.StateDB
 	)
 
-	headerHash := common.BigToHash(big.NewInt(1234))
-	timestamp := time.Now()
-
+	vmdb = suite.StateDB()
 	connector = evmkeeper.Connector{
-		Ctx:    suite.ctx.WithHeaderHash(headerHash.Bytes()).WithBlockTime(timestamp),
-		Keeper: suite.app.EvmKeeper,
+		StateDB: vmdb,
 	}
 
 	testCases := []struct {
@@ -65,16 +65,18 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 		{
 			"Should be able to insert account",
 			func() {
+				var err error
+
 				addressToSet := common.BigToAddress(big.NewInt(rand.Int63n(100000)))
 				balanceToSet := big.NewInt(10000)
 				nonceToSet := big.NewInt(1)
 
-				err := insertAccount(&connector, addressToSet, balanceToSet, nonceToSet)
+				err = insertAccount(&connector, addressToSet, balanceToSet, nonceToSet)
 				suite.Require().NoError(err)
 
 				// Check if account was inserted correctly
-				balance := connector.Keeper.GetBalance(connector.Ctx, addressToSet)
-				nonce := connector.Keeper.GetNonce(connector.Ctx, addressToSet)
+				balance := vmdb.GetBalance(addressToSet)
+				nonce := vmdb.GetNonce(addressToSet)
 
 				suite.Require().Equal(balanceToSet, balance)
 				suite.Require().Equal(nonceToSet.Uint64(), nonce)
@@ -149,16 +151,18 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 		{
 			"Should be able to set account code",
 			func() {
+				var err error
+
 				// Arrange
 				addressToSet := common.BigToAddress(big.NewInt(rand.Int63n(100000)))
 				bytecode := make([]byte, 32)
 				rand.Read(bytecode)
 
-				err := insertAccount(&connector, addressToSet, big.NewInt(0), big.NewInt(1))
+				err = insertAccount(&connector, addressToSet, big.NewInt(0), big.NewInt(1))
 				suite.Require().NoError(err)
 
 				// Encode request
-				request, encodeErr := proto.Marshal(&librustgo.CosmosRequest{
+				request, err := proto.Marshal(&librustgo.CosmosRequest{
 					Req: &librustgo.CosmosRequest_InsertAccountCode{
 						InsertAccountCode: &librustgo.QueryInsertAccountCode{
 							Address: addressToSet.Bytes(),
@@ -166,37 +170,36 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 						},
 					},
 				})
-				suite.Require().NoError(encodeErr)
+				suite.Require().NoError(err)
 
 				// Make a query
-				_, queryErr := connector.Query(request)
-				suite.Require().NoError(queryErr)
+				_, err = connector.Query(request)
+				suite.Require().NoError(err)
 
 				// Check if account code was set correctly
 				codeHash := crypto.Keccak256(bytecode)
-				recoveredCode := connector.Keeper.GetCode(connector.Ctx, common.BytesToHash(codeHash))
+				recoveredCode := vmdb.GetCode(addressToSet)
+				recoveredCodeHash := vmdb.GetCodeHash(addressToSet)
 				suite.Require().Equal(bytecode, recoveredCode)
-
-				// Check if code hash was set correctly
-				account := connector.Keeper.GetAccount(connector.Ctx, addressToSet)
-				suite.Require().NotNil(account)
-				suite.Require().Equal(codeHash, account.CodeHash)
+				suite.Require().Equal(codeHash, recoveredCodeHash.Bytes())
 			},
 		},
 		{
 			"Should be able to set & get account code",
 			func() {
+				var err error
+
 				addressToSet := common.BigToAddress(big.NewInt(rand.Int63n(100000)))
 				bytecode := make([]byte, 128)
 				rand.Read(bytecode)
 
-				err := insertAccount(&connector, addressToSet, big.NewInt(0), big.NewInt(1))
+				err = insertAccount(&connector, addressToSet, big.NewInt(0), big.NewInt(1))
 				suite.Require().NoError(err)
 
 				//
 				// Insert account code
 				//
-				request, encodeErr := proto.Marshal(&librustgo.CosmosRequest{
+				request, err := proto.Marshal(&librustgo.CosmosRequest{
 					Req: &librustgo.CosmosRequest_InsertAccountCode{
 						InsertAccountCode: &librustgo.QueryInsertAccountCode{
 							Address: addressToSet.Bytes(),
@@ -204,26 +207,29 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 						},
 					},
 				})
-				suite.Require().NoError(encodeErr)
+				suite.Require().NoError(err)
 
-				responseBytes, queryErr := connector.Query(request)
-				suite.Require().NoError(queryErr)
+				responseBytes, err := connector.Query(request)
+				suite.Require().NoError(err)
 
 				response := &librustgo.QueryInsertAccountCodeResponse{}
-				decodingError := proto.Unmarshal(responseBytes, response)
-				suite.Require().NoError(decodingError)
+				err = proto.Unmarshal(responseBytes, response)
+				suite.Require().NoError(err)
+
+				err = connector.StateDB.Commit()
+				suite.Require().NoError(err)
 
 				//
 				// Request inserted account code
 				//
-				getRequest, getRequestErr := proto.Marshal(&librustgo.CosmosRequest{
+				getRequest, err := proto.Marshal(&librustgo.CosmosRequest{
 					Req: &librustgo.CosmosRequest_AccountCode{
 						AccountCode: &librustgo.QueryGetAccountCode{
 							Address: addressToSet.Bytes(),
 						},
 					},
 				})
-				suite.Require().NoError(getRequestErr)
+				suite.Require().NoError(err)
 
 				responseAccountCodeBytes, queryAccountCodeErr := connector.Query(getRequest)
 				suite.Require().NoError(queryAccountCodeErr)
@@ -232,51 +238,6 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 				accCodeDecodingErr := proto.Unmarshal(responseAccountCodeBytes, accountCodeResponse)
 				suite.Require().NoError(accCodeDecodingErr)
 				suite.Require().Equal(bytecode, accountCodeResponse.Code)
-			},
-		},
-		{
-			"Should return correct block hash",
-			func() {
-				req, encodingErr := proto.Marshal(&librustgo.CosmosRequest{
-					Req: &librustgo.CosmosRequest_BlockHash{
-						BlockHash: &librustgo.QueryBlockHash{
-							Number: make([]byte, 32),
-						},
-					},
-				})
-				suite.Require().NoError(encodingErr)
-
-				responseBytes, err := connector.Query(req)
-				suite.Require().NoError(err)
-
-				response := &librustgo.QueryBlockHashResponse{}
-				decodingErr := proto.Unmarshal(responseBytes, response)
-				suite.Require().NoError(decodingErr)
-
-				// TODO: For now BlockHash request returns header hash and ignores provided BlockNumber
-				suite.Require().Equal(headerHash.Bytes(), response.Hash)
-			},
-		},
-		{
-			"Should be able to get block.timestamp",
-			func() {
-				request, encodingErr := proto.Marshal(&librustgo.CosmosRequest{
-					Req: &librustgo.CosmosRequest_BlockTimestamp{
-						BlockTimestamp: &librustgo.QueryBlockTimestamp{},
-					},
-				})
-				suite.Require().NoError(encodingErr)
-
-				responseBytes, err := connector.Query(request)
-				suite.Require().NoError(err)
-
-				response := &librustgo.QueryBlockTimestampResponse{}
-				decodingErr := proto.Unmarshal(responseBytes, response)
-				suite.Require().NoError(decodingErr)
-
-				decodedTimestamp := big.Int{}
-				decodedTimestamp.SetBytes(response.Timestamp)
-				suite.Require().Equal(timestamp.Unix(), decodedTimestamp.Int64())
 			},
 		},
 	}

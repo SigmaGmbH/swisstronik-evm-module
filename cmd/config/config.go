@@ -18,7 +18,7 @@ package config
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	ethermint "github.com/evmos/ethermint/types"
+	ethermint "github.com/SigmaGmbH/evm-module/types"
 )
 
 const (

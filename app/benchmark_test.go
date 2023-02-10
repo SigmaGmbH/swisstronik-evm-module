@@ -5,8 +5,8 @@ import (
 	"io"
 	"testing"
 
+	"github.com/SigmaGmbH/evm-module/encoding"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/evmos/ethermint/encoding"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"

@@ -20,14 +20,14 @@ import (
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
+	rpctypes "github.com/SigmaGmbH/evm-module/rpc/types"
+	ethermint "github.com/SigmaGmbH/evm-module/types"
+	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	rpctypes "github.com/evmos/ethermint/rpc/types"
-	ethermint "github.com/evmos/ethermint/types"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
 	tmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
 )

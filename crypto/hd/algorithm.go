@@ -27,7 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 
-	"github.com/evmos/ethermint/crypto/ethsecp256k1"
+	"github.com/SigmaGmbH/evm-module/crypto/ethsecp256k1"
 )
 
 const (

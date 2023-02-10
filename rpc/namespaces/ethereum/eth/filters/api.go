@@ -21,8 +21,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/SigmaGmbH/evm-module/rpc/types"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/evmos/ethermint/rpc/types"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -35,7 +35,7 @@ import (
 	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/ethereum/go-ethereum/rpc"
 
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 )
 
 // FilterAPI gathers

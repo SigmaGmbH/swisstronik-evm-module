@@ -3,11 +3,11 @@ package ante_test
 import (
 	"math/big"
 
+	"github.com/SigmaGmbH/evm-module/app/ante"
+	"github.com/SigmaGmbH/evm-module/tests"
+	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/evmos/ethermint/app/ante"
-	"github.com/evmos/ethermint/tests"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
 func (suite AnteTestSuite) TestEthSigVerificationDecorator() {

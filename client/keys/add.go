@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"sort"
 
-	etherminthd "github.com/evmos/ethermint/crypto/hd"
+	etherminthd "github.com/SigmaGmbH/evm-module/crypto/hd"
 
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"

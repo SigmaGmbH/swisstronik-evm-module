@@ -18,15 +18,15 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/evmos/ethermint/app"
-	"github.com/evmos/ethermint/crypto/ethsecp256k1"
-	"github.com/evmos/ethermint/crypto/hd"
-	"github.com/evmos/ethermint/encoding"
-	"github.com/evmos/ethermint/indexer"
-	"github.com/evmos/ethermint/rpc/backend/mocks"
-	rpctypes "github.com/evmos/ethermint/rpc/types"
-	"github.com/evmos/ethermint/tests"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/SigmaGmbH/evm-module/app"
+	"github.com/SigmaGmbH/evm-module/crypto/ethsecp256k1"
+	"github.com/SigmaGmbH/evm-module/crypto/hd"
+	"github.com/SigmaGmbH/evm-module/encoding"
+	"github.com/SigmaGmbH/evm-module/indexer"
+	"github.com/SigmaGmbH/evm-module/rpc/backend/mocks"
+	rpctypes "github.com/SigmaGmbH/evm-module/rpc/types"
+	"github.com/SigmaGmbH/evm-module/tests"
+	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 )
 
 type BackendTestSuite struct {

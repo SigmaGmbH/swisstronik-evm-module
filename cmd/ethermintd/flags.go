@@ -20,7 +20,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/evmos/ethermint/version"
+	"github.com/SigmaGmbH/evm-module/version"
 )
 
 const flagLong = "long"

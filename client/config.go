@@ -27,7 +27,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 
-	ethermint "github.com/evmos/ethermint/types"
+	ethermint "github.com/SigmaGmbH/evm-module/types"
 )
 
 // InitConfig adds the chain-id, encoding and output flags to the persistent flag set.

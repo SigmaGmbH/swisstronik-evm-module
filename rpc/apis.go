@@ -23,16 +23,16 @@ import (
 
 	"github.com/ethereum/go-ethereum/rpc"
 
-	"github.com/evmos/ethermint/rpc/backend"
-	"github.com/evmos/ethermint/rpc/namespaces/ethereum/debug"
-	"github.com/evmos/ethermint/rpc/namespaces/ethereum/eth"
-	"github.com/evmos/ethermint/rpc/namespaces/ethereum/eth/filters"
-	"github.com/evmos/ethermint/rpc/namespaces/ethereum/miner"
-	"github.com/evmos/ethermint/rpc/namespaces/ethereum/net"
-	"github.com/evmos/ethermint/rpc/namespaces/ethereum/personal"
-	"github.com/evmos/ethermint/rpc/namespaces/ethereum/txpool"
-	"github.com/evmos/ethermint/rpc/namespaces/ethereum/web3"
-	ethermint "github.com/evmos/ethermint/types"
+	"github.com/SigmaGmbH/evm-module/rpc/backend"
+	"github.com/SigmaGmbH/evm-module/rpc/namespaces/ethereum/debug"
+	"github.com/SigmaGmbH/evm-module/rpc/namespaces/ethereum/eth"
+	"github.com/SigmaGmbH/evm-module/rpc/namespaces/ethereum/eth/filters"
+	"github.com/SigmaGmbH/evm-module/rpc/namespaces/ethereum/miner"
+	"github.com/SigmaGmbH/evm-module/rpc/namespaces/ethereum/net"
+	"github.com/SigmaGmbH/evm-module/rpc/namespaces/ethereum/personal"
+	"github.com/SigmaGmbH/evm-module/rpc/namespaces/ethereum/txpool"
+	"github.com/SigmaGmbH/evm-module/rpc/namespaces/ethereum/web3"
+	ethermint "github.com/SigmaGmbH/evm-module/types"
 
 	rpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 )

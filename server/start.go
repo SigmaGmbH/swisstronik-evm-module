@@ -61,11 +61,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/evmos/ethermint/indexer"
-	ethdebug "github.com/evmos/ethermint/rpc/namespaces/ethereum/debug"
-	"github.com/evmos/ethermint/server/config"
-	srvflags "github.com/evmos/ethermint/server/flags"
-	ethermint "github.com/evmos/ethermint/types"
+	"github.com/SigmaGmbH/evm-module/indexer"
+	ethdebug "github.com/SigmaGmbH/evm-module/rpc/namespaces/ethereum/debug"
+	"github.com/SigmaGmbH/evm-module/server/config"
+	srvflags "github.com/SigmaGmbH/evm-module/server/flags"
+	ethermint "github.com/SigmaGmbH/evm-module/types"
 )
 
 // DBOpener is a function to open `application.db`, potentially with customized options.

@@ -10,8 +10,8 @@ import (
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
-	"github.com/evmos/ethermint/app"
-	ethermintd "github.com/evmos/ethermint/cmd/ethermintd"
+	"github.com/SigmaGmbH/evm-module/app"
+	ethermintd "github.com/SigmaGmbH/evm-module/cmd/ethermintd"
 )
 
 func TestInitCmd(t *testing.T) {

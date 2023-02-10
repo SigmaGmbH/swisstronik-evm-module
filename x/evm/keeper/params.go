@@ -16,8 +16,8 @@
 package keeper
 
 import (
+	"github.com/SigmaGmbH/evm-module/x/evm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/evmos/ethermint/x/evm/types"
 )
 
 // GetParams returns the total set of evm parameters.

@@ -17,9 +17,9 @@ package ante
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
 // RejectMessagesDecorator prevents invalid msg types from being executed

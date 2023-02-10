@@ -39,9 +39,9 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	ethparams "github.com/ethereum/go-ethereum/params"
 
-	ethermint "github.com/evmos/ethermint/types"
-	"github.com/evmos/ethermint/x/evm/statedb"
-	"github.com/evmos/ethermint/x/evm/types"
+	ethermint "github.com/SigmaGmbH/evm-module/types"
+	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
+	"github.com/SigmaGmbH/evm-module/x/evm/types"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -257,8 +257,12 @@ func (k Keeper) EthCall(c context.Context, req *types.EthCallRequest) (*types.Ms
 
 	txConfig := statedb.NewEmptyTxConfig(common.BytesToHash(ctx.HeaderHash()))
 
+	txContext, err := CreateSGXVMContextFromMessage(ctx, &k, msg)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 	// pass false to not commit StateDB
-	res, err := k.ApplyMessageWithConfig(ctx, msg, nil, false, cfg, txConfig)
+	res, err := k.ApplySGXVMMessage(ctx, msg, false, cfg, txConfig, txContext)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -352,8 +356,13 @@ func (k Keeper) EstimateGas(c context.Context, req *types.EthCallRequest) (*type
 			msg.IsFake(),
 		)
 
+		txContext, err := CreateSGXVMContextFromMessage(ctx, &k, msg)
+		if err != nil {
+			return true, nil, err
+		}
+
 		// pass false to not commit StateDB
-		rsp, err = k.ApplyMessageWithConfig(ctx, msg, nil, false, cfg, txConfig)
+		rsp, err = k.ApplySGXVMMessage(ctx, msg, false, cfg, txConfig, txContext)
 		if err != nil {
 			if errors.Is(err, core.ErrIntrinsicGas) {
 				return true, nil, nil // Special case, raise gas limit
@@ -432,7 +441,12 @@ func (k Keeper) TraceTx(c context.Context, req *types.QueryTraceTxRequest) (*typ
 		}
 		txConfig.TxHash = ethTx.Hash()
 		txConfig.TxIndex = uint(i)
-		rsp, err := k.ApplyMessageWithConfig(ctx, msg, types.NewNoOpTracer(), true, cfg, txConfig)
+
+		txContext, err := CreateSGXVMContext(ctx, &k, ethTx)
+		if err != nil {
+			continue
+		}
+		rsp, err := k.ApplySGXVMMessage(ctx, msg, true, cfg, txConfig, txContext)
 		if err != nil {
 			continue
 		}
@@ -602,7 +616,11 @@ func (k *Keeper) traceTx(
 		}
 	}()
 
-	res, err := k.ApplyMessageWithConfig(ctx, msg, tracer, commitMessage, cfg, txConfig)
+	txContext, err := CreateSGXVMContextFromMessage(ctx, k, msg)
+	if err != nil {
+		return nil, 0, status.Error(codes.Internal, err.Error())
+	}
+	res, err := k.ApplySGXVMMessage(ctx, msg, commitMessage, cfg, txConfig, txContext)
 	if err != nil {
 		return nil, 0, status.Error(codes.Internal, err.Error())
 	}

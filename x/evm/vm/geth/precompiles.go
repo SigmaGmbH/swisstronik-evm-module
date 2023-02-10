@@ -21,7 +21,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/params"
 
-	evm "github.com/evmos/ethermint/x/evm/vm"
+	evm "github.com/SigmaGmbH/evm-module/x/evm/vm"
 )
 
 // GetPrecompiles returns all the precompiled contracts defined given the

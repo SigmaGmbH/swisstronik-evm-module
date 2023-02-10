@@ -5,6 +5,9 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"encoding/json"
 	"fmt"
+	ethermint "github.com/SigmaGmbH/evm-module/types"
+	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
+	"github.com/SigmaGmbH/evm-module/x/evm/types"
 	"github.com/SigmaGmbH/librustgo"
 	"github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -14,9 +17,6 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
-	ethermint "github.com/evmos/ethermint/types"
-	"github.com/evmos/ethermint/x/evm/statedb"
-	"github.com/evmos/ethermint/x/evm/types"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"math/big"
@@ -162,7 +162,7 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 		return nil, errorsmod.Wrap(err, "failed to return ethereum transaction as core message")
 	}
 
-	txContext, err := createSGXVMConfig(ctx, k, tx)
+	txContext, err := CreateSGXVMContext(ctx, k, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -285,13 +285,20 @@ func (k *Keeper) ApplySGXVMMessage(
 	txConfig statedb.TxConfig,
 	txContext *librustgo.TransactionContext,
 ) (*types.MsgEthereumTxResponse, error) {
+	// return error if contract creation or call are disabled through governance
+	if !cfg.Params.EnableCreate && msg.To() == nil {
+		return nil, errorsmod.Wrap(types.ErrCreateDisabled, "failed to create new contract")
+	} else if !cfg.Params.EnableCall && msg.To() != nil {
+		return nil, errorsmod.Wrap(types.ErrCallDisabled, "failed to call contract")
+	}
+
 	// convert `to` field to bytes
 	var destination []byte
 	if msg.To() != nil {
 		destination = msg.To().Bytes()
 	}
 
-	stateDB := statedb.New(ctx, k, txConfig) // TODO: Use stateDB to be able to revert changes
+	stateDB := statedb.New(ctx, k, txConfig)
 	leftoverGas := msg.Gas()
 	contractCreation := msg.To() == nil
 	intrinsicGas, err := k.GetEthIntrinsicGas(ctx, msg, cfg.ChainConfig, contractCreation)
@@ -308,8 +315,7 @@ func (k *Keeper) ApplySGXVMMessage(
 	leftoverGas -= intrinsicGas
 
 	connector := Connector{
-		Ctx:    ctx,
-		Keeper: k,
+		StateDB: stateDB,
 	}
 
 	res, err := librustgo.HandleTx(
@@ -332,9 +338,8 @@ func (k *Keeper) ApplySGXVMMessage(
 	// refund gas
 	temporaryGasUsed := msg.Gas() - leftoverGas
 	refundQuotient := params.RefundQuotientEIP3529
-	leftoverGas += GasToRefund(stateDB.GetRefund(), temporaryGasUsed, refundQuotient) // TODO: Check how to obtain gasToRefund from SGXVM
+	leftoverGas += GasToRefund(stateDB.GetRefund(), temporaryGasUsed, refundQuotient)
 
-	// TODO: Check how to revert state if case of revert
 	// The dirty states in `StateDB` is either committed or discarded after return
 	if commit {
 		if err := stateDB.Commit(); err != nil {
@@ -352,7 +357,7 @@ func (k *Keeper) ApplySGXVMMessage(
 	}, nil
 }
 
-func createSGXVMConfig(ctx sdk.Context, k *Keeper, tx *ethtypes.Transaction) (*librustgo.TransactionContext, error) {
+func CreateSGXVMContext(ctx sdk.Context, k *Keeper, tx *ethtypes.Transaction) (*librustgo.TransactionContext, error) {
 	cfg, err := k.EVMConfig(ctx, ctx.BlockHeader().ProposerAddress, k.eip155ChainID)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "failed to load evm config")
@@ -366,7 +371,23 @@ func createSGXVMConfig(ctx sdk.Context, k *Keeper, tx *ethtypes.Transaction) (*l
 		BlockGasLimit:      ethermint.BlockGasLimit(ctx),
 		ChainId:            k.eip155ChainID.Uint64(),
 		GasPrice:           tx.GasPrice().Bytes(),
-		BlockHash:          common.Hash{}.Bytes(), // TODO: Decide if we need this field
+	}, nil
+}
+
+func CreateSGXVMContextFromMessage(ctx sdk.Context, k *Keeper, msg core.Message) (*librustgo.TransactionContext, error) {
+	cfg, err := k.EVMConfig(ctx, ctx.BlockHeader().ProposerAddress, k.eip155ChainID)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "failed to load evm config")
+	}
+
+	return &librustgo.TransactionContext{
+		BlockCoinbase:      cfg.CoinBase.Bytes(),
+		BlockNumber:        uint64(ctx.BlockHeight()),
+		BlockBaseFeePerGas: cfg.BaseFee.Bytes(),
+		Timestamp:          uint64(ctx.BlockHeader().Time.Unix()),
+		BlockGasLimit:      ethermint.BlockGasLimit(ctx),
+		ChainId:            k.eip155ChainID.Uint64(),
+		GasPrice:           msg.GasPrice().Bytes(),
 	}, nil
 }
 
