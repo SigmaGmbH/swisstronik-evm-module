@@ -226,7 +226,6 @@ which accepts a path for the resulting pprof file.
 }
 
 func startStandAlone(ctx *server.Context, opts StartOptions) error {
-	println("DEBUG")
 	addr := ctx.Viper.GetString(srvflags.Address)
 	transport := ctx.Viper.GetString(srvflags.Transport)
 	home := ctx.Viper.GetString(flags.FlagHome)
