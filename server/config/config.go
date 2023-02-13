@@ -53,7 +53,7 @@ const (
 
 	DefaultGasCap uint64 = 25000000
 
-	DefaultFilterCap int32 = 150 // TODO: Need to check if params are were overriden somewhere
+	DefaultFilterCap int32 = 200
 
 	DefaultFeeHistoryCap int32 = 100
 
