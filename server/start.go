@@ -226,7 +226,7 @@ which accepts a path for the resulting pprof file.
 }
 
 func startStandAlone(ctx *server.Context, opts StartOptions) error {
-	ctx.Logger.Debug("JSON-RPC: startStandAlone")
+	println("DEBUG")
 	addr := ctx.Viper.GetString(srvflags.Address)
 	transport := ctx.Viper.GetString(srvflags.Transport)
 	home := ctx.Viper.GetString(flags.FlagHome)
