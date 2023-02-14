@@ -18,7 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/SigmaGmbH/evm-module/server/config"
-	ethermint "github.com/SigmaGmbH/evm-module/types"
+	evmcommontypes "github.com/SigmaGmbH/evm-module/types"
 	"github.com/SigmaGmbH/evm-module/x/evm/types"
 )
 
@@ -53,7 +53,7 @@ func (suite *KeeperTestSuite) TestQueryAccount() {
 		{
 			"success",
 			func() {
-				amt := sdk.Coins{ethermint.NewPhotonCoinInt64(100)}
+				amt := sdk.Coins{evmcommontypes.NewPhotonCoinInt64(100)}
 				err := suite.app.BankKeeper.MintCoins(suite.ctx, types.ModuleName, amt)
 				suite.Require().NoError(err)
 				err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, suite.address.Bytes(), amt)
@@ -194,7 +194,7 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 		{
 			"success",
 			func() {
-				amt := sdk.Coins{ethermint.NewPhotonCoinInt64(100)}
+				amt := sdk.Coins{evmcommontypes.NewPhotonCoinInt64(100)}
 				err := suite.app.BankKeeper.MintCoins(suite.ctx, types.ModuleName, amt)
 				suite.Require().NoError(err)
 				err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, suite.address.Bytes(), amt)

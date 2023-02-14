@@ -5,7 +5,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"encoding/json"
 	"fmt"
-	ethermint "github.com/SigmaGmbH/evm-module/types"
+	evmcommontypes "github.com/SigmaGmbH/evm-module/types"
 	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/SigmaGmbH/evm-module/x/evm/types"
 	"github.com/SigmaGmbH/librustgo"
@@ -368,7 +368,7 @@ func CreateSGXVMContext(ctx sdk.Context, k *Keeper, tx *ethtypes.Transaction) (*
 		BlockNumber:        uint64(ctx.BlockHeight()),
 		BlockBaseFeePerGas: cfg.BaseFee.Bytes(),
 		Timestamp:          uint64(ctx.BlockHeader().Time.Unix()),
-		BlockGasLimit:      ethermint.BlockGasLimit(ctx),
+		BlockGasLimit:      evmcommontypes.BlockGasLimit(ctx),
 		ChainId:            k.eip155ChainID.Uint64(),
 		GasPrice:           tx.GasPrice().Bytes(),
 	}, nil
@@ -385,7 +385,7 @@ func CreateSGXVMContextFromMessage(ctx sdk.Context, k *Keeper, msg core.Message)
 		BlockNumber:        uint64(ctx.BlockHeight()),
 		BlockBaseFeePerGas: cfg.BaseFee.Bytes(),
 		Timestamp:          uint64(ctx.BlockHeader().Time.Unix()),
-		BlockGasLimit:      ethermint.BlockGasLimit(ctx),
+		BlockGasLimit:      evmcommontypes.BlockGasLimit(ctx),
 		ChainId:            k.eip155ChainID.Uint64(),
 		GasPrice:           msg.GasPrice().Bytes(),
 	}, nil

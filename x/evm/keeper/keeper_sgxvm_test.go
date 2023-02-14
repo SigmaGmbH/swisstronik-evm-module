@@ -24,7 +24,7 @@ import (
 	"github.com/SigmaGmbH/evm-module/encoding"
 	"github.com/SigmaGmbH/evm-module/server/config"
 	"github.com/SigmaGmbH/evm-module/tests"
-	ethermint "github.com/SigmaGmbH/evm-module/types"
+	evmcommontypes "github.com/SigmaGmbH/evm-module/types"
 	"github.com/SigmaGmbH/evm-module/x/evm/types"
 	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 
@@ -156,7 +156,7 @@ func (suite *KeeperTestSuite) SetupSGXVMAppWithT(checkTx bool, t require.Testing
 	types.RegisterQueryServer(queryHelper, suite.app.EvmKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 
-	acc := &ethermint.EthAccount{
+	acc := &evmcommontypes.EthAccount{
 		BaseAccount: authtypes.NewBaseAccount(sdk.AccAddress(suite.address.Bytes()), nil, 0, 0),
 		CodeHash:    common.BytesToHash(crypto.Keccak256(nil)).String(),
 	}

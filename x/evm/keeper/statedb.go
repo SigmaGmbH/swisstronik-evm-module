@@ -22,7 +22,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	errorsmod "cosmossdk.io/errors"
-	ethermint "github.com/SigmaGmbH/evm-module/types"
+	evmcommontypes "github.com/SigmaGmbH/evm-module/types"
 	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/SigmaGmbH/evm-module/x/evm/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -132,7 +132,7 @@ func (k *Keeper) SetAccount(ctx sdk.Context, addr common.Address, account stated
 
 	codeHash := common.BytesToHash(account.CodeHash)
 
-	if ethAcct, ok := acct.(ethermint.EthAccountI); ok {
+	if ethAcct, ok := acct.(evmcommontypes.EthAccountI); ok {
 		if err := ethAcct.SetCodeHash(codeHash); err != nil {
 			return err
 		}
@@ -202,7 +202,7 @@ func (k *Keeper) DeleteAccount(ctx sdk.Context, addr common.Address) error {
 	}
 
 	// NOTE: only Ethereum accounts (contracts) can be selfdestructed
-	_, ok := acct.(ethermint.EthAccountI)
+	_, ok := acct.(evmcommontypes.EthAccountI)
 	if !ok {
 		return errorsmod.Wrapf(types.ErrInvalidAccount, "type %T, address %s", acct, addr)
 	}

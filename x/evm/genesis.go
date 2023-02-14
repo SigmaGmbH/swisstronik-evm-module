@@ -25,7 +25,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	ethermint "github.com/SigmaGmbH/evm-module/types"
+	evmcommontypes "github.com/SigmaGmbH/evm-module/types"
 	"github.com/SigmaGmbH/evm-module/x/evm/keeper"
 	"github.com/SigmaGmbH/evm-module/x/evm/types"
 )
@@ -58,7 +58,7 @@ func InitGenesis(
 			panic(fmt.Errorf("account not found for address %s", account.Address))
 		}
 
-		ethAcct, ok := acc.(ethermint.EthAccountI)
+		ethAcct, ok := acc.(evmcommontypes.EthAccountI)
 		if !ok {
 			panic(
 				fmt.Errorf("account %s must be an EthAccount interface, got %T",
@@ -90,7 +90,7 @@ func InitGenesis(
 func ExportGenesis(ctx sdk.Context, k *keeper.Keeper, ak types.AccountKeeper) *types.GenesisState {
 	var ethGenAccounts []types.GenesisAccount
 	ak.IterateAccounts(ctx, func(account authtypes.AccountI) bool {
-		ethAccount, ok := account.(ethermint.EthAccountI)
+		ethAccount, ok := account.(evmcommontypes.EthAccountI)
 		if !ok {
 			// ignore non EthAccounts
 			return false

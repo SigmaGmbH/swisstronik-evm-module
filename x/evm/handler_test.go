@@ -36,7 +36,7 @@ import (
 	"github.com/SigmaGmbH/evm-module/app"
 	"github.com/SigmaGmbH/evm-module/crypto/ethsecp256k1"
 	"github.com/SigmaGmbH/evm-module/tests"
-	ethermint "github.com/SigmaGmbH/evm-module/types"
+	evmcommontypes "github.com/SigmaGmbH/evm-module/types"
 	"github.com/SigmaGmbH/evm-module/x/evm"
 	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/SigmaGmbH/evm-module/x/evm/types"
@@ -150,7 +150,7 @@ func (suite *EvmTestSuite) DoSetupTest(t require.TestingT) {
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.EvmKeeper)
 
-	acc := &ethermint.EthAccount{
+	acc := &evmcommontypes.EthAccount{
 		BaseAccount: authtypes.NewBaseAccount(sdk.AccAddress(address.Bytes()), nil, 0, 0),
 		CodeHash:    common.BytesToHash(crypto.Keccak256(nil)).String(),
 	}

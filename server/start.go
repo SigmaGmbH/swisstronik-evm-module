@@ -65,7 +65,7 @@ import (
 	ethdebug "github.com/SigmaGmbH/evm-module/rpc/namespaces/ethereum/debug"
 	"github.com/SigmaGmbH/evm-module/server/config"
 	srvflags "github.com/SigmaGmbH/evm-module/server/flags"
-	ethermint "github.com/SigmaGmbH/evm-module/types"
+	evmcommontypes "github.com/SigmaGmbH/evm-module/types"
 )
 
 // DBOpener is a function to open `application.db`, potentially with customized options.
@@ -424,7 +424,7 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 		ethmetricsexp.Setup(config.JSONRPC.MetricsAddress)
 	}
 
-	var idxer ethermint.EVMTxIndexer
+	var idxer evmcommontypes.EVMTxIndexer
 	if config.JSONRPC.EnableIndexer {
 		idxDB, err := OpenIndexerDB(home, server.GetAppDBBackend(ctx.Viper))
 		if err != nil {

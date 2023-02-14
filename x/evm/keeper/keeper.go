@@ -31,7 +31,7 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/tendermint/tendermint/libs/log"
 
-	ethermint "github.com/SigmaGmbH/evm-module/types"
+	evmcommontypes "github.com/SigmaGmbH/evm-module/types"
 	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/SigmaGmbH/evm-module/x/evm/types"
 	evm "github.com/SigmaGmbH/evm-module/x/evm/vm"
@@ -163,7 +163,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // WithChainID sets the chain id to the local variable in the keeper
 func (k *Keeper) WithChainID(ctx sdk.Context) {
-	chainID, err := ethermint.ParseChainID(ctx.ChainID())
+	chainID, err := evmcommontypes.ParseChainID(ctx.ChainID())
 	if err != nil {
 		panic(err)
 	}
@@ -317,7 +317,7 @@ func (k *Keeper) GetAccountWithoutBalance(ctx sdk.Context, addr common.Address) 
 	}
 
 	codeHash := types.EmptyCodeHash
-	ethAcct, ok := acct.(ethermint.EthAccountI)
+	ethAcct, ok := acct.(evmcommontypes.EthAccountI)
 	if ok {
 		codeHash = ethAcct.GetCodeHash().Bytes()
 	}

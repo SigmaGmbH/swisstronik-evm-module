@@ -18,12 +18,12 @@ package types
 import (
 	"fmt"
 
-	ethermint "github.com/SigmaGmbH/evm-module/types"
+	evmcommontypes "github.com/SigmaGmbH/evm-module/types"
 )
 
 // Validate performs a basic validation of a GenesisAccount fields.
 func (ga GenesisAccount) Validate() error {
-	if err := ethermint.ValidateAddress(ga.Address); err != nil {
+	if err := evmcommontypes.ValidateAddress(ga.Address); err != nil {
 		return err
 	}
 	return ga.Storage.Validate()
