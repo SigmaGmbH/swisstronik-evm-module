@@ -49,7 +49,8 @@ var (
 
 // ParamKeyTable returns the parameter key table.
 func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
+	defaultParams := DefaultParams()
+	return paramtypes.NewKeyTable().RegisterParamSet(&defaultParams)
 }
 
 // ParamSetPairs returns the parameter set pairs.

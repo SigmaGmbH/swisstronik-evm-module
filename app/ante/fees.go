@@ -23,7 +23,6 @@ import (
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 
 	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 )
 
@@ -85,7 +84,7 @@ func (mpd MinGasPriceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 	minGasPrice := mpd.feesKeeper.GetParams(ctx).MinGasPrice
 	if minGasPrice.IsNil() {
-		minGasPrice = sdktypes.ZeroDec() // TODO: Need to decide should we fail if value is nil or set it to zero
+		return ctx, errorsmod.Wrap(errortypes.ErrInvalidType, "FeeMarketKeeper was not properly initialized, minGasPrice is nil")
 	}
 
 	// Short-circuit if min gas price is 0 or if simulating
