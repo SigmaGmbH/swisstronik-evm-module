@@ -84,6 +84,8 @@ func (mpd MinGasPriceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 	minGasPrice := mpd.feesKeeper.GetParams(ctx).MinGasPrice
 
+	// TODO: REMOVE
+	panic("DEBUG PANIC")
 	// Short-circuit if min gas price is 0 or if simulating
 	if minGasPrice.IsZero() || simulate {
 		return next(ctx, tx, simulate)
