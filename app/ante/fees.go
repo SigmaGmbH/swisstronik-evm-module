@@ -23,6 +23,7 @@ import (
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 
 	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 )
 
@@ -83,9 +84,12 @@ func (mpd MinGasPriceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 	}
 
 	minGasPrice := mpd.feesKeeper.GetParams(ctx).MinGasPrice
+	if minGasPrice.IsNil() {
+		minGasPrice = sdktypes.ZeroDec() // TODO: Need to decide should we fail if value is nil or set it to zero
+	}
 
 	// Short-circuit if min gas price is 0 or if simulating
-	if minGasPrice.IsZero() || simulate { // FIXME: .IsZero fails
+	if minGasPrice.IsZero() || simulate {
 		return next(ctx, tx, simulate)
 	}
 
