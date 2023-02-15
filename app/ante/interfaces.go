@@ -22,13 +22,10 @@ import (
 	tx "github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/params"
 
 	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
-	evm "github.com/SigmaGmbH/evm-module/x/evm/vm"
 	feemarkettypes "github.com/SigmaGmbH/evm-module/x/feemarket/types"
 )
 
@@ -44,7 +41,6 @@ type EVMKeeper interface {
 	statedb.Keeper
 	DynamicFeeEVMKeeper
 
-	NewEVM(ctx sdk.Context, msg core.Message, cfg *statedb.EVMConfig, tracer vm.EVMLogger, stateDB vm.StateDB) evm.EVM
 	DeductTxCostsFromUserBalance(ctx sdk.Context, fees sdk.Coins, from common.Address) error
 	GetBalance(ctx sdk.Context, addr common.Address) *big.Int
 	ResetTransientGasUsed(ctx sdk.Context)
