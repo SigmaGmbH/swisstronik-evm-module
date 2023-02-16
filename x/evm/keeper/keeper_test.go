@@ -279,7 +279,7 @@ func (suite *KeeperTestSuite) DeployTestContract(t require.TestingT, owner commo
 	})
 	require.NoError(t, err)
 
-	var erc20DeployTx *types.MsgEthereumTx
+	var erc20DeployTx *types.MsgHandleTx
 	if suite.enableFeemarket {
 		erc20DeployTx = types.NewTxContract(
 			chainID,
@@ -308,13 +308,20 @@ func (suite *KeeperTestSuite) DeployTestContract(t require.TestingT, owner commo
 	erc20DeployTx.From = suite.address.Hex()
 	err = erc20DeployTx.Sign(ethtypes.LatestSignerForChainID(chainID), suite.signer)
 	require.NoError(t, err)
-	rsp, err := suite.app.EvmKeeper.EthereumTx(ctx, erc20DeployTx)
+
+	ethTx := &types.MsgEthereumTx{
+		Data:  erc20DeployTx.Data,
+		Size_: 0,
+		Hash:  erc20DeployTx.Hash,
+		From:  erc20DeployTx.From,
+	}
+	rsp, err := suite.app.EvmKeeper.EthereumTx(ctx, ethTx)
 	require.NoError(t, err)
 	require.Empty(t, rsp.VmError)
 	return crypto.CreateAddress(suite.address, nonce)
 }
 
-func (suite *KeeperTestSuite) TransferERC20Token(t require.TestingT, contractAddr, from, to common.Address, amount *big.Int) *types.MsgEthereumTx {
+func (suite *KeeperTestSuite) TransferERC20Token(t require.TestingT, contractAddr, from, to common.Address, amount *big.Int) *types.MsgHandleTx {
 	ctx := sdk.WrapSDKContext(suite.ctx)
 	chainID := suite.app.EvmKeeper.ChainID()
 
@@ -331,7 +338,7 @@ func (suite *KeeperTestSuite) TransferERC20Token(t require.TestingT, contractAdd
 
 	nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
 
-	var ercTransferTx *types.MsgEthereumTx
+	var ercTransferTx *types.MsgHandleTx
 	if suite.enableFeemarket {
 		ercTransferTx = types.NewTx(
 			chainID,
@@ -362,7 +369,14 @@ func (suite *KeeperTestSuite) TransferERC20Token(t require.TestingT, contractAdd
 	ercTransferTx.From = suite.address.Hex()
 	err = ercTransferTx.Sign(ethtypes.LatestSignerForChainID(chainID), suite.signer)
 	require.NoError(t, err)
-	rsp, err := suite.app.EvmKeeper.EthereumTx(ctx, ercTransferTx)
+
+	ethTx := &types.MsgEthereumTx{
+		Data:  ercTransferTx.Data,
+		Size_: 0,
+		Hash:  ercTransferTx.Hash,
+		From:  ercTransferTx.From,
+	}
+	rsp, err := suite.app.EvmKeeper.EthereumTx(ctx, ethTx)
 	require.NoError(t, err)
 	require.Empty(t, rsp.VmError)
 	return ercTransferTx
@@ -389,7 +403,7 @@ func (suite *KeeperTestSuite) DeployTestMessageCall(t require.TestingT) common.A
 
 	nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
 
-	var erc20DeployTx *types.MsgEthereumTx
+	var erc20DeployTx *types.MsgHandleTx
 	if suite.enableFeemarket {
 		erc20DeployTx = types.NewTxContract(
 			chainID,
@@ -418,7 +432,14 @@ func (suite *KeeperTestSuite) DeployTestMessageCall(t require.TestingT) common.A
 	erc20DeployTx.From = suite.address.Hex()
 	err = erc20DeployTx.Sign(ethtypes.LatestSignerForChainID(chainID), suite.signer)
 	require.NoError(t, err)
-	rsp, err := suite.app.EvmKeeper.EthereumTx(ctx, erc20DeployTx)
+
+	ethTx := &types.MsgEthereumTx{
+		Data:  erc20DeployTx.Data,
+		Size_: 0,
+		Hash:  erc20DeployTx.Hash,
+		From:  erc20DeployTx.From,
+	}
+	rsp, err := suite.app.EvmKeeper.EthereumTx(ctx, ethTx)
 	require.NoError(t, err)
 	require.Empty(t, rsp.VmError)
 	return crypto.CreateAddress(suite.address, nonce)

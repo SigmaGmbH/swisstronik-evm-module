@@ -19,11 +19,11 @@ import (
 )
 
 func (suite *BackendTestSuite) TestTraceTransaction() {
-	msgEthereumTx, _ := suite.buildEthereumTx()
-	msgEthereumTx2, _ := suite.buildEthereumTx()
+	msgHandleTx, _ := suite.buildEthereumTx()
+	msgHandleTx2, _ := suite.buildEthereumTx()
 
-	txHash := msgEthereumTx.AsTransaction().Hash()
-	txHash2 := msgEthereumTx2.AsTransaction().Hash()
+	txHash := msgHandleTx.AsTransaction().Hash()
+	txHash2 := msgHandleTx2.AsTransaction().Hash()
 
 	priv, _ := ethsecp256k1.GenerateKey()
 	from := common.BytesToAddress(priv.PubKey().Address().Bytes())
@@ -37,14 +37,14 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 
 	txEncoder := suite.backend.clientCtx.TxConfig.TxEncoder()
 
-	msgEthereumTx.From = from.String()
-	msgEthereumTx.Sign(ethSigner, suite.signer)
-	tx, _ := msgEthereumTx.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "swtr")
+	msgHandleTx.From = from.String()
+	msgHandleTx.Sign(ethSigner, suite.signer)
+	tx, _ := msgHandleTx.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "swtr")
 	txBz, _ := txEncoder(tx)
 
-	msgEthereumTx2.From = from.String()
-	msgEthereumTx2.Sign(ethSigner, suite.signer)
-	tx2, _ := msgEthereumTx.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "swtr")
+	msgHandleTx2.From = from.String()
+	msgHandleTx2.Sign(ethSigner, suite.signer)
+	tx2, _ := msgHandleTx.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "swtr")
 	txBz2, _ := txEncoder(tx2)
 
 	testCases := []struct {
@@ -109,7 +109,7 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				RegisterBlockMultipleTxs(client, 1, []types.Tx{txBz, txBz2})
-				RegisterTraceTransactionWithPredecessors(queryClient, msgEthereumTx, []*evmtypes.MsgEthereumTx{msgEthereumTx})
+				RegisterTraceTransactionWithPredecessors(queryClient, msgHandleTx, []*evmtypes.MsgHandleTx{msgHandleTx})
 			},
 			&types.Block{Header: types.Header{Height: 1, ChainID: ChainID}, Data: types.Data{Txs: []types.Tx{txBz, txBz2}}},
 			[]*abci.ResponseDeliverTx{
@@ -149,7 +149,7 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				RegisterBlock(client, 1, txBz)
-				RegisterTraceTransaction(queryClient, msgEthereumTx)
+				RegisterTraceTransaction(queryClient, msgHandleTx)
 			},
 			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
 			[]*abci.ResponseDeliverTx{
@@ -223,7 +223,7 @@ func (suite *BackendTestSuite) TestTraceBlock() {
 			"fail - cannot unmarshal data",
 			func() {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				RegisterTraceBlock(queryClient, []*evmtypes.MsgEthereumTx{msgEthTx})
+				RegisterTraceBlock(queryClient, []*evmtypes.MsgHandleTx{msgEthTx})
 			},
 			[]*evmtypes.TxTraceResult{},
 			&resBlockFilled,

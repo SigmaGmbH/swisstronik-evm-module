@@ -502,7 +502,7 @@ func (e *PublicAPI) GetPendingTransactions() ([]*rpctypes.RPCTransaction, error)
 	result := make([]*rpctypes.RPCTransaction, 0, len(txs))
 	for _, tx := range txs {
 		for _, msg := range (*tx).GetMsgs() {
-			ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
+			ethMsg, ok := msg.(*evmtypes.MsgHandleTx)
 			if !ok {
 				// not valid ethereum tx
 				break

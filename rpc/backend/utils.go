@@ -98,7 +98,7 @@ func (b *Backend) getAccountNonce(accAddr common.Address, pending bool, height i
 	// only supports `MsgEthereumTx` style tx
 	for _, tx := range pendingTxs {
 		for _, msg := range (*tx).GetMsgs() {
-			ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
+			ethMsg, ok := msg.(*evmtypes.MsgHandleTx)
 			if !ok {
 				// not ethereum tx
 				break
@@ -184,7 +184,7 @@ func (b *Backend) processBlock(
 		}
 		txGasUsed := uint64(eachTendermintTxResult.GasUsed)
 		for _, msg := range tx.GetMsgs() {
-			ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
+			ethMsg, ok := msg.(*evmtypes.MsgHandleTx)
 			if !ok {
 				continue
 			}

@@ -44,17 +44,17 @@ import (
 const ExceedBlockGasLimitError = "out of gas in location: block gas meter; gasWanted:"
 
 // RawTxToEthTx returns a evm MsgEthereum transaction from raw tx bytes.
-func RawTxToEthTx(clientCtx client.Context, txBz tmtypes.Tx) ([]*evmtypes.MsgEthereumTx, error) {
+func RawTxToEthTx(clientCtx client.Context, txBz tmtypes.Tx) ([]*evmtypes.MsgHandleTx, error) {
 	tx, err := clientCtx.TxConfig.TxDecoder()(txBz)
 	if err != nil {
 		return nil, errorsmod.Wrap(errortypes.ErrJSONUnmarshal, err.Error())
 	}
 
-	ethTxs := make([]*evmtypes.MsgEthereumTx, len(tx.GetMsgs()))
+	ethTxs := make([]*evmtypes.MsgHandleTx, len(tx.GetMsgs()))
 	for i, msg := range tx.GetMsgs() {
-		ethTx, ok := msg.(*evmtypes.MsgEthereumTx)
+		ethTx, ok := msg.(*evmtypes.MsgHandleTx)
 		if !ok {
-			return nil, fmt.Errorf("invalid message type %T, expected %T", msg, &evmtypes.MsgEthereumTx{})
+			return nil, fmt.Errorf("invalid message type %T, expected %T", msg, &evmtypes.MsgHandleTx{})
 		}
 		ethTx.Hash = ethTx.AsTransaction().Hash().Hex()
 		ethTxs[i] = ethTx
@@ -156,7 +156,7 @@ func FormatBlock(
 // NewTransactionFromMsg returns a transaction that will serialize to the RPC
 // representation, with the given location metadata set (if available).
 func NewTransactionFromMsg(
-	msg *evmtypes.MsgEthereumTx,
+	msg *evmtypes.MsgHandleTx,
 	blockHash common.Hash,
 	blockNumber, index uint64,
 	baseFee *big.Int,

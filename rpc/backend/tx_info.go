@@ -52,7 +52,7 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 	}
 
 	// the `res.MsgIndex` is inferred from tx index, should be within the bound.
-	msg, ok := tx.GetMsgs()[res.MsgIndex].(*evmtypes.MsgEthereumTx)
+	msg, ok := tx.GetMsgs()[res.MsgIndex].(*evmtypes.MsgHandleTx)
 	if !ok {
 		return nil, errors.New("invalid ethereum tx")
 	}
@@ -73,7 +73,7 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 			}
 		}
 	}
-	// if we still unable to find the eth tx index, return error, shouldn't happen.
+	// if we are still unable to find the eth tx index, return error, shouldn't happen.
 	if res.EthTxIndex == -1 {
 		return nil, errors.New("can't find index of ethereum tx")
 	}
@@ -163,7 +163,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 		b.logger.Debug("decoding failed", "error", err.Error())
 		return nil, fmt.Errorf("failed to decode tx: %w", err)
 	}
-	ethMsg := tx.GetMsgs()[res.MsgIndex].(*evmtypes.MsgEthereumTx)
+	ethMsg := tx.GetMsgs()[res.MsgIndex].(*evmtypes.MsgHandleTx)
 
 	txData, err := evmtypes.UnpackTxData(ethMsg.Data)
 	if err != nil {
@@ -374,7 +374,7 @@ func (b *Backend) GetTransactionByBlockAndIndex(block *tmrpctypes.ResultBlock, i
 		return nil, nil
 	}
 
-	var msg *evmtypes.MsgEthereumTx
+	var msg *evmtypes.MsgHandleTx
 	// find in tx indexer
 	res, err := b.GetTxByTxIndex(block.Block.Height, uint(idx))
 	if err == nil {
@@ -386,7 +386,7 @@ func (b *Backend) GetTransactionByBlockAndIndex(block *tmrpctypes.ResultBlock, i
 
 		var ok bool
 		// msgIndex is inferred from tx events, should be within bound.
-		msg, ok = tx.GetMsgs()[res.MsgIndex].(*evmtypes.MsgEthereumTx)
+		msg, ok = tx.GetMsgs()[res.MsgIndex].(*evmtypes.MsgHandleTx)
 		if !ok {
 			b.logger.Debug("invalid ethereum tx", "height", block.Block.Header, "index", idx)
 			return nil, nil

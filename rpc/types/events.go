@@ -144,7 +144,7 @@ func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error
 			p.Txs[i].Failed = true
 
 			// replace gasUsed with gasLimit because that's what's actually deducted.
-			gasLimit := tx.GetMsgs()[i].(*evmtypes.MsgEthereumTx).GetGas()
+			gasLimit := tx.GetMsgs()[i].(*evmtypes.MsgHandleTx).GetGas()
 			p.Txs[i].GasUsed = gasLimit
 		}
 	}

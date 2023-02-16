@@ -186,7 +186,7 @@ func (api *PublicFilterAPI) NewPendingTransactionFilter() rpc.ID {
 				api.filtersMu.Lock()
 				if f, found := api.filters[pendingTxSub.ID()]; found {
 					for _, msg := range tx.GetMsgs() {
-						ethTx, ok := msg.(*evmtypes.MsgEthereumTx)
+						ethTx, ok := msg.(*evmtypes.MsgHandleTx)
 						if ok {
 							f.hashes = append(f.hashes, ethTx.AsTransaction().Hash())
 						}
@@ -250,7 +250,7 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Su
 				}
 
 				for _, msg := range tx.GetMsgs() {
-					ethTx, ok := msg.(*evmtypes.MsgEthereumTx)
+					ethTx, ok := msg.(*evmtypes.MsgHandleTx)
 					if ok {
 						_ = notifier.Notify(rpcSub.ID, ethTx.AsTransaction().Hash())
 					}
