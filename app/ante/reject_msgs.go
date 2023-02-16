@@ -30,7 +30,7 @@ type RejectMessagesDecorator struct{}
 // order to perform the refund.
 func (rmd RejectMessagesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	for _, msg := range tx.GetMsgs() {
-		if _, ok := msg.(*evmtypes.MsgEthereumTx); ok {
+		if _, ok := msg.(*evmtypes.MsgHandleTx); ok {
 			return ctx, errorsmod.Wrapf(
 				errortypes.ErrInvalidType,
 				"MsgEthereumTx needs to be contained within a tx with 'ExtensionOptionsEthereumTx' option",
