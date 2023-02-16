@@ -155,14 +155,14 @@ func (s *AnteTestSuite) BuildTestEthTx(
 	gasFeeCap *big.Int,
 	gasTipCap *big.Int,
 	accesses *ethtypes.AccessList,
-) *evmtypes.MsgEthereumTx {
+) *evmtypes.MsgHandleTx {
 	chainID := s.app.EvmKeeper.ChainID()
 	nonce := s.app.EvmKeeper.GetNonce(
 		s.ctx,
 		common.BytesToAddress(from.Bytes()),
 	)
 
-	msgEthereumTx := evmtypes.NewTx(
+	msgHandleTx := evmtypes.NewTx(
 		chainID,
 		nonce,
 		&to,
@@ -174,13 +174,13 @@ func (s *AnteTestSuite) BuildTestEthTx(
 		input,
 		accesses,
 	)
-	msgEthereumTx.From = from.String()
-	return msgEthereumTx
+	msgHandleTx.From = from.String()
+	return msgHandleTx
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
 func (suite *AnteTestSuite) CreateTestTx(
-	msg *evmtypes.MsgEthereumTx, priv cryptotypes.PrivKey, accNum uint64, signCosmosTx bool,
+	msg *evmtypes.MsgHandleTx, priv cryptotypes.PrivKey, accNum uint64, signCosmosTx bool,
 	unsetExtensionOptions ...bool,
 ) authsigning.Tx {
 	return suite.CreateTestTxBuilder(msg, priv, accNum, signCosmosTx).GetTx()
@@ -188,7 +188,7 @@ func (suite *AnteTestSuite) CreateTestTx(
 
 // CreateTestTxBuilder is a helper function to create a tx builder given multiple inputs.
 func (suite *AnteTestSuite) CreateTestTxBuilder(
-	msg *evmtypes.MsgEthereumTx, priv cryptotypes.PrivKey, accNum uint64, signCosmosTx bool,
+	msg *evmtypes.MsgHandleTx, priv cryptotypes.PrivKey, accNum uint64, signCosmosTx bool,
 	unsetExtensionOptions ...bool,
 ) client.TxBuilder {
 	var option *codectypes.Any

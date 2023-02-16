@@ -175,7 +175,7 @@ func (suite *EvmTestSuite) SetupTest() {
 	suite.DoSetupTest(suite.T())
 }
 
-func (suite *EvmTestSuite) SignTx(tx *types.MsgEthereumTx) {
+func (suite *EvmTestSuite) SignTx(tx *types.MsgHandleTx) {
 	tx.From = suite.from.String()
 	err := tx.Sign(suite.ethSigner, suite.signer)
 	suite.Require().NoError(err)
@@ -190,7 +190,7 @@ func TestEvmTestSuite(t *testing.T) {
 }
 
 func (suite *EvmTestSuite) TestHandleMsgEthereumTx() {
-	var tx *types.MsgEthereumTx
+	var tx *types.MsgHandleTx
 
 	testCases := []struct {
 		msg      string
@@ -608,7 +608,13 @@ func (suite *EvmTestSuite) TestERC20TransferReverted() {
 			err = k.DeductTxCostsFromUserBalance(suite.ctx, fees, common.HexToAddress(tx.From))
 			suite.Require().NoError(err)
 
-			res, err := k.EthereumTx(sdk.WrapSDKContext(suite.ctx), tx)
+			ethMsgTx := &types.MsgEthereumTx{
+				Data:  tx.Data,
+				Size_: 0,
+				Hash:  tx.Hash,
+				From:  tx.From,
+			}
+			res, err := k.EthereumTx(sdk.WrapSDKContext(suite.ctx), ethMsgTx)
 			suite.Require().NoError(err)
 
 			suite.Require().True(res.Failed())
@@ -681,7 +687,13 @@ func (suite *EvmTestSuite) TestContractDeploymentRevert() {
 			db.SetNonce(suite.from, nonce+1)
 			suite.Require().NoError(db.Commit())
 
-			rsp, err := k.EthereumTx(sdk.WrapSDKContext(suite.ctx), tx)
+			msgEthTx := &types.MsgEthereumTx{
+				Data:  tx.Data,
+				Size_: 0,
+				Hash:  tx.Hash,
+				From:  tx.From,
+			}
+			rsp, err := k.EthereumTx(sdk.WrapSDKContext(suite.ctx), msgEthTx)
 			suite.Require().NoError(err)
 			suite.Require().True(rsp.Failed())
 

@@ -58,7 +58,7 @@ const (
 func NewTx(
 	chainID *big.Int, nonce uint64, to *common.Address, amount *big.Int,
 	gasLimit uint64, gasPrice, gasFeeCap, gasTipCap *big.Int, input []byte, accesses *ethtypes.AccessList,
-) *MsgEthereumTx {
+) *MsgHandleTx {
 	return newMsgEthereumTx(chainID, nonce, to, amount, gasLimit, gasPrice, gasFeeCap, gasTipCap, input, accesses)
 }
 
@@ -72,14 +72,14 @@ func NewTxContract(
 	gasPrice, gasFeeCap, gasTipCap *big.Int,
 	input []byte,
 	accesses *ethtypes.AccessList,
-) *MsgEthereumTx {
+) *MsgHandleTx {
 	return newMsgEthereumTx(chainID, nonce, nil, amount, gasLimit, gasPrice, gasFeeCap, gasTipCap, input, accesses)
 }
 
 func newMsgEthereumTx(
 	chainID *big.Int, nonce uint64, to *common.Address, amount *big.Int,
 	gasLimit uint64, gasPrice, gasFeeCap, gasTipCap *big.Int, input []byte, accesses *ethtypes.AccessList,
-) *MsgEthereumTx {
+) *MsgHandleTx {
 	var (
 		cid, amt, gp *sdkmath.Int
 		toAddr       string
@@ -149,7 +149,7 @@ func newMsgEthereumTx(
 		panic(err)
 	}
 
-	msg := MsgEthereumTx{Data: dataAny}
+	msg := MsgHandleTx{Data: dataAny}
 	msg.Hash = msg.AsTransaction().Hash().Hex()
 	return &msg
 }

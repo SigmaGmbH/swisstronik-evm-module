@@ -52,7 +52,7 @@ func NewEthAccountVerificationDecorator(ak evmtypes.AccountKeeper, ek EVMKeeper)
 // AnteHandle validates checks that the sender balance is greater than the total transaction cost.
 // The account will be set to store if it doesn't exis, i.e cannot be found on store.
 // This AnteHandler decorator will fail if:
-// - any of the msgs is not a MsgEthereumTx
+// - any of the msgs is not a MsgHandleTx
 // - from address is empty
 // - account balance is lower than the transaction cost
 func (avd EthAccountVerificationDecorator) AnteHandle(
@@ -68,7 +68,7 @@ func (avd EthAccountVerificationDecorator) AnteHandle(
 	for i, msg := range tx.GetMsgs() {
 		msgEthTx, ok := msg.(*evmtypes.MsgHandleTx)
 		if !ok {
-			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid message type %T, expected %T", msg, (*evmtypes.MsgEthereumTx)(nil))
+			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid message type %T, expected %T", msg, (*evmtypes.MsgHandleTx)(nil))
 		}
 
 		txData, err := evmtypes.UnpackTxData(msgEthTx.Data)
@@ -164,9 +164,9 @@ func (egcd EthGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	baseFee := egcd.evmKeeper.GetBaseFee(ctx, ethCfg)
 
 	for _, msg := range tx.GetMsgs() {
-		msgEthTx, ok := msg.(*evmtypes.MsgEthereumTx)
+		msgEthTx, ok := msg.(*evmtypes.MsgHandleTx)
 		if !ok {
-			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid message type %T, expected %T", msg, (*evmtypes.MsgEthereumTx)(nil))
+			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid message type %T, expected %T", msg, (*evmtypes.MsgHandleTx)(nil))
 		}
 
 		txData, err := evmtypes.UnpackTxData(msgEthTx.Data)
@@ -264,9 +264,9 @@ func (ctd CanTransferDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 	signer := ethtypes.MakeSigner(ethCfg, big.NewInt(ctx.BlockHeight()))
 
 	for _, msg := range tx.GetMsgs() {
-		msgEthTx, ok := msg.(*evmtypes.MsgEthereumTx)
+		msgEthTx, ok := msg.(*evmtypes.MsgHandleTx)
 		if !ok {
-			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid message type %T, expected %T", msg, (*evmtypes.MsgEthereumTx)(nil))
+			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid message type %T, expected %T", msg, (*evmtypes.MsgHandleTx)(nil))
 		}
 
 		baseFee := ctd.evmKeeper.GetBaseFee(ctx, ethCfg)
@@ -330,9 +330,9 @@ func NewEthIncrementSenderSequenceDecorator(ak evmtypes.AccountKeeper) EthIncrem
 // this AnteHandler decorator.
 func (issd EthIncrementSenderSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	for _, msg := range tx.GetMsgs() {
-		msgEthTx, ok := msg.(*evmtypes.MsgEthereumTx)
+		msgEthTx, ok := msg.(*evmtypes.MsgHandleTx)
 		if !ok {
-			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid message type %T, expected %T", msg, (*evmtypes.MsgEthereumTx)(nil))
+			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid message type %T, expected %T", msg, (*evmtypes.MsgHandleTx)(nil))
 		}
 
 		txData, err := evmtypes.UnpackTxData(msgEthTx.Data)

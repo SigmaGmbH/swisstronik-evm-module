@@ -143,12 +143,12 @@ func (empd EthMinGasPriceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	baseFee := empd.evmKeeper.GetBaseFee(ctx, ethCfg)
 
 	for _, msg := range tx.GetMsgs() {
-		ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
+		ethMsg, ok := msg.(*evmtypes.MsgHandleTx)
 		if !ok {
 			return ctx, errorsmod.Wrapf(
 				errortypes.ErrUnknownRequest,
 				"invalid message type %T, expected %T",
-				msg, (*evmtypes.MsgEthereumTx)(nil),
+				msg, (*evmtypes.MsgHandleTx)(nil),
 			)
 		}
 
@@ -210,9 +210,9 @@ func (mfd EthMempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulat
 	minGasPrice := ctx.MinGasPrices().AmountOf(evmDenom)
 
 	for _, msg := range tx.GetMsgs() {
-		ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
+		ethMsg, ok := msg.(*evmtypes.MsgHandleTx)
 		if !ok {
-			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid message type %T, expected %T", msg, (*evmtypes.MsgEthereumTx)(nil))
+			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid message type %T, expected %T", msg, (*evmtypes.MsgHandleTx)(nil))
 		}
 
 		fee := sdk.NewDecFromBigInt(ethMsg.GetFee())

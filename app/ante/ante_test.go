@@ -241,7 +241,7 @@ func (suite AnteTestSuite) TestAnteHandler() {
 				return txBuilder.GetTx()
 			}, true, false, false,
 		},
-		// Based on EVMBackend.SendTransaction, for cosmos tx, forcing null for some fields except ExtensionOptions, Fee, MsgEthereumTx
+		// Based on EVMBackend.SendTransaction, for cosmos tx, forcing null for some fields except ExtensionOptions, Fee, MsgHandleTx
 		// should be part of consensus
 		{
 			"fail - DeliverTx (cosmos tx signed)",
@@ -569,7 +569,7 @@ func (suite AnteTestSuite) TestAnteHandler() {
 				)
 				msg.From = addr.Hex()
 				tx := suite.CreateTestTx(msg, privKey, 1, false)
-				msg = tx.GetMsgs()[0].(*evmtypes.MsgEthereumTx)
+				msg = tx.GetMsgs()[0].(*evmtypes.MsgHandleTx)
 				msg.From = addr.Hex()
 				return tx
 			}, true, false, false,

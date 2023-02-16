@@ -83,7 +83,7 @@ func (suite *BackendTestSuite) TestGetBlockByNumber() {
 		blockRes *tmrpctypes.ResultBlockResults
 		resBlock *tmrpctypes.ResultBlock
 	)
-	msgEthereumTx, bz := suite.buildEthereumTx()
+	msgHandleTx, bz := suite.buildEthereumTx()
 
 	testCases := []struct {
 		name         string
@@ -91,7 +91,7 @@ func (suite *BackendTestSuite) TestGetBlockByNumber() {
 		fullTx       bool
 		baseFee      *big.Int
 		validator    sdk.AccAddress
-		tx           *evmtypes.MsgEthereumTx
+		tx           *evmtypes.MsgHandleTx
 		txBz         []byte
 		registerMock func(ethrpc.BlockNumber, sdk.Int, sdk.AccAddress, []byte)
 		expNoop      bool
@@ -174,7 +174,7 @@ func (suite *BackendTestSuite) TestGetBlockByNumber() {
 			true,
 			sdk.NewInt(1).BigInt(),
 			sdk.AccAddress(tests.GenerateAddress().Bytes()),
-			msgEthereumTx,
+			msgHandleTx,
 			bz,
 			func(blockNum ethrpc.BlockNumber, baseFee sdk.Int, validator sdk.AccAddress, txBz []byte) {
 				height := blockNum.Int64()
@@ -226,7 +226,7 @@ func (suite *BackendTestSuite) TestGetBlockByHash() {
 		blockRes *tmrpctypes.ResultBlockResults
 		resBlock *tmrpctypes.ResultBlock
 	)
-	msgEthereumTx, bz := suite.buildEthereumTx()
+	msgHandleTx, bz := suite.buildEthereumTx()
 
 	block := tmtypes.MakeBlock(1, []tmtypes.Tx{bz}, nil, nil)
 
@@ -236,7 +236,7 @@ func (suite *BackendTestSuite) TestGetBlockByHash() {
 		fullTx       bool
 		baseFee      *big.Int
 		validator    sdk.AccAddress
-		tx           *evmtypes.MsgEthereumTx
+		tx           *evmtypes.MsgHandleTx
 		txBz         []byte
 		registerMock func(common.Hash, sdk.Int, sdk.AccAddress, []byte)
 		expNoop      bool
@@ -319,7 +319,7 @@ func (suite *BackendTestSuite) TestGetBlockByHash() {
 			true,
 			sdk.NewInt(1).BigInt(),
 			sdk.AccAddress(tests.GenerateAddress().Bytes()),
-			msgEthereumTx,
+			msgHandleTx,
 			bz,
 			func(hash common.Hash, baseFee sdk.Int, validator sdk.AccAddress, txBz []byte) {
 				height := int64(1)
@@ -874,7 +874,7 @@ func (suite *BackendTestSuite) TestBlockBloom() {
 }
 
 func (suite *BackendTestSuite) TestGetEthBlockFromTendermint() {
-	msgEthereumTx, bz := suite.buildEthereumTx()
+	msgHandleTx, bz := suite.buildEthereumTx()
 	emptyBlock := tmtypes.MakeBlock(1, []tmtypes.Tx{}, nil, nil)
 
 	testCases := []struct {
@@ -1083,7 +1083,7 @@ func (suite *BackendTestSuite) TestGetEthBlockFromTendermint() {
 			if tc.expTxs {
 				if tc.fullTx {
 					rpcTx, err := ethrpc.NewRPCTransaction(
-						msgEthereumTx.AsTransaction(),
+						msgHandleTx.AsTransaction(),
 						common.BytesToHash(header.Hash()),
 						uint64(header.Height),
 						uint64(0),
@@ -1093,7 +1093,7 @@ func (suite *BackendTestSuite) TestGetEthBlockFromTendermint() {
 					suite.Require().NoError(err)
 					ethRPCTxs = []interface{}{rpcTx}
 				} else {
-					ethRPCTxs = []interface{}{common.HexToHash(msgEthereumTx.Hash)}
+					ethRPCTxs = []interface{}{common.HexToHash(msgHandleTx.Hash)}
 				}
 			}
 
@@ -1119,13 +1119,13 @@ func (suite *BackendTestSuite) TestGetEthBlockFromTendermint() {
 }
 
 func (suite *BackendTestSuite) TestEthMsgsFromTendermintBlock() {
-	msgEthereumTx, bz := suite.buildEthereumTx()
+	msgHandleTx, bz := suite.buildEthereumTx()
 
 	testCases := []struct {
 		name     string
 		resBlock *tmrpctypes.ResultBlock
 		blockRes *tmrpctypes.ResultBlockResults
-		expMsgs  []*evmtypes.MsgEthereumTx
+		expMsgs  []*evmtypes.MsgHandleTx
 	}{
 		{
 			"tx in not included in block - unsuccessful tx without ExceedBlockGasLimit error",
@@ -1139,7 +1139,7 @@ func (suite *BackendTestSuite) TestEthMsgsFromTendermintBlock() {
 					},
 				},
 			},
-			[]*evmtypes.MsgEthereumTx(nil),
+			[]*evmtypes.MsgHandleTx(nil),
 		},
 		{
 			"tx included in block - unsuccessful tx with ExceedBlockGasLimit error",
@@ -1154,7 +1154,7 @@ func (suite *BackendTestSuite) TestEthMsgsFromTendermintBlock() {
 					},
 				},
 			},
-			[]*evmtypes.MsgEthereumTx{msgEthereumTx},
+			[]*evmtypes.MsgHandleTx{msgHandleTx},
 		},
 		{
 			"pass",
@@ -1169,7 +1169,7 @@ func (suite *BackendTestSuite) TestEthMsgsFromTendermintBlock() {
 					},
 				},
 			},
-			[]*evmtypes.MsgEthereumTx{msgEthereumTx},
+			[]*evmtypes.MsgHandleTx{msgHandleTx},
 		},
 	}
 	for _, tc := range testCases {
@@ -1403,7 +1403,7 @@ func (suite *BackendTestSuite) TestHeaderByHash() {
 }
 
 func (suite *BackendTestSuite) TestEthBlockByNumber() {
-	msgEthereumTx, bz := suite.buildEthereumTx()
+	msgHandleTx, bz := suite.buildEthereumTx()
 	emptyBlock := tmtypes.MakeBlock(1, []tmtypes.Tx{}, nil, nil)
 
 	testCases := []struct {
@@ -1481,7 +1481,7 @@ func (suite *BackendTestSuite) TestEthBlockByNumber() {
 					ethtypes.Bloom{},
 					sdk.NewInt(1).BigInt(),
 				),
-				[]*ethtypes.Transaction{msgEthereumTx.AsTransaction()},
+				[]*ethtypes.Transaction{msgHandleTx.AsTransaction()},
 				nil,
 				nil,
 				trie.NewStackTrie(nil),
@@ -1513,7 +1513,7 @@ func (suite *BackendTestSuite) TestEthBlockByNumber() {
 }
 
 func (suite *BackendTestSuite) TestEthBlockFromTendermintBlock() {
-	msgEthereumTx, bz := suite.buildEthereumTx()
+	msgHandleTx, bz := suite.buildEthereumTx()
 	emptyBlock := tmtypes.MakeBlock(1, []tmtypes.Tx{}, nil, nil)
 
 	testCases := []struct {
@@ -1580,7 +1580,7 @@ func (suite *BackendTestSuite) TestEthBlockFromTendermintBlock() {
 					ethtypes.Bloom{},
 					sdk.NewInt(1).BigInt(),
 				),
-				[]*ethtypes.Transaction{msgEthereumTx.AsTransaction()},
+				[]*ethtypes.Transaction{msgHandleTx.AsTransaction()},
 				nil,
 				nil,
 				trie.NewStackTrie(nil),

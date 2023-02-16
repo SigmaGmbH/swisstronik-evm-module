@@ -91,8 +91,8 @@ func (suite *BackendTestSuite) SetupTest() {
 }
 
 // buildEthereumTx returns an example legacy Ethereum transaction
-func (suite *BackendTestSuite) buildEthereumTx() (*evmtypes.MsgEthereumTx, []byte) {
-	msgEthereumTx := evmtypes.NewTx(
+func (suite *BackendTestSuite) buildEthereumTx() (*evmtypes.MsgHandleTx, []byte) {
+	msgHandleTx := evmtypes.NewTx(
 		suite.backend.chainID,
 		uint64(0),
 		&common.Address{},
@@ -106,15 +106,15 @@ func (suite *BackendTestSuite) buildEthereumTx() (*evmtypes.MsgEthereumTx, []byt
 	)
 
 	// A valid msg should have empty `From`
-	msgEthereumTx.From = ""
+	msgHandleTx.From = ""
 
 	txBuilder := suite.backend.clientCtx.TxConfig.NewTxBuilder()
-	err := txBuilder.SetMsgs(msgEthereumTx)
+	err := txBuilder.SetMsgs(msgHandleTx)
 	suite.Require().NoError(err)
 
 	bz, err := suite.backend.clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	suite.Require().NoError(err)
-	return msgEthereumTx, bz
+	return msgHandleTx, bz
 }
 
 // buildFormattedBlock returns a formatted block for testing
@@ -122,7 +122,7 @@ func (suite *BackendTestSuite) buildFormattedBlock(
 	blockRes *tmrpctypes.ResultBlockResults,
 	resBlock *tmrpctypes.ResultBlock,
 	fullTx bool,
-	tx *evmtypes.MsgEthereumTx,
+	tx *evmtypes.MsgHandleTx,
 	validator sdk.AccAddress,
 	baseFee *big.Int,
 ) map[string]interface{} {
@@ -170,7 +170,7 @@ func (suite *BackendTestSuite) generateTestKeyring(clientDir string) (keyring.Ke
 	return keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, clientDir, buf, encCfg.Codec, []keyring.Option{hd.EthSecp256k1Option()}...)
 }
 
-func (suite *BackendTestSuite) signAndEncodeEthTx(msgEthereumTx *evmtypes.MsgEthereumTx) []byte {
+func (suite *BackendTestSuite) signAndEncodeEthTx(msgHandleTx *evmtypes.MsgHandleTx) []byte {
 	from, priv := tests.NewAddrKey()
 	signer := tests.NewSigner(priv)
 
@@ -178,11 +178,11 @@ func (suite *BackendTestSuite) signAndEncodeEthTx(msgEthereumTx *evmtypes.MsgEth
 	RegisterParamsWithoutHeader(queryClient, 1)
 
 	ethSigner := ethtypes.LatestSigner(suite.backend.ChainConfig())
-	msgEthereumTx.From = from.String()
-	err := msgEthereumTx.Sign(ethSigner, signer)
+	msgHandleTx.From = from.String()
+	err := msgHandleTx.Sign(ethSigner, signer)
 	suite.Require().NoError(err)
 
-	tx, err := msgEthereumTx.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "swtr")
+	tx, err := msgHandleTx.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "swtr")
 	suite.Require().NoError(err)
 
 	txEncoder := suite.backend.clientCtx.TxConfig.TxEncoder()

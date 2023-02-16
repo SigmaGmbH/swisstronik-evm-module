@@ -93,7 +93,7 @@ func (kv *KVIndexer) IndexBlock(block *tmtypes.Block, txResults []*abci.Response
 
 		var cumulativeGasUsed uint64
 		for msgIndex, msg := range tx.GetMsgs() {
-			ethMsg := msg.(*evmtypes.MsgEthereumTx)
+			ethMsg := msg.(*evmtypes.MsgHandleTx)
 			txHash := common.HexToHash(ethMsg.Hash)
 
 			txResult := ethermint.TxResult{

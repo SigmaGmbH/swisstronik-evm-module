@@ -52,7 +52,7 @@ func init() {
 // transactions, as defined by the presence of an ExtensionOptionsWeb3Tx extension.
 func NewLegacyCosmosAnteHandlerEip712(options HandlerOptions) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
-		RejectMessagesDecorator{}, // reject MsgEthereumTxs
+		RejectMessagesDecorator{}, // reject MsgHandleTxs
 		authante.NewSetUpContextDecorator(),
 		authante.NewValidateBasicDecorator(),
 		authante.NewTxTimeoutHeightDecorator(),

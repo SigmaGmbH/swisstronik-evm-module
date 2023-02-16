@@ -478,7 +478,7 @@ func (suite AnteTestSuite) TestEthIncrementSenderSequenceDecorator() {
 
 			if tc.expPass {
 				suite.Require().NoError(err)
-				msg := tc.tx.(*evmtypes.MsgEthereumTx)
+				msg := tc.tx.(*evmtypes.MsgHandleTx)
 
 				txData, err := evmtypes.UnpackTxData(msg.Data)
 				suite.Require().NoError(err)

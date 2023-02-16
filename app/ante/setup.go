@@ -75,9 +75,9 @@ func (eeed EthEmitEventDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulat
 	// we need to emit some basic events at the very end of ante handler to be indexed by tendermint.
 	txIndex := eeed.evmKeeper.GetTxIndexTransient(ctx)
 	for i, msg := range tx.GetMsgs() {
-		msgEthTx, ok := msg.(*evmtypes.MsgEthereumTx)
+		msgEthTx, ok := msg.(*evmtypes.MsgHandleTx)
 		if !ok {
-			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid message type %T, expected %T", msg, (*evmtypes.MsgEthereumTx)(nil))
+			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid message type %T, expected %T", msg, (*evmtypes.MsgHandleTx)(nil))
 		}
 
 		// emit ethereum tx hash as an event so that it can be indexed by Tendermint for query purposes
@@ -162,9 +162,9 @@ func (vbd EthValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	evmDenom := evmParams.GetEvmDenom()
 
 	for _, msg := range protoTx.GetMsgs() {
-		msgEthTx, ok := msg.(*evmtypes.MsgEthereumTx)
+		msgEthTx, ok := msg.(*evmtypes.MsgHandleTx)
 		if !ok {
-			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid message type %T, expected %T", msg, (*evmtypes.MsgEthereumTx)(nil))
+			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid message type %T, expected %T", msg, (*evmtypes.MsgHandleTx)(nil))
 		}
 
 		// Validate `From` field

@@ -236,7 +236,7 @@ message EstimateGasResponse {
 // QueryTraceTxRequest defines TraceTx request
 message QueryTraceTxRequest {
   // msg is the MsgEthereumTx for the requested transaction
-  MsgEthereumTx msg = 1;
+  MsgHandleTx msg = 1;
   // tx_index is not necessary anymore
   reserved 2;
   reserved "tx_index";
@@ -244,7 +244,7 @@ message QueryTraceTxRequest {
   TraceConfig trace_config = 3;
   // predecessors is an array of transactions included in the same block
   // need to be replayed first to get correct context for tracing.
-  repeated MsgEthereumTx predecessors = 4;
+  repeated MsgHandleTx predecessors = 4;
   // block_number of requested transaction
   int64 block_number = 5;
   // block_hash of requested transaction
@@ -266,7 +266,7 @@ message QueryTraceTxResponse {
 // QueryTraceBlockRequest defines TraceTx request
 message QueryTraceBlockRequest {
   // txs is an array of messages in the block
-  repeated MsgEthereumTx txs = 1;
+  repeated MsgHandleTx txs = 1;
   // trace_config holds extra parameters to trace functions.
   TraceConfig trace_config = 3;
   // block_number of the traced block

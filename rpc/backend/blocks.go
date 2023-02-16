@@ -248,14 +248,14 @@ func (b *Backend) BlockNumberFromTendermintByHash(blockHash common.Hash) (*big.I
 func (b *Backend) EthMsgsFromTendermintBlock(
 	resBlock *tmrpctypes.ResultBlock,
 	blockRes *tmrpctypes.ResultBlockResults,
-) []*evmtypes.MsgEthereumTx {
-	var result []*evmtypes.MsgEthereumTx
+) []*evmtypes.MsgHandleTx {
+	var result []*evmtypes.MsgHandleTx
 	block := resBlock.Block
 
 	txResults := blockRes.TxsResults
 
 	for i, tx := range block.Txs {
-		// Check if tx exists on EVM by cross checking with blockResults:
+		// Check if tx exists on EVM by cross-checking with blockResults:
 		//  - Include unsuccessful tx that exceeds block gas limit
 		//  - Exclude unsuccessful tx with any other error but ExceedBlockGasLimit
 		if !rpctypes.TxSuccessOrExceedsBlockGasLimit(txResults[i]) {
@@ -270,7 +270,7 @@ func (b *Backend) EthMsgsFromTendermintBlock(
 		}
 
 		for _, msg := range tx.GetMsgs() {
-			ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
+			ethMsg, ok := msg.(*evmtypes.MsgHandleTx)
 			if !ok {
 				continue
 			}
