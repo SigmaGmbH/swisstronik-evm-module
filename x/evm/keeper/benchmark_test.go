@@ -48,7 +48,7 @@ func SetupTestMessageCall(b *testing.B) (*KeeperTestSuite, common.Address) {
 	return &suite, contractAddr
 }
 
-type TxBuilder func(suite *KeeperTestSuite, contract common.Address) *types.MsgEthereumTx
+type TxBuilder func(suite *KeeperTestSuite, contract common.Address) *types.MsgHandleTx
 
 func DoBenchmark(b *testing.B, txBuilder TxBuilder) {
 	suite, contractAddr := SetupContract(b)
@@ -71,14 +71,20 @@ func DoBenchmark(b *testing.B, txBuilder TxBuilder) {
 		err = authante.DeductFees(suite.app.BankKeeper, suite.ctx, suite.app.AccountKeeper.GetAccount(ctx, msg.GetFrom()), fees)
 		require.NoError(b, err)
 
-		rsp, err := suite.app.EvmKeeper.EthereumTx(sdk.WrapSDKContext(ctx), msg)
+		ethMsg := &types.MsgEthereumTx{
+			Data:  msg.Data,
+			Size_: 0,
+			Hash:  msg.Hash,
+			From:  msg.From,
+		}
+		rsp, err := suite.app.EvmKeeper.EthereumTx(sdk.WrapSDKContext(ctx), ethMsg)
 		require.NoError(b, err)
 		require.False(b, rsp.Failed())
 	}
 }
 
 func BenchmarkTokenTransfer(b *testing.B) {
-	DoBenchmark(b, func(suite *KeeperTestSuite, contract common.Address) *types.MsgEthereumTx {
+	DoBenchmark(b, func(suite *KeeperTestSuite, contract common.Address) *types.MsgHandleTx {
 		input, err := types.ERC20Contract.ABI.Pack("transfer", common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), big.NewInt(1000))
 		require.NoError(b, err)
 		nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
@@ -87,7 +93,7 @@ func BenchmarkTokenTransfer(b *testing.B) {
 }
 
 func BenchmarkEmitLogs(b *testing.B) {
-	DoBenchmark(b, func(suite *KeeperTestSuite, contract common.Address) *types.MsgEthereumTx {
+	DoBenchmark(b, func(suite *KeeperTestSuite, contract common.Address) *types.MsgHandleTx {
 		input, err := types.ERC20Contract.ABI.Pack("benchmarkLogs", big.NewInt(1000))
 		require.NoError(b, err)
 		nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
@@ -96,7 +102,7 @@ func BenchmarkEmitLogs(b *testing.B) {
 }
 
 func BenchmarkTokenTransferFrom(b *testing.B) {
-	DoBenchmark(b, func(suite *KeeperTestSuite, contract common.Address) *types.MsgEthereumTx {
+	DoBenchmark(b, func(suite *KeeperTestSuite, contract common.Address) *types.MsgHandleTx {
 		input, err := types.ERC20Contract.ABI.Pack("transferFrom", suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), big.NewInt(0))
 		require.NoError(b, err)
 		nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
@@ -105,7 +111,7 @@ func BenchmarkTokenTransferFrom(b *testing.B) {
 }
 
 func BenchmarkTokenMint(b *testing.B) {
-	DoBenchmark(b, func(suite *KeeperTestSuite, contract common.Address) *types.MsgEthereumTx {
+	DoBenchmark(b, func(suite *KeeperTestSuite, contract common.Address) *types.MsgHandleTx {
 		input, err := types.ERC20Contract.ABI.Pack("mint", common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), big.NewInt(1000))
 		require.NoError(b, err)
 		nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
@@ -138,7 +144,13 @@ func BenchmarkMessageCall(b *testing.B) {
 		err = authante.DeductFees(suite.app.BankKeeper, suite.ctx, suite.app.AccountKeeper.GetAccount(ctx, msg.GetFrom()), fees)
 		require.NoError(b, err)
 
-		rsp, err := suite.app.EvmKeeper.EthereumTx(sdk.WrapSDKContext(ctx), msg)
+		ethMsg := &types.MsgEthereumTx{
+			Data:  nil,
+			Size_: 0,
+			Hash:  "",
+			From:  "",
+		}
+		rsp, err := suite.app.EvmKeeper.EthereumTx(sdk.WrapSDKContext(ctx), ethMsg)
 		require.NoError(b, err)
 		require.False(b, rsp.Failed())
 	}

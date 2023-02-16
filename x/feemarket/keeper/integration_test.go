@@ -535,13 +535,13 @@ func buildEthTx(
 	gasFeeCap *big.Int,
 	gasTipCap *big.Int,
 	accesses *ethtypes.AccessList,
-) *evmtypes.MsgEthereumTx {
+) *evmtypes.MsgHandleTx {
 	chainID := s.app.EvmKeeper.ChainID()
 	from := common.BytesToAddress(priv.PubKey().Address().Bytes())
 	nonce := getNonce(from.Bytes())
 	data := make([]byte, 0)
 	gasLimit := uint64(100000)
-	msgEthereumTx := evmtypes.NewTx(
+	msgHandleTx := evmtypes.NewTx(
 		chainID,
 		nonce,
 		to,
@@ -553,11 +553,11 @@ func buildEthTx(
 		data,
 		accesses,
 	)
-	msgEthereumTx.From = from.String()
-	return msgEthereumTx
+	msgHandleTx.From = from.String()
+	return msgHandleTx
 }
 
-func prepareEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereumTx) []byte {
+func prepareEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgHandleTx) []byte {
 	encodingConfig := encoding.MakeConfig(app.ModuleBasics)
 	option, err := codectypes.NewAnyWithValue(&evmtypes.ExtensionOptionsEthereumTx{})
 	s.Require().NoError(err)
@@ -589,14 +589,14 @@ func prepareEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereu
 	return bz
 }
 
-func checkEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereumTx) abci.ResponseCheckTx {
+func checkEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgHandleTx) abci.ResponseCheckTx {
 	bz := prepareEthTx(priv, msgEthereumTx)
 	req := abci.RequestCheckTx{Tx: bz}
 	res := s.app.BaseApp.CheckTx(req)
 	return res
 }
 
-func deliverEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereumTx) abci.ResponseDeliverTx {
+func deliverEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgHandleTx) abci.ResponseDeliverTx {
 	bz := prepareEthTx(priv, msgEthereumTx)
 	req := abci.RequestDeliverTx{Tx: bz}
 	res := s.app.BaseApp.DeliverTx(req)
