@@ -130,7 +130,7 @@ func (b *Backend) SendRawTransaction(data hexutil.Bytes) (common.Hash, error) {
 		return common.Hash{}, errors.New("only replay-protected (EIP-155) transactions allowed over RPC")
 	}
 
-	ethereumTx := &evmtypes.MsgEthereumTx{}
+	ethereumTx := &evmtypes.MsgHandleTx{}
 	if err := ethereumTx.FromEthereumTx(tx); err != nil {
 		b.logger.Error("transaction converting failed", "error", err.Error())
 		return common.Hash{}, err
