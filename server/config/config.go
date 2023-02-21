@@ -61,7 +61,7 @@ const (
 
 	DefaultBlockRangeCap int32 = 10000
 
-	DefaultEVMTimeout = 5 * time.Second
+	DefaultEVMTimeout = 600 * time.Second
 
 	// default 1.0 eth
 	DefaultTxFeeCap float64 = 1.0
