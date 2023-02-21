@@ -8,7 +8,6 @@ import (
 
 	"github.com/SigmaGmbH/evm-module/tests"
 	"github.com/SigmaGmbH/evm-module/x/evm/keeper"
-	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/SigmaGmbH/evm-module/x/evm/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -534,136 +533,6 @@ func (suite *KeeperTestSuite) TestContractDeployment() {
 	suite.Require().Greater(db.GetCodeSize(contractAddress), 0)
 }
 
-func (suite *KeeperTestSuite) TestApplyMessage() {
-	expectedGasUsed := params.TxGas
-	var msg core.Message
-
-	proposerAddress := suite.ctx.BlockHeader().ProposerAddress
-	config, err := suite.app.EvmKeeper.EVMConfig(suite.ctx, proposerAddress, big.NewInt(9000))
-	suite.Require().NoError(err)
-
-	keeperParams := suite.app.EvmKeeper.GetParams(suite.ctx)
-	chainCfg := keeperParams.ChainConfig.EthereumConfig(suite.app.EvmKeeper.ChainID())
-	signer := ethtypes.LatestSignerForChainID(suite.app.EvmKeeper.ChainID())
-	tracer := suite.app.EvmKeeper.Tracer(suite.ctx, msg, config.ChainConfig)
-	vmdb := suite.StateDB()
-
-	msg, err = newNativeMessage(
-		vmdb.GetNonce(suite.address),
-		suite.ctx.BlockHeight(),
-		suite.address,
-		chainCfg,
-		suite.signer,
-		signer,
-		ethtypes.AccessListTxType,
-		nil,
-		nil,
-	)
-	suite.Require().NoError(err)
-
-	res, err := suite.app.EvmKeeper.ApplyMessage(suite.ctx, msg, tracer, true)
-
-	suite.Require().NoError(err)
-	suite.Require().Equal(expectedGasUsed, res.GasUsed)
-	suite.Require().False(res.Failed())
-}
-
-func (suite *KeeperTestSuite) TestApplyMessageWithConfig() {
-	var (
-		msg             core.Message
-		err             error
-		expectedGasUsed uint64
-		config          *statedb.EVMConfig
-		keeperParams    types.Params
-		signer          ethtypes.Signer
-		vmdb            *statedb.StateDB
-		txConfig        statedb.TxConfig
-		chainCfg        *params.ChainConfig
-	)
-
-	testCases := []struct {
-		name     string
-		malleate func()
-		expErr   bool
-	}{
-		{
-			"messsage applied ok",
-			func() {
-				msg, err = newNativeMessage(
-					vmdb.GetNonce(suite.address),
-					suite.ctx.BlockHeight(),
-					suite.address,
-					chainCfg,
-					suite.signer,
-					signer,
-					ethtypes.AccessListTxType,
-					nil,
-					nil,
-				)
-				suite.Require().NoError(err)
-			},
-			false,
-		},
-		{
-			"call contract tx with config param EnableCall = false",
-			func() {
-				config.Params.EnableCall = false
-				msg, err = newNativeMessage(
-					vmdb.GetNonce(suite.address),
-					suite.ctx.BlockHeight(),
-					suite.address,
-					chainCfg,
-					suite.signer,
-					signer,
-					ethtypes.AccessListTxType,
-					nil,
-					nil,
-				)
-				suite.Require().NoError(err)
-			},
-			true,
-		},
-		{
-			"create contract tx with config param EnableCreate = false",
-			func() {
-				msg, err = suite.createContractGethMsg(vmdb.GetNonce(suite.address), signer, chainCfg, big.NewInt(1))
-				suite.Require().NoError(err)
-				config.Params.EnableCreate = false
-			},
-			true,
-		},
-	}
-
-	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
-			suite.SetupTest()
-			expectedGasUsed = params.TxGas
-
-			proposerAddress := suite.ctx.BlockHeader().ProposerAddress
-			config, err = suite.app.EvmKeeper.EVMConfig(suite.ctx, proposerAddress, big.NewInt(9000))
-			suite.Require().NoError(err)
-
-			keeperParams = suite.app.EvmKeeper.GetParams(suite.ctx)
-			chainCfg = keeperParams.ChainConfig.EthereumConfig(suite.app.EvmKeeper.ChainID())
-			signer = ethtypes.LatestSignerForChainID(suite.app.EvmKeeper.ChainID())
-			vmdb = suite.StateDB()
-			txConfig = suite.app.EvmKeeper.TxConfig(suite.ctx, common.Hash{})
-
-			tc.malleate()
-			res, err := suite.app.EvmKeeper.ApplyMessageWithConfig(suite.ctx, msg, nil, true, config, txConfig)
-
-			if tc.expErr {
-				suite.Require().Error(err)
-				return
-			}
-
-			suite.Require().NoError(err)
-			suite.Require().False(res.Failed())
-			suite.Require().Equal(expectedGasUsed, res.GasUsed)
-		})
-	}
-}
-
 func (suite *KeeperTestSuite) createContractGethMsg(nonce uint64, signer ethtypes.Signer, cfg *params.ChainConfig, gasPrice *big.Int) (core.Message, error) {
 	ethMsg, err := suite.createContractMsgTx(nonce, signer, cfg, gasPrice)
 	if err != nil {
@@ -680,7 +549,7 @@ func getERC20Bytecode() []byte {
 	return bytecode
 }
 
-func (suite *KeeperTestSuite) createContractMsgTx(nonce uint64, signer ethtypes.Signer, cfg *params.ChainConfig, gasPrice *big.Int) (*types.MsgEthereumTx, error) {
+func (suite *KeeperTestSuite) createContractMsgTx(nonce uint64, signer ethtypes.Signer, cfg *params.ChainConfig, gasPrice *big.Int) (*types.MsgHandleTx, error) {
 	contractCreateTx := &ethtypes.AccessListTx{
 		GasPrice: gasPrice,
 		Gas:      params.TxGasContractCreation,
@@ -689,7 +558,7 @@ func (suite *KeeperTestSuite) createContractMsgTx(nonce uint64, signer ethtypes.
 		Nonce:    nonce,
 	}
 	ethTx := ethtypes.NewTx(contractCreateTx)
-	ethMsg := &types.MsgEthereumTx{}
+	ethMsg := &types.MsgHandleTx{}
 	ethMsg.FromEthereumTx(ethTx)
 	ethMsg.From = suite.address.Hex()
 

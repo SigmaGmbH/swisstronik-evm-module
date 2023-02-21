@@ -12,11 +12,6 @@ option go_package = "github.com/evmos/ethermint/x/evm/types";
 
 // Msg defines the evm Msg service.
 service Msg {
-  // EthereumTx defines a method submitting Ethereum transactions.
-  rpc EthereumTx(MsgEthereumTx) returns (MsgEthereumTxResponse) {
-    option (google.api.http).post = "/ethermint/evm/v1/ethereum_tx";
-  };
-
   // HandleTx defines a method submitting Ethereum transactions.
   rpc HandleTx(MsgHandleTx) returns (MsgEthereumTxResponse) {
     option (google.api.http).post = "/ethermint/evm/v1/handle_tx";
@@ -37,23 +32,6 @@ message MsgHandleTx {
   // hash of the transaction in hex format
   string hash = 3 [(gogoproto.moretags) = "rlp:\"-\""];
 
-  // from is the ethereum signer address in hex format. This address value is checked
-  // against the address derived from the signature (V, R, S) using the
-  // secp256k1 elliptic curve
-  string from = 4;
-}
-
-// MsgEthereumTx encapsulates an Ethereum transaction as an SDK message.
-message MsgEthereumTx {
-  option (gogoproto.goproto_getters) = false;
-
-  // data is inner transaction data of the Ethereum transaction
-  google.protobuf.Any data = 1;
-
-  // size is the encoded storage size of the transaction (DEPRECATED)
-  double size = 2 [(gogoproto.jsontag) = "-"];
-  // hash of the transaction in hex format
-  string hash = 3 [(gogoproto.moretags) = "rlp:\"-\""];
   // from is the ethereum signer address in hex format. This address value is checked
   // against the address derived from the signature (V, R, S) using the
   // secp256k1 elliptic curve

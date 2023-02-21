@@ -309,13 +309,12 @@ func (suite *KeeperTestSuite) DeployTestContract(t require.TestingT, owner commo
 	err = erc20DeployTx.Sign(ethtypes.LatestSignerForChainID(chainID), suite.signer)
 	require.NoError(t, err)
 
-	ethTx := &types.MsgEthereumTx{
-		Data:  erc20DeployTx.Data,
-		Size_: 0,
-		Hash:  erc20DeployTx.Hash,
-		From:  erc20DeployTx.From,
+	ethTx := &types.MsgHandleTx{
+		Data: erc20DeployTx.Data,
+		Hash: erc20DeployTx.Hash,
+		From: erc20DeployTx.From,
 	}
-	rsp, err := suite.app.EvmKeeper.EthereumTx(ctx, ethTx)
+	rsp, err := suite.app.EvmKeeper.HandleTx(ctx, ethTx)
 	require.NoError(t, err)
 	require.Empty(t, rsp.VmError)
 	return crypto.CreateAddress(suite.address, nonce)
@@ -370,13 +369,12 @@ func (suite *KeeperTestSuite) TransferERC20Token(t require.TestingT, contractAdd
 	err = ercTransferTx.Sign(ethtypes.LatestSignerForChainID(chainID), suite.signer)
 	require.NoError(t, err)
 
-	ethTx := &types.MsgEthereumTx{
-		Data:  ercTransferTx.Data,
-		Size_: 0,
-		Hash:  ercTransferTx.Hash,
-		From:  ercTransferTx.From,
+	ethTx := &types.MsgHandleTx{
+		Data: ercTransferTx.Data,
+		Hash: ercTransferTx.Hash,
+		From: ercTransferTx.From,
 	}
-	rsp, err := suite.app.EvmKeeper.EthereumTx(ctx, ethTx)
+	rsp, err := suite.app.EvmKeeper.HandleTx(ctx, ethTx)
 	require.NoError(t, err)
 	require.Empty(t, rsp.VmError)
 	return ercTransferTx
@@ -433,13 +431,12 @@ func (suite *KeeperTestSuite) DeployTestMessageCall(t require.TestingT) common.A
 	err = erc20DeployTx.Sign(ethtypes.LatestSignerForChainID(chainID), suite.signer)
 	require.NoError(t, err)
 
-	ethTx := &types.MsgEthereumTx{
-		Data:  erc20DeployTx.Data,
-		Size_: 0,
-		Hash:  erc20DeployTx.Hash,
-		From:  erc20DeployTx.From,
+	ethTx := &types.MsgHandleTx{
+		Data: erc20DeployTx.Data,
+		Hash: erc20DeployTx.Hash,
+		From: erc20DeployTx.From,
 	}
-	rsp, err := suite.app.EvmKeeper.EthereumTx(ctx, ethTx)
+	rsp, err := suite.app.EvmKeeper.HandleTx(ctx, ethTx)
 	require.NoError(t, err)
 	require.Empty(t, rsp.VmError)
 	return crypto.CreateAddress(suite.address, nonce)

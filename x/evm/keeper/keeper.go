@@ -27,14 +27,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/tendermint/tendermint/libs/log"
 
 	evmcommontypes "github.com/SigmaGmbH/evm-module/types"
 	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/SigmaGmbH/evm-module/x/evm/types"
-	evm "github.com/SigmaGmbH/evm-module/x/evm/vm"
 )
 
 // Keeper grants access to the EVM module state and implements the go-ethereum StateDB interface.
@@ -65,64 +63,15 @@ type Keeper struct {
 	// chain ID number obtained from the context's chain id
 	eip155ChainID *big.Int
 
-	// Tracer used to collect execution traces from the EVM transaction execution
-	tracer string
-
 	// EVM Hooks for tx post-processing
 	hooks types.EvmHooks
 
-	// custom stateless precompiled smart contracts
-	customPrecompiles evm.PrecompiledContracts
-
-	// evm constructor function
-	evmConstructor evm.Constructor
 	// Legacy subspace
 	ss paramstypes.Subspace
 }
 
 // NewKeeper generates new evm module keeper
 func NewKeeper(
-	cdc codec.BinaryCodec,
-	storeKey, transientKey storetypes.StoreKey,
-	authority sdk.AccAddress,
-	ak types.AccountKeeper,
-	bankKeeper types.BankKeeper,
-	sk types.StakingKeeper,
-	fmk types.FeeMarketKeeper,
-	customPrecompiles evm.PrecompiledContracts,
-	evmConstructor evm.Constructor,
-	tracer string,
-	ss paramstypes.Subspace,
-) *Keeper {
-	// ensure evm module account is set
-	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
-		panic("the EVM module account has not been set")
-	}
-
-	// ensure the authority account is correct
-	if err := sdk.VerifyAddressFormat(authority); err != nil {
-		panic(err)
-	}
-
-	// NOTE: we pass in the parameter space to the CommitStateDB in order to use custom denominations for the EVM operations
-	return &Keeper{
-		cdc:               cdc,
-		authority:         authority,
-		accountKeeper:     ak,
-		bankKeeper:        bankKeeper,
-		stakingKeeper:     sk,
-		feeMarketKeeper:   fmk,
-		storeKey:          storeKey,
-		transientKey:      transientKey,
-		customPrecompiles: customPrecompiles,
-		evmConstructor:    evmConstructor,
-		tracer:            tracer,
-		ss:                ss,
-	}
-}
-
-// NewSGXVMKeeper generates new evm module keeper for SGXVM (without tracing)
-func NewSGXVMKeeper(
 	cdc codec.BinaryCodec,
 	storeKey, transientKey storetypes.StoreKey,
 	authority sdk.AccAddress,
@@ -300,11 +249,6 @@ func (k *Keeper) PostTxProcessing(ctx sdk.Context, msg core.Message, receipt *et
 		return nil
 	}
 	return k.hooks.PostTxProcessing(ctx, msg, receipt)
-}
-
-// Tracer return a default vm.Tracer based on current keeper state
-func (k Keeper) Tracer(ctx sdk.Context, msg core.Message, ethCfg *params.ChainConfig) vm.EVMLogger {
-	return types.NewTracer(k.tracer, msg, ethCfg, ctx.BlockHeight())
 }
 
 // GetAccountWithoutBalance load nonce and codehash without balance,

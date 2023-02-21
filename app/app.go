@@ -125,7 +125,6 @@ import (
 	"github.com/SigmaGmbH/evm-module/x/evm"
 	evmkeeper "github.com/SigmaGmbH/evm-module/x/evm/keeper"
 	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
-	"github.com/SigmaGmbH/evm-module/x/evm/vm/geth"
 	"github.com/SigmaGmbH/evm-module/x/feemarket"
 	feemarketkeeper "github.com/SigmaGmbH/evm-module/x/feemarket/keeper"
 	feemarkettypes "github.com/SigmaGmbH/evm-module/x/feemarket/types"
@@ -409,8 +408,6 @@ func NewEthermintApp(
 		app.MsgServiceRouter(),
 		app.AccountKeeper)
 
-	tracer := cast.ToString(appOpts.Get(srvflags.EVMTracer))
-
 	// Create Ethermint keepers
 	feeMarketSs := app.GetSubspace(feemarkettypes.ModuleName)
 	app.FeeMarketKeeper = feemarketkeeper.NewKeeper(
@@ -422,8 +419,7 @@ func NewEthermintApp(
 	evmSs := app.GetSubspace(evmtypes.ModuleName)
 	app.EvmKeeper = evmkeeper.NewKeeper(
 		appCodec, keys[evmtypes.StoreKey], tkeys[evmtypes.TransientKey], authtypes.NewModuleAddress(govtypes.ModuleName),
-		app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.FeeMarketKeeper,
-		nil, geth.NewEVM, tracer, evmSs,
+		app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.FeeMarketKeeper, evmSs,
 	)
 
 	// Create IBC Keeper

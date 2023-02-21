@@ -71,13 +71,12 @@ func DoBenchmark(b *testing.B, txBuilder TxBuilder) {
 		err = authante.DeductFees(suite.app.BankKeeper, suite.ctx, suite.app.AccountKeeper.GetAccount(ctx, msg.GetFrom()), fees)
 		require.NoError(b, err)
 
-		ethMsg := &types.MsgEthereumTx{
-			Data:  msg.Data,
-			Size_: 0,
-			Hash:  msg.Hash,
-			From:  msg.From,
+		ethMsg := &types.MsgHandleTx{
+			Data: msg.Data,
+			Hash: msg.Hash,
+			From: msg.From,
 		}
-		rsp, err := suite.app.EvmKeeper.EthereumTx(sdk.WrapSDKContext(ctx), ethMsg)
+		rsp, err := suite.app.EvmKeeper.HandleTx(sdk.WrapSDKContext(ctx), ethMsg)
 		require.NoError(b, err)
 		require.False(b, rsp.Failed())
 	}
@@ -144,13 +143,12 @@ func BenchmarkMessageCall(b *testing.B) {
 		err = authante.DeductFees(suite.app.BankKeeper, suite.ctx, suite.app.AccountKeeper.GetAccount(ctx, msg.GetFrom()), fees)
 		require.NoError(b, err)
 
-		ethMsg := &types.MsgEthereumTx{
-			Data:  nil,
-			Size_: 0,
-			Hash:  "",
-			From:  "",
+		ethMsg := &types.MsgHandleTx{
+			Data: nil,
+			Hash: "",
+			From: "",
 		}
-		rsp, err := suite.app.EvmKeeper.EthereumTx(sdk.WrapSDKContext(ctx), ethMsg)
+		rsp, err := suite.app.EvmKeeper.HandleTx(sdk.WrapSDKContext(ctx), ethMsg)
 		require.NoError(b, err)
 		require.False(b, rsp.Failed())
 	}

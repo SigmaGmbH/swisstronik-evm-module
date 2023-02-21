@@ -56,7 +56,7 @@ func NewRawTxCmd() *cobra.Command {
 				return errors.Wrap(err, "failed to decode ethereum tx hex bytes")
 			}
 
-			msg := &types.MsgEthereumTx{}
+			msg := &types.MsgHandleTx{}
 			if err := msg.UnmarshalBinary(data); err != nil {
 				return err
 			}

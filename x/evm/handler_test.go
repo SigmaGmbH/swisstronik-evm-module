@@ -509,25 +509,59 @@ func (suite *EvmTestSuite) TestErrorWhenDeployContract() {
 	// TODO: snapshot checking
 }
 
+//func (suite *EvmTestSuite) deployERC20Contract() common.Address {
+//	k := suite.app.EvmKeeper
+//	nonce := k.GetNonce(suite.ctx, suite.from)
+//	ctorArgs, err := types.ERC20Contract.ABI.Pack("", suite.from, big.NewInt(10000000000))
+//	suite.Require().NoError(err)
+//	msg := ethtypes.NewMessage(
+//		suite.from,
+//		nil,
+//		nonce,
+//		big.NewInt(0),
+//		2000000,
+//		big.NewInt(1),
+//		nil,
+//		nil,
+//		append(types.ERC20Contract.Bin, ctorArgs...),
+//		nil,
+//		true,
+//	)
+//	txConfig := statedb.NewEmptyTxConfig(common.BytesToHash(suite.ctx.HeaderHash()))
+//	txContext, err := keeper.CreateSGXVMContextFromMessage(suite.ctx, suite.app.EvmKeeper, msg)
+//	cfg, err := k.EVMConfig(suite.ctx, keeper.GetProposerAddress(suite.ctx, suite.app.Pro), chainID)
+//	suite.Require().NoError(err)
+//
+//	rsp, err := k.ApplySGXVMMessage(suite.ctx, msg, true, txConfig, txContext)
+//	suite.Require().NoError(err)
+//	suite.Require().False(rsp.Failed())
+//	return crypto.CreateAddress(suite.from, nonce)
+//}
+
+// DeployTestContract deploy a test erc20 contract and returns the contract address
 func (suite *EvmTestSuite) deployERC20Contract() common.Address {
-	k := suite.app.EvmKeeper
-	nonce := k.GetNonce(suite.ctx, suite.from)
+	chainID := suite.app.EvmKeeper.ChainID()
 	ctorArgs, err := types.ERC20Contract.ABI.Pack("", suite.from, big.NewInt(10000000000))
 	suite.Require().NoError(err)
-	msg := ethtypes.NewMessage(
-		suite.from,
-		nil,
+
+	nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.from)
+	data := append(types.ERC20Contract.Bin, ctorArgs...)
+
+	erc20DeployTx := types.NewSGXVMTxContract(
+		chainID,
 		nonce,
-		big.NewInt(0),
-		2000000,
-		big.NewInt(1),
-		nil,
-		nil,
-		append(types.ERC20Contract.Bin, ctorArgs...),
-		nil,
-		true,
+		nil,           // amount
+		2000000,       // gasLimit
+		big.NewInt(1), // gasPrice
+		nil, nil,
+		data, // input
+		nil,  // accesses
 	)
-	rsp, err := k.ApplyMessage(suite.ctx, msg, nil, true)
+
+	erc20DeployTx.From = suite.from.Hex()
+	err = erc20DeployTx.Sign(ethtypes.LatestSignerForChainID(chainID), suite.signer)
+	suite.Require().NoError(err)
+	rsp, err := suite.app.EvmKeeper.ApplySGXVMTransaction(suite.ctx, erc20DeployTx.AsTransaction())
 	suite.Require().NoError(err)
 	suite.Require().False(rsp.Failed())
 	return crypto.CreateAddress(suite.from, nonce)
@@ -549,13 +583,13 @@ func (suite *EvmTestSuite) TestERC20TransferReverted() {
 			"no hooks",
 			intrinsicGas, // enough for intrinsicGas, but not enough for execution
 			nil,
-			"out of gas",
+			"evm error: OutOfGas",
 		},
 		{
 			"success hooks",
 			intrinsicGas, // enough for intrinsicGas, but not enough for execution
 			&DummyHook{},
-			"out of gas",
+			"evm error: OutOfGas",
 		},
 		{
 			"failure hooks",
@@ -569,12 +603,12 @@ func (suite *EvmTestSuite) TestERC20TransferReverted() {
 		suite.Run(tc.msg, func() {
 			suite.SetupTest()
 			k := suite.app.EvmKeeper
-			k.SetHooks(tc.hooks)
 
 			// add some fund to pay gas fee
 			k.SetBalance(suite.ctx, suite.from, big.NewInt(1000000000000000))
-
 			contract := suite.deployERC20Contract()
+
+			k.SetHooks(tc.hooks)
 
 			data, err := types.ERC20Contract.ABI.Pack("transfer", suite.from, big.NewInt(10))
 			suite.Require().NoError(err)
@@ -608,13 +642,12 @@ func (suite *EvmTestSuite) TestERC20TransferReverted() {
 			err = k.DeductTxCostsFromUserBalance(suite.ctx, fees, common.HexToAddress(tx.From))
 			suite.Require().NoError(err)
 
-			ethMsgTx := &types.MsgEthereumTx{
-				Data:  tx.Data,
-				Size_: 0,
-				Hash:  tx.Hash,
-				From:  tx.From,
+			ethMsgTx := &types.MsgHandleTx{
+				Data: tx.Data,
+				Hash: tx.Hash,
+				From: tx.From,
 			}
-			res, err := k.EthereumTx(sdk.WrapSDKContext(suite.ctx), ethMsgTx)
+			res, err := k.HandleTx(sdk.WrapSDKContext(suite.ctx), ethMsgTx)
 			suite.Require().NoError(err)
 
 			suite.Require().True(res.Failed())
@@ -623,7 +656,7 @@ func (suite *EvmTestSuite) TestERC20TransferReverted() {
 
 			after := k.GetBalance(suite.ctx, suite.from)
 
-			if tc.expErr == "out of gas" {
+			if tc.expErr == "evm error: OutOfGas" {
 				suite.Require().Equal(tc.gasLimit, res.GasUsed)
 			} else {
 				suite.Require().Greater(tc.gasLimit, res.GasUsed)
@@ -687,13 +720,12 @@ func (suite *EvmTestSuite) TestContractDeploymentRevert() {
 			db.SetNonce(suite.from, nonce+1)
 			suite.Require().NoError(db.Commit())
 
-			msgEthTx := &types.MsgEthereumTx{
-				Data:  tx.Data,
-				Size_: 0,
-				Hash:  tx.Hash,
-				From:  tx.From,
+			msgEthTx := &types.MsgHandleTx{
+				Data: tx.Data,
+				Hash: tx.Hash,
+				From: tx.From,
 			}
-			rsp, err := k.EthereumTx(sdk.WrapSDKContext(suite.ctx), msgEthTx)
+			rsp, err := k.HandleTx(sdk.WrapSDKContext(suite.ctx), msgEthTx)
 			suite.Require().NoError(err)
 			suite.Require().True(rsp.Failed())
 

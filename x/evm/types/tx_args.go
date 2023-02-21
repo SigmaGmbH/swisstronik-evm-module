@@ -69,7 +69,7 @@ func (args *TransactionArgs) String() string {
 
 // ToTransaction converts the arguments to an ethereum transaction.
 // This assumes that setTxDefaults has been called.
-func (args *TransactionArgs) ToTransaction() *MsgEthereumTx {
+func (args *TransactionArgs) ToTransaction() *MsgHandleTx {
 	var (
 		chainID, value, gasPrice, maxFeePerGas, maxPriorityFeePerGas sdkmath.Int
 		gas, nonce                                                   uint64
@@ -159,7 +159,7 @@ func (args *TransactionArgs) ToTransaction() *MsgEthereumTx {
 		from = args.From.Hex()
 	}
 
-	msg := MsgEthereumTx{
+	msg := MsgHandleTx{
 		Data: any,
 		From: from,
 	}

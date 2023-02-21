@@ -30,7 +30,7 @@ func (suite *KeeperTestSuite) TestNativeCurrencyTransfer() {
 			"Transfer funds tx",
 			func() {
 				transferAmount = 1000
-				msg, _, err = newHandleMsgTx(
+				msg, _, err = newEthMsgTx(
 					vmdb.GetNonce(suite.address),
 					suite.ctx.BlockHeight(),
 					suite.address,
@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestNativeCurrencyTransfer() {
 			func() {
 				transferAmount = 1000
 				wrongAmount := int64(100000)
-				msg, _, err = newHandleMsgTx(
+				msg, _, err = newEthMsgTx(
 					vmdb.GetNonce(suite.address),
 					suite.ctx.BlockHeight(),
 					suite.address,
@@ -152,7 +152,7 @@ func (suite *KeeperTestSuite) TestDryRun() {
 			cfg, err := suite.app.EvmKeeper.EVMConfig(suite.ctx, suite.ctx.BlockHeader().ProposerAddress, suite.app.EvmKeeper.ChainID())
 			suite.Require().NoError(err)
 
-			msg, baseFee, err := newHandleMsgTx(
+			msg, baseFee, err := newEthMsgTx(
 				vmdb.GetNonce(suite.address),
 				suite.ctx.BlockHeight(),
 				suite.address,

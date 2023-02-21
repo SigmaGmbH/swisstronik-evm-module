@@ -14,7 +14,7 @@ import (
 func (suite *KeeperTestSuite) TestEthereumTx() {
 	var (
 		err             error
-		msg             *types.MsgEthereumTx
+		msg             *types.MsgHandleTx
 		signer          ethtypes.Signer
 		vmdb            *statedb.StateDB
 		chainCfg        *params.ChainConfig
@@ -71,7 +71,7 @@ func (suite *KeeperTestSuite) TestEthereumTx() {
 			vmdb = suite.StateDB()
 
 			tc.malleate()
-			res, err := suite.app.EvmKeeper.EthereumTx(suite.ctx, msg)
+			res, err := suite.app.EvmKeeper.HandleTx(suite.ctx, msg)
 			if tc.expErr {
 				suite.Require().Error(err)
 				return
