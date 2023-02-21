@@ -509,35 +509,6 @@ func (suite *EvmTestSuite) TestErrorWhenDeployContract() {
 	// TODO: snapshot checking
 }
 
-//func (suite *EvmTestSuite) deployERC20Contract() common.Address {
-//	k := suite.app.EvmKeeper
-//	nonce := k.GetNonce(suite.ctx, suite.from)
-//	ctorArgs, err := types.ERC20Contract.ABI.Pack("", suite.from, big.NewInt(10000000000))
-//	suite.Require().NoError(err)
-//	msg := ethtypes.NewMessage(
-//		suite.from,
-//		nil,
-//		nonce,
-//		big.NewInt(0),
-//		2000000,
-//		big.NewInt(1),
-//		nil,
-//		nil,
-//		append(types.ERC20Contract.Bin, ctorArgs...),
-//		nil,
-//		true,
-//	)
-//	txConfig := statedb.NewEmptyTxConfig(common.BytesToHash(suite.ctx.HeaderHash()))
-//	txContext, err := keeper.CreateSGXVMContextFromMessage(suite.ctx, suite.app.EvmKeeper, msg)
-//	cfg, err := k.EVMConfig(suite.ctx, keeper.GetProposerAddress(suite.ctx, suite.app.Pro), chainID)
-//	suite.Require().NoError(err)
-//
-//	rsp, err := k.ApplySGXVMMessage(suite.ctx, msg, true, txConfig, txContext)
-//	suite.Require().NoError(err)
-//	suite.Require().False(rsp.Failed())
-//	return crypto.CreateAddress(suite.from, nonce)
-//}
-
 // DeployTestContract deploy a test erc20 contract and returns the contract address
 func (suite *EvmTestSuite) deployERC20Contract() common.Address {
 	chainID := suite.app.EvmKeeper.ChainID()
