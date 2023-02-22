@@ -527,7 +527,6 @@ func (suite *KeeperTestSuite) TestEVMConfig() {
 }
 
 func (suite *KeeperTestSuite) TestContractDeployment() {
-	// TODO: For some reason GetCodeSize returns 0
 	contractAddress := suite.DeployTestContract(suite.T(), suite.address, big.NewInt(10000000000000))
 	db := suite.StateDB()
 	suite.Require().Greater(db.GetCodeSize(contractAddress), 0)
