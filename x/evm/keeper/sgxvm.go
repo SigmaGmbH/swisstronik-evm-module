@@ -281,7 +281,8 @@ func (k *Keeper) ApplyMessageWithConfig(
 	}
 
 	connector := Connector{
-		StateDB: stateDB,
+		Context:   ctx,
+		EVMKeeper: k,
 	}
 
 	var res *librustgo.HandleTransactionResponse

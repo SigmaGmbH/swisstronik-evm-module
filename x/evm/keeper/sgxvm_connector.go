@@ -2,11 +2,11 @@ package keeper
 
 import (
 	"errors"
-	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/SigmaGmbH/librustgo"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/golang/protobuf/proto"
 	"math/big"
 )
@@ -14,10 +14,12 @@ import (
 // Connector allows our VM interact with existing Cosmos application.
 // It is passed by pointer into SGX to make it accessible for our VM.
 type Connector struct {
-	// StateDB used to store intermediate state
-	StateDB *statedb.StateDB
 	// GetHashFn returns the hash corresponding to n
 	GetHashFn vm.GetHashFunc
+	// Keeper used to store and obtain state
+	EVMKeeper *Keeper
+	// Context used to make Keeper calls available
+	Context sdk.Context
 }
 
 func (q Connector) Query(req []byte) ([]byte, error) {
@@ -67,32 +69,37 @@ func (q Connector) Query(req []byte) ([]byte, error) {
 // Returns data in protobuf-encoded format
 func (q Connector) GetAccount(req *librustgo.CosmosRequest_GetAccount) ([]byte, error) {
 	//println("Connector::Query GetAccount invoked")
-
 	ethAddress := common.BytesToAddress(req.GetAccount.Address)
-	balance := q.StateDB.GetBalance(ethAddress)
-	nonce := q.StateDB.GetNonce(ethAddress)
+	account := q.EVMKeeper.GetAccountOrEmpty(q.Context, ethAddress)
 
 	return proto.Marshal(&librustgo.QueryGetAccountResponse{
-		Balance: balance.Bytes(),
-		Nonce:   sdk.Uint64ToBigEndian(nonce),
+		Balance: account.Balance.Bytes(),
+		Nonce:   sdk.Uint64ToBigEndian(account.Nonce),
 	})
 }
 
 // ContainsKey handles incoming protobuf-encoded request to check whether specified address exists
 func (q Connector) ContainsKey(req *librustgo.CosmosRequest_ContainsKey) ([]byte, error) {
 	//println("Connector::Query ContainsKey invoked")
-	address := common.BytesToAddress(req.ContainsKey.Key)
-	contains := q.StateDB.Exist(address)
-	return proto.Marshal(&librustgo.QueryContainsKeyResponse{Contains: contains})
+	ethAddress := common.BytesToAddress(req.ContainsKey.Key)
+	account := q.EVMKeeper.GetAccountWithoutBalance(q.Context, ethAddress)
+	return proto.Marshal(&librustgo.QueryContainsKeyResponse{Contains: account != nil})
 }
 
 // InsertAccountCode handles incoming protobuf-encoded request for adding or modifying existing account code
 // It will insert account code only if account exists, otherwise it returns an error
 func (q Connector) InsertAccountCode(req *librustgo.CosmosRequest_InsertAccountCode) ([]byte, error) {
 	//println("Connector::Query InsertAccountCode invoked")
-
 	ethAddress := common.BytesToAddress(req.InsertAccountCode.Address)
-	q.StateDB.SetCode(ethAddress, req.InsertAccountCode.Code)
+	account := q.EVMKeeper.GetAccountOrEmpty(q.Context, ethAddress)
+
+	codeHash := crypto.Keccak256Hash(req.InsertAccountCode.Code)
+	account.CodeHash = codeHash.Bytes()
+
+	if err := q.EVMKeeper.SetAccount(q.Context, ethAddress, account); err != nil {
+		return nil, err
+	}
+	q.EVMKeeper.SetCode(q.Context, codeHash.Bytes(), req.InsertAccountCode.Code)
 
 	return proto.Marshal(&librustgo.QueryInsertAccountCodeResponse{})
 }
@@ -103,7 +110,7 @@ func (q Connector) RemoveStorageCell(req *librustgo.CosmosRequest_RemoveStorageC
 	address := common.BytesToAddress(req.RemoveStorageCell.Address)
 	index := common.BytesToHash(req.RemoveStorageCell.Index)
 
-	q.StateDB.SetState(address, index, common.Hash{})
+	q.EVMKeeper.SetState(q.Context, address, index, common.Hash{}.Bytes())
 
 	return proto.Marshal(&librustgo.QueryRemoveStorageCellResponse{})
 }
@@ -111,9 +118,10 @@ func (q Connector) RemoveStorageCell(req *librustgo.CosmosRequest_RemoveStorageC
 // Remove handles incoming protobuf-encoded request for removing smart contract (selfdestruct)
 func (q Connector) Remove(req *librustgo.CosmosRequest_Remove) ([]byte, error) {
 	//println("Connector::Query Remove invoked")
-
 	ethAddress := common.BytesToAddress(req.Remove.Address)
-	q.StateDB.Suicide(ethAddress)
+	if err := q.EVMKeeper.DeleteAccount(q.Context, ethAddress); err != nil {
+		return nil, err
+	}
 
 	return proto.Marshal(&librustgo.QueryRemoveResponse{})
 }
@@ -137,7 +145,7 @@ func (q Connector) InsertStorageCell(req *librustgo.CosmosRequest_InsertStorageC
 	index := common.BytesToHash(req.InsertStorageCell.Index)
 	value := common.BytesToHash(req.InsertStorageCell.Value)
 
-	q.StateDB.SetState(ethAddress, index, value)
+	q.EVMKeeper.SetState(q.Context, ethAddress, index, value.Bytes())
 
 	return proto.Marshal(&librustgo.QueryInsertStorageCellResponse{})
 }
@@ -145,10 +153,9 @@ func (q Connector) InsertStorageCell(req *librustgo.CosmosRequest_InsertStorageC
 // GetStorageCell handles incoming protobuf-encoded request of storage cell value
 func (q Connector) GetStorageCell(req *librustgo.CosmosRequest_StorageCell) ([]byte, error) {
 	//println("Connector::Query Request value of storage cell")
-
 	ethAddress := common.BytesToAddress(req.StorageCell.Address)
 	index := common.BytesToHash(req.StorageCell.Index)
-	value := q.StateDB.GetState(ethAddress, index)
+	value := q.EVMKeeper.GetState(q.Context, ethAddress, index)
 
 	return proto.Marshal(&librustgo.QueryGetAccountStorageCellResponse{Value: value.Bytes()})
 }
@@ -158,8 +165,14 @@ func (q Connector) GetStorageCell(req *librustgo.CosmosRequest_StorageCell) ([]b
 func (q Connector) GetAccountCode(req *librustgo.CosmosRequest_AccountCode) ([]byte, error) {
 	//println("Connector::Query Request account code")
 	ethAddress := common.BytesToAddress(req.AccountCode.Address)
-	code := q.StateDB.GetCode(ethAddress)
+	account := q.EVMKeeper.GetAccountWithoutBalance(q.Context, ethAddress)
+	if account == nil {
+		return proto.Marshal(&librustgo.QueryGetAccountCodeResponse{
+			Code: nil,
+		})
+	}
 
+	code := q.EVMKeeper.GetCode(q.Context, common.BytesToHash(account.CodeHash))
 	return proto.Marshal(&librustgo.QueryGetAccountCodeResponse{
 		Code: code,
 	})
@@ -178,8 +191,16 @@ func (q Connector) InsertAccount(req *librustgo.CosmosRequest_InsertAccount) ([]
 	nonce := &big.Int{}
 	nonce.SetBytes(req.InsertAccount.Nonce)
 
-	q.StateDB.SetBalance(ethAddress, balance)
-	q.StateDB.SetNonce(ethAddress, nonce.Uint64())
+	account := q.EVMKeeper.GetAccountOrEmpty(q.Context, ethAddress)
+	if err := q.EVMKeeper.SetBalance(q.Context, ethAddress, balance); err != nil {
+		return nil, err
+	}
+
+	account.Balance = balance
+	account.Nonce = nonce.Uint64()
+	if err := q.EVMKeeper.SetAccount(q.Context, ethAddress, account); err != nil {
+		return nil, err
+	}
 
 	return proto.Marshal(&librustgo.QueryInsertAccountResponse{})
 }

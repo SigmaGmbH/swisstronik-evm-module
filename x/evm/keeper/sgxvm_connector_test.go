@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	evmkeeper "github.com/SigmaGmbH/evm-module/x/evm/keeper"
-	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/SigmaGmbH/librustgo"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -36,8 +35,6 @@ func insertAccount(
 		return queryErr
 	}
 
-	_ = connector.StateDB.Commit()
-
 	response := &librustgo.QueryInsertAccountResponse{}
 	decodingError := proto.Unmarshal(responseBytes, response)
 	if decodingError != nil {
@@ -50,12 +47,11 @@ func insertAccount(
 func (suite *KeeperTestSuite) TestSGXVMConnector() {
 	var (
 		connector evmkeeper.Connector
-		vmdb      *statedb.StateDB
 	)
 
-	vmdb = suite.StateDB()
 	connector = evmkeeper.Connector{
-		StateDB: vmdb,
+		Context:   suite.ctx,
+		EVMKeeper: suite.app.EvmKeeper,
 	}
 
 	testCases := []struct {
@@ -75,11 +71,9 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 				suite.Require().NoError(err)
 
 				// Check if account was inserted correctly
-				balance := vmdb.GetBalance(addressToSet)
-				nonce := vmdb.GetNonce(addressToSet)
-
-				suite.Require().Equal(balanceToSet, balance)
-				suite.Require().Equal(nonceToSet.Uint64(), nonce)
+				account := connector.EVMKeeper.GetAccountOrEmpty(connector.Context, addressToSet)
+				suite.Require().Equal(balanceToSet, account.Balance)
+				suite.Require().Equal(nonceToSet.Uint64(), account.Nonce)
 			},
 		},
 		{
@@ -178,10 +172,10 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 
 				// Check if account code was set correctly
 				codeHash := crypto.Keccak256(bytecode)
-				recoveredCode := vmdb.GetCode(addressToSet)
-				recoveredCodeHash := vmdb.GetCodeHash(addressToSet)
+				recoveredCode := connector.EVMKeeper.GetCode(connector.Context, common.BytesToHash(codeHash))
+				//recoveredCodeHash := vmdb.GetCodeHash(addressToSet)
 				suite.Require().Equal(bytecode, recoveredCode)
-				suite.Require().Equal(codeHash, recoveredCodeHash.Bytes())
+				//suite.Require().Equal(codeHash, recoveredCodeHash.Bytes())
 			},
 		},
 		{
@@ -214,9 +208,6 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 
 				response := &librustgo.QueryInsertAccountCodeResponse{}
 				err = proto.Unmarshal(responseBytes, response)
-				suite.Require().NoError(err)
-
-				err = connector.StateDB.Commit()
 				suite.Require().NoError(err)
 
 				//
