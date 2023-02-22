@@ -279,27 +279,40 @@ func (k *Keeper) ApplyMessageWithConfig(
 		// eth_estimateGas will check for this exact error
 		return nil, errorsmod.Wrap(core.ErrIntrinsicGas, "apply message")
 	}
-	leftoverGas -= intrinsicGas
-
-	// convert `to` field to bytes
-	var destination []byte
-	if msg.To() != nil {
-		destination = msg.To().Bytes()
-	}
 
 	connector := Connector{
 		StateDB: stateDB,
 	}
 
-	res, err := librustgo.HandleTx(
-		connector,
-		msg.From().Bytes(),
-		destination,
-		msg.Data(),
-		msg.Value().Bytes(),
-		leftoverGas,
-		txContext,
-	)
+	var res *librustgo.HandleTransactionResponse
+	if contractCreation {
+		// take over the nonce management from evm:
+		// - reset sender's nonce to msg.Nonce() before calling evm.
+		// - increase sender's nonce by one no matter the result.
+		stateDB.SetNonce(msg.From(), msg.Nonce())
+		res, err = librustgo.Create(
+			connector,
+			msg.From().Bytes(),
+			msg.Data(),
+			msg.Value().Bytes(),
+			leftoverGas,
+			txContext,
+			commit,
+		)
+		stateDB.SetNonce(msg.From(), msg.Nonce()+1)
+	} else {
+		res, err = librustgo.Call(
+			connector,
+			msg.From().Bytes(),
+			msg.To().Bytes(),
+			msg.Data(),
+			msg.Value().Bytes(),
+			leftoverGas,
+			txContext,
+			commit,
+		)
+	}
+
 	if err != nil {
 		return nil, err
 	}
