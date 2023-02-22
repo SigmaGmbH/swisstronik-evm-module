@@ -28,11 +28,9 @@ import (
 // so that it can implement and call the StateDB methods without receiving it as a function
 // parameter.
 func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgHandleTx) (*types.MsgEthereumTxResponse, error) {
-	var (
-		err error
-	)
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender := msg.From
 	tx := msg.AsTransaction()
 	txIndex := k.GetTxIndexTransient(ctx)
 
@@ -81,7 +79,7 @@ func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgHandleTx) (*types
 	attrs := []sdk.Attribute{
 		sdk.NewAttribute(sdk.AttributeKeyAmount, tx.Value().String()),
 		// add event for ethereum transaction hash format
-		sdk.NewAttribute(types.AttributeKeyEthereumTxHash, tx.Hash().String()),
+		sdk.NewAttribute(types.AttributeKeyEthereumTxHash, response.Hash),
 		// add event for index of valid ethereum tx
 		sdk.NewAttribute(types.AttributeKeyTxIndex, strconv.FormatUint(txIndex, 10)),
 		// add event for eth tx gas used, we can't get it from cosmos tx result when it contains multiple eth tx msgs.
@@ -124,20 +122,10 @@ func (k *Keeper) HandleTx(goCtx context.Context, msg *types.MsgHandleTx) (*types
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.From),
+			sdk.NewAttribute(sdk.AttributeKeySender, sender),
 			sdk.NewAttribute(types.AttributeKeyTxType, fmt.Sprintf("%d", tx.Type())),
 		),
 	})
-
-	logs := make([]*types.Log, len(response.Logs))
-	for i, log := range response.Logs {
-		protoLog := &types.Log{
-			Address: log.Address,
-			Topics:  log.Topics,
-			Data:    log.Data,
-		}
-		logs[i] = protoLog
-	}
 
 	return response, nil
 }
@@ -146,10 +134,9 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 	var (
 		bloom        *big.Int
 		bloomReceipt ethtypes.Bloom
-		err          error
 	)
 
-	cfg, err := k.EVMConfig(ctx, ctx.BlockHeader().ProposerAddress, k.eip155ChainID)
+	cfg, err := k.EVMConfig(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress), k.eip155ChainID)
 	txConfig := k.TxConfig(ctx, tx.Hash())
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "failed to load evm config")
@@ -167,21 +154,6 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 		return nil, err
 	}
 
-	// Check if there is enough gas limit for intrinsic gas
-	isContractCreation := msg.To() == nil
-	intrinsicGas, err := k.GetEthIntrinsicGas(ctx, msg, cfg.ChainConfig, isContractCreation)
-	if err != nil {
-		// should have already been checked on Ante Handler
-		return nil, errorsmod.Wrap(err, "intrinsic gas failed")
-	}
-
-	leftoverGas := msg.Gas()
-	if leftoverGas < intrinsicGas {
-		// eth_estimateGas will check for this exact error
-		return nil, errorsmod.Wrap(core.ErrIntrinsicGas, "failed to apply message")
-	}
-	leftoverGas -= intrinsicGas
-
 	// snapshot to contain the tx processing and post-processing in same scope
 	var commit func()
 	tmpCtx := ctx
@@ -193,7 +165,7 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 		tmpCtx, commit = ctx.CacheContext()
 	}
 
-	res, err := k.ApplySGXVMMessage(tmpCtx, msg, true, cfg, txConfig, txContext)
+	res, err := k.ApplyMessageWithConfig(tmpCtx, msg, true, cfg, txConfig, txContext)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "failed to apply ethereum core message")
 	}
@@ -277,7 +249,7 @@ func (k *Keeper) ApplySGXVMTransaction(ctx sdk.Context, tx *ethtypes.Transaction
 	return res, nil
 }
 
-func (k *Keeper) ApplySGXVMMessage(
+func (k *Keeper) ApplyMessageWithConfig(
 	ctx sdk.Context,
 	msg core.Message,
 	commit bool,
@@ -292,13 +264,8 @@ func (k *Keeper) ApplySGXVMMessage(
 		return nil, errorsmod.Wrap(types.ErrCallDisabled, "failed to call contract")
 	}
 
-	// convert `to` field to bytes
-	var destination []byte
-	if msg.To() != nil {
-		destination = msg.To().Bytes()
-	}
-
 	stateDB := statedb.New(ctx, k, txConfig)
+
 	leftoverGas := msg.Gas()
 	contractCreation := msg.To() == nil
 	intrinsicGas, err := k.GetEthIntrinsicGas(ctx, msg, cfg.ChainConfig, contractCreation)
@@ -313,6 +280,12 @@ func (k *Keeper) ApplySGXVMMessage(
 		return nil, errorsmod.Wrap(core.ErrIntrinsicGas, "apply message")
 	}
 	leftoverGas -= intrinsicGas
+
+	// convert `to` field to bytes
+	var destination []byte
+	if msg.To() != nil {
+		destination = msg.To().Bytes()
+	}
 
 	connector := Connector{
 		StateDB: stateDB,

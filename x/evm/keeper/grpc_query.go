@@ -262,7 +262,7 @@ func (k Keeper) EthCall(c context.Context, req *types.EthCallRequest) (*types.Ms
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	// pass false to not commit StateDB
-	res, err := k.ApplySGXVMMessage(ctx, msg, false, cfg, txConfig, txContext)
+	res, err := k.ApplyMessageWithConfig(ctx, msg, false, cfg, txConfig, txContext)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -362,7 +362,7 @@ func (k Keeper) EstimateGas(c context.Context, req *types.EthCallRequest) (*type
 		}
 
 		// pass false to not commit StateDB
-		rsp, err = k.ApplySGXVMMessage(ctx, msg, false, cfg, txConfig, txContext)
+		rsp, err = k.ApplyMessageWithConfig(ctx, msg, false, cfg, txConfig, txContext)
 		if err != nil {
 			if errors.Is(err, core.ErrIntrinsicGas) {
 				return true, nil, nil // Special case, raise gas limit
@@ -446,7 +446,7 @@ func (k Keeper) TraceTx(c context.Context, req *types.QueryTraceTxRequest) (*typ
 		if err != nil {
 			continue
 		}
-		rsp, err := k.ApplySGXVMMessage(ctx, msg, true, cfg, txConfig, txContext)
+		rsp, err := k.ApplyMessageWithConfig(ctx, msg, true, cfg, txConfig, txContext)
 		if err != nil {
 			continue
 		}
@@ -620,7 +620,7 @@ func (k *Keeper) traceTx(
 	if err != nil {
 		return nil, 0, status.Error(codes.Internal, err.Error())
 	}
-	res, err := k.ApplySGXVMMessage(ctx, msg, commitMessage, cfg, txConfig, txContext)
+	res, err := k.ApplyMessageWithConfig(ctx, msg, commitMessage, cfg, txConfig, txContext)
 	if err != nil {
 		return nil, 0, status.Error(codes.Internal, err.Error())
 	}

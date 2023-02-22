@@ -178,7 +178,7 @@ func (suite *KeeperTestSuite) TestDryRun() {
 			balanceBefore := suite.app.EvmKeeper.GetBalance(suite.ctx, suite.address)
 			receiverBalanceBefore := suite.app.EvmKeeper.GetBalance(suite.ctx, common.Address{})
 
-			res, err := suite.app.EvmKeeper.ApplySGXVMMessage(suite.ctx, ethMessage, tc.commit, cfg, txConfig, txContext)
+			res, err := suite.app.EvmKeeper.ApplyMessageWithConfig(suite.ctx, ethMessage, tc.commit, cfg, txConfig, txContext)
 			suite.Require().NoError(err)
 			suite.Require().Empty(res.VmError)
 
