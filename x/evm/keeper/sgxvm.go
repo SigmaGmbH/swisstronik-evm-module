@@ -290,7 +290,6 @@ func (k *Keeper) ApplyMessageWithConfig(
 		// take over the nonce management from evm:
 		// - reset sender's nonce to msg.Nonce() before calling evm.
 		// - increase sender's nonce by one no matter the result.
-		stateDB.SetNonce(msg.From(), msg.Nonce())
 		res, err = librustgo.Create(
 			connector,
 			msg.From().Bytes(),
@@ -300,7 +299,6 @@ func (k *Keeper) ApplyMessageWithConfig(
 			txContext,
 			commit,
 		)
-		stateDB.SetNonce(msg.From(), msg.Nonce()+1)
 	} else {
 		res, err = librustgo.Call(
 			connector,
@@ -326,13 +324,6 @@ func (k *Keeper) ApplyMessageWithConfig(
 	temporaryGasUsed := msg.Gas() - leftoverGas
 	refundQuotient := params.RefundQuotientEIP3529
 	leftoverGas += GasToRefund(stateDB.GetRefund(), temporaryGasUsed, refundQuotient)
-
-	// The dirty states in `StateDB` is either committed or discarded after return
-	if commit {
-		if err := stateDB.Commit(); err != nil {
-			return nil, errorsmod.Wrap(err, "failed to commit stateDB")
-		}
-	}
 
 	logs := SGXVMLogsToEthereum(res.Logs, txConfig, txContext.BlockNumber)
 	return &types.MsgEthereumTxResponse{
