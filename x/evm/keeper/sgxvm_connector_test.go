@@ -173,9 +173,11 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 				// Check if account code was set correctly
 				codeHash := crypto.Keccak256(bytecode)
 				recoveredCode := connector.EVMKeeper.GetCode(connector.Context, common.BytesToHash(codeHash))
-				//recoveredCodeHash := vmdb.GetCodeHash(addressToSet)
 				suite.Require().Equal(bytecode, recoveredCode)
-				//suite.Require().Equal(codeHash, recoveredCodeHash.Bytes())
+
+				account := connector.EVMKeeper.GetAccountOrEmpty(connector.Context, addressToSet)
+				recoveredCodeHash := account.CodeHash
+				suite.Require().Equal(codeHash, recoveredCodeHash)
 			},
 		},
 		{
