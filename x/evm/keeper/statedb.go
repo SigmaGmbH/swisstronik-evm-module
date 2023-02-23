@@ -84,6 +84,13 @@ func (k *Keeper) ForEachStorage(ctx sdk.Context, addr common.Address, cb func(ke
 	}
 }
 
+// SetNonce update account's nonce field
+func (k *Keeper) SetNonce(ctx sdk.Context, addr common.Address, nonce uint64) error {
+	accountData := k.GetAccountOrEmpty(ctx, addr)
+	accountData.Nonce = nonce
+	return k.SetAccount(ctx, addr, accountData)
+}
+
 // SetBalance update account's balance, compare with current balance first, then decide to mint or burn.
 func (k *Keeper) SetBalance(ctx sdk.Context, addr common.Address, amount *big.Int) error {
 	cosmosAddr := sdk.AccAddress(addr.Bytes())
