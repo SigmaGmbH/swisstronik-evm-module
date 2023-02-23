@@ -287,6 +287,11 @@ func (k *Keeper) ApplyMessageWithConfig(
 
 	var res *librustgo.HandleTransactionResponse
 	if contractCreation {
+		// TODO: Remove debug messages
+		debugActualNonce := k.GetAccountOrEmpty(ctx, msg.From()).Nonce
+		debugMessageNonce := msg.Nonce()
+		println("ACTUAL: ", debugActualNonce, "MSG: ", debugMessageNonce)
+
 		// take over the nonce management from evm:
 		// - reset sender's nonce to msg.Nonce() before calling evm.
 		// - increase sender's nonce by one no matter the result.
@@ -299,6 +304,10 @@ func (k *Keeper) ApplyMessageWithConfig(
 			txContext,
 			commit,
 		)
+
+		// TODO: Remove debug messages
+		debugNonceAfter := k.GetAccountOrEmpty(ctx, msg.From()).Nonce
+		println("AFTER: ", debugNonceAfter)
 	} else {
 		res, err = librustgo.Call(
 			connector,
