@@ -17,6 +17,7 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/ethereum/go-ethereum/crypto"
 	"math/big"
 
 	sdkmath "cosmossdk.io/math"
@@ -187,6 +188,19 @@ func (k *Keeper) SetCode(ctx sdk.Context, codeHash, code []byte) {
 		fmt.Sprintf("code %s", action),
 		"code-hash", common.BytesToHash(codeHash).Hex(),
 	)
+}
+
+// SetAccountCode set contract code to provided address delete if code is empty.
+func (k *Keeper) SetAccountCode(ctx sdk.Context, addr common.Address, code []byte) error {
+	account := k.GetAccountOrEmpty(ctx, addr)
+	codeHash := crypto.Keccak256Hash(code)
+	account.CodeHash = codeHash.Bytes()
+
+	if err := k.SetAccount(ctx, addr, account); err != nil {
+		return err
+	}
+	k.SetCode(ctx, codeHash.Bytes(), code)
+	return nil
 }
 
 // DeleteAccount handles contract's suicide call:
