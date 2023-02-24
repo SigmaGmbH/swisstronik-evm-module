@@ -318,6 +318,42 @@ func (suite *KeeperTestSuite) TestSetCode() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestKeeperSetAccountCode() {
+	addr := tests.GenerateAddress()
+	baseAcc := &authtypes.BaseAccount{Address: sdk.AccAddress(addr.Bytes()).String()}
+	suite.app.AccountKeeper.SetAccount(suite.ctx, baseAcc)
+
+	testCases := []struct {
+		name string
+		code []byte
+	}{
+		{
+			"set code",
+			[]byte("codecodecode"),
+		},
+		{
+			"delete code",
+			nil,
+		},
+	}
+
+	suite.SetupTest()
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			err := suite.app.EvmKeeper.SetAccountCode(suite.ctx, addr, tc.code)
+			suite.Require().NoError(err)
+
+			acct := suite.app.EvmKeeper.GetAccountOrEmpty(suite.ctx, addr)
+			codeHash := crypto.Keccak256Hash(tc.code)
+			suite.Require().Equal(codeHash.Bytes(), acct.CodeHash)
+
+			code := suite.app.EvmKeeper.GetCode(suite.ctx, common.BytesToHash(acct.CodeHash))
+			suite.Require().Equal(tc.code, code)
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestKeeperSetCode() {
 	addr := tests.GenerateAddress()
 	baseAcc := &authtypes.BaseAccount{Address: sdk.AccAddress(addr.Bytes()).String()}

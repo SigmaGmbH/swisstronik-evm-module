@@ -296,12 +296,12 @@ func (suite *KeeperTestSuite) TestQueryCode() {
 
 	testCases := []struct {
 		msg      string
-		malleate func(vm.StateDB)
+		malleate func()
 		expPass  bool
 	}{
 		{
 			"invalid address",
-			func(vm.StateDB) {
+			func() {
 				req = &types.QueryCodeRequest{
 					Address: invalidAddress,
 				}
@@ -312,10 +312,10 @@ func (suite *KeeperTestSuite) TestQueryCode() {
 		},
 		{
 			"success",
-			func(vmdb vm.StateDB) {
+			func() {
 				expCode = []byte("code")
-				vmdb.SetCode(suite.address, expCode)
-
+				err := suite.app.EvmKeeper.SetAccountCode(suite.ctx, suite.address, expCode)
+				suite.Require().NoError(err)
 				req = &types.QueryCodeRequest{
 					Address: suite.address.String(),
 				}
@@ -328,9 +328,7 @@ func (suite *KeeperTestSuite) TestQueryCode() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			vmdb := suite.StateDB()
-			tc.malleate(vmdb)
-			suite.Require().NoError(vmdb.Commit())
+			tc.malleate()
 
 			ctx := sdk.WrapSDKContext(suite.ctx)
 			res, err := suite.queryClient.Code(ctx, req)

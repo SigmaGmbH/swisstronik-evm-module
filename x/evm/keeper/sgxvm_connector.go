@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/golang/protobuf/proto"
 	"math/big"
 )
@@ -91,15 +90,9 @@ func (q Connector) ContainsKey(req *librustgo.CosmosRequest_ContainsKey) ([]byte
 func (q Connector) InsertAccountCode(req *librustgo.CosmosRequest_InsertAccountCode) ([]byte, error) {
 	//println("Connector::Query InsertAccountCode invoked")
 	ethAddress := common.BytesToAddress(req.InsertAccountCode.Address)
-	account := q.EVMKeeper.GetAccountOrEmpty(q.Context, ethAddress)
-
-	codeHash := crypto.Keccak256Hash(req.InsertAccountCode.Code)
-	account.CodeHash = codeHash.Bytes()
-
-	if err := q.EVMKeeper.SetAccount(q.Context, ethAddress, account); err != nil {
+	if err := q.EVMKeeper.SetAccountCode(q.Context, ethAddress, req.InsertAccountCode.Code); err != nil {
 		return nil, err
 	}
-	q.EVMKeeper.SetCode(q.Context, codeHash.Bytes(), req.InsertAccountCode.Code)
 
 	return proto.Marshal(&librustgo.QueryInsertAccountCodeResponse{})
 }
