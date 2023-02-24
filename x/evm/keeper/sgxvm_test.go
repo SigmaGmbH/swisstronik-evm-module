@@ -1,10 +1,14 @@
 package keeper_test
 
 import (
+	"encoding/json"
+	"github.com/SigmaGmbH/evm-module/server/config"
 	"github.com/SigmaGmbH/evm-module/x/evm/keeper"
 	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/SigmaGmbH/evm-module/x/evm/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
 	"math/big"
@@ -279,5 +283,51 @@ func (suite *KeeperTestSuite) TestMultipleTransfers() {
 
 		// Check if nonce was updated
 		suite.Require().Equal(nonceBefore+1, nonceAfter)
+	}
+}
+
+func (suite *KeeperTestSuite) TestMultipleContractDeployments() {
+	suite.SetupSGXVMTest()
+
+	ctx := sdk.WrapSDKContext(suite.ctx)
+	chainID := suite.app.EvmKeeper.ChainID()
+
+	ctorArgs, err := types.ERC20Contract.ABI.Pack("", suite.address, big.NewInt(10))
+	suite.Require().NoError(err)
+
+	for i := 0; i < 5; i++ {
+		nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
+
+		data := append(types.ERC20Contract.Bin, ctorArgs...)
+		args, err := json.Marshal(&types.TransactionArgs{
+			From: &suite.address,
+			Data: (*hexutil.Bytes)(&data),
+		})
+		suite.Require().NoError(err)
+		gasRes, err := suite.queryClient.EstimateGas(ctx, &types.EthCallRequest{
+			Args:            args,
+			GasCap:          uint64(config.DefaultGasCap),
+			ProposerAddress: suite.ctx.BlockHeader().ProposerAddress,
+		})
+		suite.Require().NoError(err)
+
+		erc20DeployTx := types.NewSGXVMTxContract(
+			chainID,
+			nonce,
+			nil,        // amount
+			gasRes.Gas, // gasLimit
+			nil,        // gasPrice
+			nil, nil,
+			data, // input
+			nil,  // accesses
+		)
+
+		erc20DeployTx.From = suite.address.Hex()
+		err = erc20DeployTx.Sign(ethtypes.LatestSignerForChainID(chainID), suite.signer)
+		suite.Require().NoError(err)
+
+		rsp, err := suite.app.EvmKeeper.HandleTx(ctx, erc20DeployTx)
+		suite.Require().NoError(err)
+		suite.Require().Empty(rsp.VmError)
 	}
 }
