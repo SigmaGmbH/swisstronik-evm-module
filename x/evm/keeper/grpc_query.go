@@ -206,7 +206,7 @@ func (k Keeper) Code(c context.Context, req *types.QueryCodeRequest) (*types.Que
 
 	var code []byte
 	if acct != nil && acct.IsContract() {
-		code = k.GetCode(ctx, common.BytesToHash(acct.CodeHash))
+		code = k.GetCode(ctx, common.BytesToHash(acct.CodeHash)) // FIXME: Somewhere it sets default value for account code hash
 	}
 
 	return &types.QueryCodeResponse{
