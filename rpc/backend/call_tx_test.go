@@ -47,7 +47,7 @@ func (suite *BackendTestSuite) TestResend() {
 		expPass      bool
 	}{
 		{
-			"fail - Missing transaction nonce ",
+			"fail - Missing transaction nonce",
 			func() {},
 			evmtypes.TransactionArgs{
 				Nonce: nil,
@@ -64,8 +64,10 @@ func (suite *BackendTestSuite) TestResend() {
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				RegisterParams(queryClient, &header, 1)
-				RegisterBlock(client, 1, nil)
-				RegisterBlockResults(client, 1)
+				_, err := RegisterBlock(client, 1, nil)
+				suite.Require().NoError(err)
+				_, err = RegisterBlockResults(client, 1)
+				suite.Require().NoError(err)
 				RegisterBaseFeeDisabled(queryClient)
 			},
 			evmtypes.TransactionArgs{
@@ -78,7 +80,7 @@ func (suite *BackendTestSuite) TestResend() {
 			true,
 		},
 		{
-			"pass - Can't set Tx defaults ",
+			"pass - Can't set Tx defaults",
 			func() {
 				var header metadata.MD
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
@@ -86,8 +88,10 @@ func (suite *BackendTestSuite) TestResend() {
 				feeMarketClient := suite.backend.queryClient.FeeMarket.(*mocks.FeeMarketQueryClient)
 				RegisterParams(queryClient, &header, 1)
 				RegisterFeeMarketParams(feeMarketClient, 1)
-				RegisterBlock(client, 1, nil)
-				RegisterBlockResults(client, 1)
+				_, err := RegisterBlock(client, 1, nil)
+				suite.Require().NoError(err)
+				_, err = RegisterBlockResults(client, 1)
+				suite.Require().NoError(err)
 				RegisterBaseFee(queryClient, baseFee)
 			},
 			evmtypes.TransactionArgs{
@@ -105,8 +109,10 @@ func (suite *BackendTestSuite) TestResend() {
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				RegisterParams(queryClient, &header, 1)
-				RegisterBlock(client, 1, nil)
-				RegisterBlockResults(client, 1)
+				_, err := RegisterBlock(client, 1, nil)
+				suite.Require().NoError(err)
+				_, err = RegisterBlockResults(client, 1)
+				suite.Require().NoError(err)
 				RegisterBaseFeeDisabled(queryClient)
 			},
 			evmtypes.TransactionArgs{
@@ -121,7 +127,7 @@ func (suite *BackendTestSuite) TestResend() {
 			true,
 		},
 		{
-			"fail - GasPrice and (MaxFeePerGas or MaxPriorityPerGas specified",
+			"fail - GasPrice and (MaxFeePerGas or MaxPriorityPerGas specified)",
 			func() {},
 			evmtypes.TransactionArgs{
 				Nonce:                &txNonce,
@@ -158,8 +164,10 @@ func (suite *BackendTestSuite) TestResend() {
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				RegisterParams(queryClient, &header, 1)
-				RegisterBlock(client, 1, nil)
-				RegisterBlockResults(client, 1)
+				_, err := RegisterBlock(client, 1, nil)
+				suite.Require().NoError(err)
+				_, err = RegisterBlockResults(client, 1)
+				suite.Require().NoError(err)
 				RegisterBaseFee(queryClient, baseFee)
 			},
 			evmtypes.TransactionArgs{
@@ -181,8 +189,10 @@ func (suite *BackendTestSuite) TestResend() {
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				RegisterParams(queryClient, &header, 1)
-				RegisterBlock(client, 1, nil)
-				RegisterBlockResults(client, 1)
+				_, err := RegisterBlock(client, 1, nil)
+				suite.Require().NoError(err)
+				_, err = RegisterBlockResults(client, 1)
+				suite.Require().NoError(err)
 				RegisterBaseFee(queryClient, baseFee)
 			},
 			evmtypes.TransactionArgs{
@@ -201,8 +211,10 @@ func (suite *BackendTestSuite) TestResend() {
 				var header metadata.MD
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				RegisterBlock(client, 1, nil)
-				RegisterBlockResults(client, 1)
+				_, err := RegisterBlock(client, 1, nil)
+				suite.Require().NoError(err)
+				_, err = RegisterBlockResults(client, 1)
+				suite.Require().NoError(err)
 				RegisterBaseFee(queryClient, baseFee)
 				RegisterEstimateGas(queryClient, callArgs)
 				RegisterParams(queryClient, &header, 1)
@@ -229,8 +241,10 @@ func (suite *BackendTestSuite) TestResend() {
 				var header metadata.MD
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				RegisterBlock(client, 1, nil)
-				RegisterBlockResults(client, 1)
+				_, err := RegisterBlock(client, 1, nil)
+				suite.Require().NoError(err)
+				_, err = RegisterBlockResults(client, 1)
+				suite.Require().NoError(err)
 				RegisterBaseFee(queryClient, baseFee)
 				RegisterEstimateGas(queryClient, callArgs)
 				RegisterParams(queryClient, &header, 1)
@@ -394,7 +408,8 @@ func (suite *BackendTestSuite) TestDoCall() {
 			func() {
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				RegisterBlock(client, 1, bz)
+				_, err := RegisterBlock(client, 1, bz)
+				suite.Require().NoError(err)
 				RegisterEthCallError(queryClient, &evmtypes.EthCallRequest{Args: argsBz, ChainId: suite.backend.chainID.Int64()})
 			},
 			rpctypes.BlockNumber(1),
@@ -407,7 +422,8 @@ func (suite *BackendTestSuite) TestDoCall() {
 			func() {
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				RegisterBlock(client, 1, bz)
+				_, err := RegisterBlock(client, 1, bz)
+				suite.Require().NoError(err)
 				RegisterEthCall(queryClient, &evmtypes.EthCallRequest{Args: argsBz, ChainId: suite.backend.chainID.Int64()})
 			},
 			rpctypes.BlockNumber(1),
@@ -432,7 +448,6 @@ func (suite *BackendTestSuite) TestDoCall() {
 		})
 	}
 }
-
 func (suite *BackendTestSuite) TestGasPrice() {
 	defaultGasPrice := (*hexutil.Big)(big.NewInt(1))
 
