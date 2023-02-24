@@ -358,12 +358,13 @@ func (issd EthIncrementSenderSequenceDecorator) AnteHandle(ctx sdk.Context, tx s
 				"invalid nonce; got %d, expected %d", txData.GetNonce(), nonce,
 			)
 		}
-
-		if err := acc.SetSequence(nonce + 1); err != nil {
-			return ctx, errorsmod.Wrapf(err, "failed to set sequence to %d", acc.GetSequence()+1)
-		}
-
-		issd.ak.SetAccount(ctx, acc)
+		// TODO: it is strange, why we update nonce before transaction execution. It should be updated after the execution
+		//
+		//if err := acc.SetSequence(nonce + 1); err != nil {
+		//	return ctx, errorsmod.Wrapf(err, "failed to set sequence to %d", acc.GetSequence()+1)
+		//}
+		//
+		//issd.ak.SetAccount(ctx, acc)
 	}
 
 	return next(ctx, tx, simulate)
