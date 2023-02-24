@@ -264,8 +264,6 @@ func (k *Keeper) ApplyMessageWithConfig(
 		return nil, errorsmod.Wrap(types.ErrCallDisabled, "failed to call contract")
 	}
 
-	stateDB := statedb.New(ctx, k, txConfig)
-
 	leftoverGas := msg.Gas()
 	contractCreation := msg.To() == nil
 	intrinsicGas, err := k.GetEthIntrinsicGas(ctx, msg, cfg.ChainConfig, contractCreation)
@@ -287,14 +285,6 @@ func (k *Keeper) ApplyMessageWithConfig(
 
 	var res *librustgo.HandleTransactionResponse
 	if contractCreation {
-		// TODO: Remove debug messages
-		debugActualNonce := k.GetAccountOrEmpty(ctx, msg.From()).Nonce
-		debugMessageNonce := msg.Nonce()
-		println("ACTUAL: ", debugActualNonce, "MSG: ", debugMessageNonce)
-
-		// take over the nonce management from evm:
-		// - reset sender's nonce to msg.Nonce() before calling evm.
-		// - increase sender's nonce by one no matter the result.
 		res, err = librustgo.Create(
 			connector,
 			msg.From().Bytes(),
@@ -304,10 +294,6 @@ func (k *Keeper) ApplyMessageWithConfig(
 			txContext,
 			commit,
 		)
-
-		// TODO: Remove debug messages
-		debugNonceAfter := k.GetAccountOrEmpty(ctx, msg.From()).Nonce
-		println("AFTER: ", debugNonceAfter)
 	} else {
 		res, err = librustgo.Call(
 			connector,
@@ -332,7 +318,7 @@ func (k *Keeper) ApplyMessageWithConfig(
 	// refund gas
 	temporaryGasUsed := msg.Gas() - leftoverGas
 	refundQuotient := params.RefundQuotientEIP3529
-	leftoverGas += GasToRefund(stateDB.GetRefund(), temporaryGasUsed, refundQuotient)
+	leftoverGas += GasToRefund(0, temporaryGasUsed, refundQuotient) // TODO: SGXVM should return gas to refund
 
 	logs := SGXVMLogsToEthereum(res.Logs, txConfig, txContext.BlockNumber)
 	return &types.MsgEthereumTxResponse{

@@ -150,8 +150,9 @@ func (suite *KeeperTestSuite) TestDryRun() {
 			cfg, err := suite.app.EvmKeeper.EVMConfig(suite.ctx, suite.ctx.BlockHeader().ProposerAddress, suite.app.EvmKeeper.ChainID())
 			suite.Require().NoError(err)
 
+			nonceBefore := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
 			msg, baseFee, err := newEthMsgTx(
-				suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address),
+				nonceBefore,
 				suite.ctx.BlockHeight(),
 				suite.address,
 				chainCfg,
@@ -165,7 +166,6 @@ func (suite *KeeperTestSuite) TestDryRun() {
 			suite.Require().NoError(err)
 
 			tx := msg.AsTransaction()
-
 			ethMessage, err := tx.AsMessage(signer, baseFee)
 			suite.Require().NoError(err)
 
@@ -180,6 +180,8 @@ func (suite *KeeperTestSuite) TestDryRun() {
 			suite.Require().NoError(err)
 			suite.Require().Empty(res.VmError)
 
+			nonceAfter := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
+
 			if tc.commit {
 				// Check if balance & nonce were updated
 				expectedBalance := balanceBefore.Sub(balanceBefore, big.NewInt(amountToTransfer))
@@ -193,6 +195,9 @@ func (suite *KeeperTestSuite) TestDryRun() {
 				expectedReceiverBalance := receiverBalanceBefore.Add(receiverBalanceBefore, big.NewInt(amountToTransfer))
 				isReceiverBalanceCorrect := expectedReceiverBalance.Cmp(receiverBalanceAfter)
 				suite.Require().True(isReceiverBalanceCorrect == 0, "Incorrect receiver's balance")
+
+				// Check if nonce was updated
+				suite.Require().Equal(nonceBefore+1, nonceAfter)
 			} else {
 				// Check if balance & nonce still the same
 				// Check sender's balance
@@ -202,6 +207,9 @@ func (suite *KeeperTestSuite) TestDryRun() {
 				// Check receiver's balance
 				receiverBalanceAfter := suite.app.EvmKeeper.GetBalance(suite.ctx, common.Address{})
 				suite.Require().Equal(receiverBalanceBefore, receiverBalanceAfter)
+
+				// Check if nonce still the same
+				suite.Require().Equal(nonceBefore, nonceAfter)
 			}
 		})
 	}
