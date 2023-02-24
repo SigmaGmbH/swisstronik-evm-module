@@ -214,3 +214,70 @@ func (suite *KeeperTestSuite) TestDryRun() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestMultipleTransfers() {
+	balanceToSet := int64(10)
+	amountToTransfer := int64(1)
+
+	suite.SetupSGXVMTest()
+
+	keeperParams := suite.app.EvmKeeper.GetParams(suite.ctx)
+	chainCfg := keeperParams.ChainConfig.EthereumConfig(suite.app.EvmKeeper.ChainID())
+	signer := ethtypes.LatestSignerForChainID(suite.app.EvmKeeper.ChainID())
+
+	err := suite.app.EvmKeeper.SetBalance(suite.ctx, suite.address, big.NewInt(balanceToSet))
+	suite.Require().NoError(err)
+
+	cfg, err := suite.app.EvmKeeper.EVMConfig(suite.ctx, suite.ctx.BlockHeader().ProposerAddress, suite.app.EvmKeeper.ChainID())
+	suite.Require().NoError(err)
+
+	for i := 0; i < 10; i++ {
+		nonceBefore := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
+		msg, baseFee, err := newEthMsgTx(
+			nonceBefore,
+			suite.ctx.BlockHeight(),
+			suite.address,
+			chainCfg,
+			suite.signer,
+			signer,
+			ethtypes.AccessListTxType,
+			nil,
+			nil,
+			big.NewInt(amountToTransfer),
+		)
+		suite.Require().NoError(err)
+
+		tx := msg.AsTransaction()
+		ethMessage, err := tx.AsMessage(signer, baseFee)
+		suite.Require().NoError(err)
+
+		txConfig := suite.app.EvmKeeper.TxConfig(suite.ctx, tx.Hash())
+		txContext, err := keeper.CreateSGXVMContext(suite.ctx, suite.app.EvmKeeper, tx)
+		suite.Require().NoError(err)
+
+		balanceBefore := suite.app.EvmKeeper.GetBalance(suite.ctx, suite.address)
+		receiverBalanceBefore := suite.app.EvmKeeper.GetBalance(suite.ctx, common.Address{})
+
+		res, err := suite.app.EvmKeeper.ApplyMessageWithConfig(suite.ctx, ethMessage, true, cfg, txConfig, txContext)
+		suite.Require().NoError(err)
+		suite.Require().Empty(res.VmError)
+
+		nonceAfter := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
+
+		// Check if balance & nonce were updated
+		expectedBalance := balanceBefore.Sub(balanceBefore, big.NewInt(amountToTransfer))
+		balanceAfter := suite.app.EvmKeeper.GetBalance(suite.ctx, suite.address)
+
+		isSenderBalanceCorrect := expectedBalance.Cmp(balanceAfter)
+		suite.Require().True(isSenderBalanceCorrect == 0, "Incorrect sender's balance")
+
+		// Check receiver's balance
+		receiverBalanceAfter := suite.app.EvmKeeper.GetBalance(suite.ctx, common.Address{})
+		expectedReceiverBalance := receiverBalanceBefore.Add(receiverBalanceBefore, big.NewInt(amountToTransfer))
+		isReceiverBalanceCorrect := expectedReceiverBalance.Cmp(receiverBalanceAfter)
+		suite.Require().True(isReceiverBalanceCorrect == 0, "Incorrect receiver's balance")
+
+		// Check if nonce was updated
+		suite.Require().Equal(nonceBefore+1, nonceAfter)
+	}
+}
