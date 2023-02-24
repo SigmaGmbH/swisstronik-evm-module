@@ -344,7 +344,13 @@ func (suite *KeeperTestSuite) TestKeeperSetAccountCode() {
 			err := suite.app.EvmKeeper.SetAccountCode(suite.ctx, addr, tc.code)
 			suite.Require().NoError(err)
 
-			acct := suite.app.EvmKeeper.GetAccountOrEmpty(suite.ctx, addr)
+			acct := suite.app.EvmKeeper.GetAccountWithoutBalance(suite.ctx, addr)
+			suite.Require().NotNil(acct)
+
+			if tc.code != nil {
+				suite.Require().True(acct.IsContract())
+			}
+
 			codeHash := crypto.Keccak256Hash(tc.code)
 			suite.Require().Equal(codeHash.Bytes(), acct.CodeHash)
 
