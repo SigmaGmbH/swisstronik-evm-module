@@ -117,7 +117,6 @@ func (suite *KeeperTestSuite) TestNativeCurrencyTransfer() {
 func (suite *KeeperTestSuite) TestDryRun() {
 	var (
 		signer   ethtypes.Signer
-		vmdb     *statedb.StateDB
 		chainCfg *params.ChainConfig
 	)
 
@@ -144,7 +143,6 @@ func (suite *KeeperTestSuite) TestDryRun() {
 			keeperParams := suite.app.EvmKeeper.GetParams(suite.ctx)
 			chainCfg = keeperParams.ChainConfig.EthereumConfig(suite.app.EvmKeeper.ChainID())
 			signer = ethtypes.LatestSignerForChainID(suite.app.EvmKeeper.ChainID())
-			vmdb = suite.StateDB()
 
 			err := suite.app.EvmKeeper.SetBalance(suite.ctx, suite.address, big.NewInt(amountToTransfer))
 			suite.Require().NoError(err)
@@ -153,7 +151,7 @@ func (suite *KeeperTestSuite) TestDryRun() {
 			suite.Require().NoError(err)
 
 			msg, baseFee, err := newEthMsgTx(
-				vmdb.GetNonce(suite.address),
+				suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address),
 				suite.ctx.BlockHeight(),
 				suite.address,
 				chainCfg,
@@ -184,9 +182,6 @@ func (suite *KeeperTestSuite) TestDryRun() {
 
 			if tc.commit {
 				// Check if balance & nonce were updated
-				suite.Commit()
-
-				// Check sender's balance
 				expectedBalance := balanceBefore.Sub(balanceBefore, big.NewInt(amountToTransfer))
 				balanceAfter := suite.app.EvmKeeper.GetBalance(suite.ctx, suite.address)
 
