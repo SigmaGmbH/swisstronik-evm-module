@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
 	"math/big"
 )
@@ -329,5 +330,11 @@ func (suite *KeeperTestSuite) TestMultipleContractDeployments() {
 		rsp, err := suite.app.EvmKeeper.HandleTx(ctx, erc20DeployTx)
 		suite.Require().NoError(err)
 		suite.Require().Empty(rsp.VmError)
+
+		contractAddress := crypto.CreateAddress(suite.address, nonce)
+		contractAcc := suite.app.EvmKeeper.GetAccountOrEmpty(suite.ctx, contractAddress)
+		suite.Require().Equal(uint64(1), contractAcc.Nonce)
+		suite.Require().Equal(new(big.Int), contractAcc.Balance)
+		suite.Require().True(contractAcc.IsContract())
 	}
 }
