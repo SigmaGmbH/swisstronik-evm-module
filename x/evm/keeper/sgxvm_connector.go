@@ -94,6 +94,12 @@ func (q Connector) InsertAccountCode(req *librustgo.CosmosRequest_InsertAccountC
 		return nil, err
 	}
 
+	// TODO: For some reason, if we broadcast transaction using JSON-RPC it doesn't store account code
+	updAcc := q.EVMKeeper.GetAccountOrEmpty(q.Context, ethAddress)
+	if !updAcc.IsContract() {
+		return nil, errors.New("contract was not deployed")
+	}
+
 	return proto.Marshal(&librustgo.QueryInsertAccountCodeResponse{})
 }
 

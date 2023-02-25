@@ -16,6 +16,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum/crypto"
 	"math/big"
@@ -195,6 +196,12 @@ func (k *Keeper) SetAccountCode(ctx sdk.Context, addr common.Address, code []byt
 	account := k.GetAccountOrEmpty(ctx, addr)
 	codeHash := crypto.Keccak256Hash(code)
 	account.CodeHash = codeHash.Bytes()
+
+	// TODO: It's just an additional check for debugging. Remove it when contract deployment
+	// via eth_sendRawTransaction will be fixed
+	if !account.IsContract() {
+		return errors.New("invalid code hash received")
+	}
 
 	if err := k.SetAccount(ctx, addr, account); err != nil {
 		return err
