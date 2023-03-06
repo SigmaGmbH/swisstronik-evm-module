@@ -16,6 +16,8 @@
 package ante
 
 import (
+	"github.com/SigmaGmbH/evm-module/types"
+	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -55,6 +57,17 @@ func (gwd GasWantedDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	}
 
 	gasWanted := feeTx.GetGas()
+	// return error if the tx gas is greater than the block limit (max gas)
+	blockGasLimit := types.BlockGasLimit(ctx)
+	if gasWanted > blockGasLimit {
+		return ctx, errorsmod.Wrapf(
+			errortypes.ErrOutOfGas,
+			"tx gas (%d) exceeds block gas limit (%d)",
+			gasWanted,
+			blockGasLimit,
+		)
+	}
+
 	isBaseFeeEnabled := gwd.feeMarketKeeper.GetBaseFeeEnabled(ctx)
 
 	// Add total gasWanted to cumulative in block transientStore in FeeMarket module
