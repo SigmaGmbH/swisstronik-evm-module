@@ -73,7 +73,7 @@ func (q Connector) GetAccount(req *librustgo.CosmosRequest_GetAccount) ([]byte, 
 
 	return proto.Marshal(&librustgo.QueryGetAccountResponse{
 		Balance: account.Balance.Bytes(),
-		Nonce:   sdk.Uint64ToBigEndian(account.Nonce),
+		Nonce:   account.Nonce,
 	})
 }
 
@@ -186,9 +186,7 @@ func (q Connector) InsertAccount(req *librustgo.CosmosRequest_InsertAccount) ([]
 
 	balance := &big.Int{}
 	balance.SetBytes(req.InsertAccount.Balance)
-
-	nonce := &big.Int{}
-	nonce.SetBytes(req.InsertAccount.Nonce)
+	nonce := req.InsertAccount.Nonce
 
 	account := q.EVMKeeper.GetAccountOrEmpty(q.Context, ethAddress)
 	if err := q.EVMKeeper.SetBalance(q.Context, ethAddress, balance); err != nil {
@@ -196,7 +194,7 @@ func (q Connector) InsertAccount(req *librustgo.CosmosRequest_InsertAccount) ([]
 	}
 
 	account.Balance = balance
-	account.Nonce = nonce.Uint64()
+	account.Nonce = nonce
 	if err := q.EVMKeeper.SetAccount(q.Context, ethAddress, account); err != nil {
 		return nil, err
 	}

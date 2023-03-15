@@ -21,7 +21,7 @@ func insertAccount(
 			InsertAccount: &librustgo.QueryInsertAccount{
 				Address: address.Bytes(),
 				Balance: balance.Bytes(),
-				Nonce:   nonce.Bytes(),
+				Nonce:   nonce.Uint64(),
 			},
 		},
 	})
@@ -137,9 +137,8 @@ func (suite *KeeperTestSuite) TestSGXVMConnector() {
 				returnedBalance.SetBytes(response.Balance)
 				suite.Require().Equal(balanceToSet, returnedBalance)
 
-				returnedNonce := &big.Int{}
-				returnedNonce.SetBytes(response.Nonce)
-				suite.Require().Equal(nonceToSet, returnedNonce)
+				returnedNonce := response.Nonce
+				suite.Require().Equal(nonceToSet.Uint64(), returnedNonce)
 			},
 		},
 		{
