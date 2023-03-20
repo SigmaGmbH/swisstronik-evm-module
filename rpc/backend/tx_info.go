@@ -17,6 +17,7 @@ package backend
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -68,6 +69,9 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 		msgs := b.EthMsgsFromTendermintBlock(block, blockRes)
 		for i := range msgs {
 			if msgs[i].Hash == hexTx {
+				if i > math.MaxInt32 {
+					return nil, errors.New("tx index overflow")
+				}
 				res.EthTxIndex = int32(i)
 				break
 			}
