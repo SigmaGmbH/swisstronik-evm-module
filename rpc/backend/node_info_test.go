@@ -2,6 +2,7 @@ package backend
 
 import (
 	"fmt"
+	"google.golang.org/grpc/metadata"
 	"math/big"
 
 	"github.com/SigmaGmbH/evm-module/crypto/ethsecp256k1"
@@ -247,10 +248,12 @@ func (suite *BackendTestSuite) TestSetEtherbase() {
 		{
 			"fail - error querying for account ",
 			func() {
+				var header metadata.MD
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				RegisterStatus(client)
 				RegisterValidatorAccount(queryClient, suite.acc)
+				RegisterParams(queryClient, &header, 1)
 				c := sdk.NewDecCoin("swtr", sdk.NewIntFromBigInt(big.NewInt(1)))
 				suite.backend.cfg.SetMinGasPrices(sdk.DecCoins{c})
 				delAddr, _ := suite.backend.GetCoinbase()
