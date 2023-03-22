@@ -20,10 +20,13 @@ import (
 	"math"
 	"math/big"
 
+	errorsmod "cosmossdk.io/errors"
+
 	sdkmath "cosmossdk.io/math"
 	rpctypes "github.com/SigmaGmbH/evm-module/rpc/types"
 	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -187,14 +190,29 @@ func (b *Backend) GetBalance(address common.Address, blockNrOrHash rpctypes.Bloc
 
 // GetTransactionCount returns the number of transactions at the given address up to the given block number.
 func (b *Backend) GetTransactionCount(address common.Address, blockNum rpctypes.BlockNumber) (*hexutil.Uint64, error) {
+	n := hexutil.Uint64(0)
+	bn, err := b.BlockNumber()
+	if err != nil {
+		return &n, err
+	}
+	height := blockNum.Int64()
+
+	currentHeight := int64(bn) //#nosec G701 -- checked for int overflow already
+	if height > currentHeight {
+		return &n, errorsmod.Wrapf(
+			sdkerrors.ErrInvalidHeight,
+			"cannot query with height in the future (current: %d, queried: %d); please provide a valid height",
+			currentHeight, height,
+		)
+	}
+
 	// Get nonce (sequence) from account
 	from := sdk.AccAddress(address.Bytes())
 	accRet := b.clientCtx.AccountRetriever
 
-	err := accRet.EnsureExists(b.clientCtx, from)
+	err = accRet.EnsureExists(b.clientCtx, from)
 	if err != nil {
 		// account doesn't exist yet, return 0
-		n := hexutil.Uint64(0)
 		return &n, nil
 	}
 
@@ -204,6 +222,6 @@ func (b *Backend) GetTransactionCount(address common.Address, blockNum rpctypes.
 		return nil, err
 	}
 
-	n := hexutil.Uint64(nonce)
+	n = hexutil.Uint64(nonce)
 	return &n, nil
 }
