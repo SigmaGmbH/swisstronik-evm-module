@@ -1,0 +1,3 @@
+[submodule "librustgo"]
+	path = librustgo
+	url = https://github.com/SigmaGmbH/librustgo
