@@ -31,6 +31,7 @@ import (
 
 	"github.com/SigmaGmbH/evm-module/encoding"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ibctesting "github.com/cosmos/ibc-go/v6/testing"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -186,4 +187,12 @@ func genesisStateWithValSet(codec codec.Codec, genesisState simapp.GenesisState,
 	genesisState[banktypes.ModuleName] = codec.MustMarshalJSON(bankGenesis)
 
 	return genesisState
+}
+
+// SetupTestingApp initializes the IBC-go testing application
+func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
+	db := dbm.NewMemDB()
+	cfg := encoding.MakeConfig(ModuleBasics)
+	app := NewEthermintApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, cfg, simapp.EmptyAppOptions{})
+	return app, NewDefaultGenesisState()
 }
