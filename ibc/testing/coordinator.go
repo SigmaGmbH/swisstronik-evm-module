@@ -20,13 +20,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/SigmaGmbH/evm-module/app"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctesting "github.com/cosmos/ibc-go/v6/testing"
 	ibchelpers "github.com/cosmos/ibc-go/v6/testing/simapp/helpers"
-	"github.com/evmos/evmos/v12/app"
 	"github.com/stretchr/testify/require"
 )
 
@@ -140,7 +140,7 @@ func SendMsgs(chain *ibctesting.TestChain, feeAmt int64, msgs ...sdk.Msg) (*sdk.
 	// ensure the chain has the latest time
 	chain.Coordinator.UpdateTimeForChain(chain)
 
-	if evmosChain, ok := chain.App.(*app.Evmos); ok {
+	if evmosChain, ok := chain.App.(*app.EthermintApp); ok {
 		bondDenom = evmosChain.StakingKeeper.BondDenom(chain.GetContext())
 	} else {
 		bondDenom = chain.GetSimApp().StakingKeeper.BondDenom(chain.GetContext())
