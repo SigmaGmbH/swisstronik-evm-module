@@ -35,7 +35,7 @@ type ExtStateDB interface {
 type Keeper interface {
 	// Read methods
 	GetAccount(ctx sdk.Context, addr common.Address) *Account
-	GetState(ctx sdk.Context, addr common.Address, key common.Hash) common.Hash
+	GetState(ctx sdk.Context, addr common.Address, key common.Hash) []byte
 	GetCode(ctx sdk.Context, codeHash common.Hash) []byte
 	// the callback returns false to break early
 	ForEachStorage(ctx sdk.Context, addr common.Address, cb func(key, value common.Hash) bool)

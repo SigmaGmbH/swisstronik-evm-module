@@ -218,7 +218,8 @@ func (s *stateObject) GetCommittedState(key common.Hash) common.Hash {
 		return value
 	}
 	// If no live objects are available, load it from keeper
-	value := s.db.keeper.GetState(s.db.ctx, s.Address(), key)
+	valueBytes := s.db.keeper.GetState(s.db.ctx, s.Address(), key)
+	value := common.BytesToHash(valueBytes)
 	s.originStorage[key] = value
 	return value
 }

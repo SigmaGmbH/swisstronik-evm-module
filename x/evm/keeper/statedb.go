@@ -49,15 +49,15 @@ func (k *Keeper) GetAccount(ctx sdk.Context, addr common.Address) *statedb.Accou
 }
 
 // GetState loads contract state from database, implements `statedb.Keeper` interface.
-func (k *Keeper) GetState(ctx sdk.Context, addr common.Address, key common.Hash) common.Hash {
+func (k *Keeper) GetState(ctx sdk.Context, addr common.Address, key common.Hash) []byte {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.AddressStoragePrefix(addr))
 
 	value := store.Get(key.Bytes())
 	if len(value) == 0 {
-		return common.Hash{}
+		return nil
 	}
 
-	return common.BytesToHash(value)
+	return value
 }
 
 // GetCode loads contract code from database, implements `statedb.Keeper` interface.
