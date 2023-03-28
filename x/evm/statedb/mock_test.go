@@ -42,8 +42,8 @@ func (k MockKeeper) GetAccount(ctx sdk.Context, addr common.Address) *statedb.Ac
 	return &acct.account
 }
 
-func (k MockKeeper) GetState(ctx sdk.Context, addr common.Address, key common.Hash) common.Hash {
-	return k.accounts[addr].states[key]
+func (k MockKeeper) GetState(ctx sdk.Context, addr common.Address, key common.Hash) []byte {
+	return k.accounts[addr].states[key].Bytes()
 }
 
 func (k MockKeeper) GetCode(ctx sdk.Context, codeHash common.Hash) []byte {
