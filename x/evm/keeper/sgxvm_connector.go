@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"errors"
 	"github.com/SigmaGmbH/librustgo"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -140,6 +141,8 @@ func (q Connector) BlockHash(req *librustgo.CosmosRequest_BlockHash) ([]byte, er
 func (q Connector) InsertStorageCell(req *librustgo.CosmosRequest_InsertStorageCell) ([]byte, error) {
 	//println("Connector::Query InsertStorageCell invoked")
 
+	fmt.Println("DEBUG: insert storage cell: ", req.InsertStorageCell.Value)
+
 	ethAddress := common.BytesToAddress(req.InsertStorageCell.Address)
 	index := common.BytesToHash(req.InsertStorageCell.Index)
 	value := common.BytesToHash(req.InsertStorageCell.Value)
@@ -155,6 +158,8 @@ func (q Connector) GetStorageCell(req *librustgo.CosmosRequest_StorageCell) ([]b
 	ethAddress := common.BytesToAddress(req.StorageCell.Address)
 	index := common.BytesToHash(req.StorageCell.Index)
 	value := q.EVMKeeper.GetState(q.Context, ethAddress, index)
+
+	fmt.Println("DEBUG: get storage cell: ", value)
 
 	return proto.Marshal(&librustgo.QueryGetAccountStorageCellResponse{Value: value})
 }
