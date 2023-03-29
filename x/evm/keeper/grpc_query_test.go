@@ -10,7 +10,6 @@ import (
 	"github.com/SigmaGmbH/evm-module/tests"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	//"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
 	ethparams "github.com/ethereum/go-ethereum/params"
 
@@ -255,7 +254,6 @@ func (suite *KeeperTestSuite) TestQueryStorage() {
 				value := common.BytesToHash([]byte("value"))
 				expValue = value.String()
 				suite.app.EvmKeeper.SetState(suite.ctx, suite.address, key, value.Bytes())
-				//vmdb.SetState(suite.address, key, value)
 				req = &types.QueryStorageRequest{
 					Address: suite.address.String(),
 					Key:     key.String(),
@@ -269,9 +267,7 @@ func (suite *KeeperTestSuite) TestQueryStorage() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			//vmdb := suite.StateDB()
 			tc.malleate()
-			//suite.Require().NoError(vmdb.Commit())
 
 			ctx := sdk.WrapSDKContext(suite.ctx)
 			res, err := suite.queryClient.Storage(ctx, req)
@@ -623,7 +619,8 @@ func (suite *KeeperTestSuite) TestEstimateGas() {
 				}
 				params := suite.app.EvmKeeper.GetParams(suite.ctx)
 				params.EnableCreate = false
-				suite.app.EvmKeeper.SetParams(suite.ctx, params)
+				err = suite.app.EvmKeeper.SetParams(suite.ctx, params)
+				suite.Require().NoError(err)
 			},
 			false,
 			0,
@@ -1259,7 +1256,8 @@ func (suite *KeeperTestSuite) TestEthCall() {
 
 				params := suite.app.EvmKeeper.GetParams(suite.ctx)
 				params.EnableCreate = false
-				suite.app.EvmKeeper.SetParams(suite.ctx, params)
+				err = suite.app.EvmKeeper.SetParams(suite.ctx, params)
+				suite.Require().NoError(err)
 			},
 			false,
 		},

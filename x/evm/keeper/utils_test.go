@@ -203,15 +203,10 @@ func (suite *KeeperTestSuite) TestCheckSenderBalance() {
 		},
 	}
 
-	//vmdb := suite.StateDB()
-	//vmdb.AddBalance(suite.address, hundredInt.BigInt())
 	err := suite.app.EvmKeeper.SetBalance(suite.ctx, suite.address, hundredInt.BigInt())
 	suite.Require().NoError(err)
-	//balance := vmdb.GetBalance(suite.address)
 	balance := suite.app.EvmKeeper.GetBalance(suite.ctx, suite.address)
 	suite.Require().Equal(balance, hundredInt.BigInt())
-	//err := vmdb.Commit()
-	suite.Require().NoError(err, "Unexpected error while committing to vmdb: %d", err)
 
 	for i, tc := range testCases {
 		suite.Run(tc.name, func() {
@@ -439,7 +434,6 @@ func (suite *KeeperTestSuite) TestVerifyFeeAndDeductTxCostsFromUserBalance() {
 		suite.Run(tc.name, func() {
 			suite.enableFeemarket = tc.enableFeemarket
 			suite.SetupTest()
-			//vmdb := suite.StateDB()
 
 			if tc.malleate != nil {
 				tc.malleate()
@@ -458,10 +452,8 @@ func (suite *KeeperTestSuite) TestVerifyFeeAndDeductTxCostsFromUserBalance() {
 				} else {
 					gasTipCap = tc.gasTipCap
 				}
-				//vmdb.AddBalance(suite.address, initBalance.BigInt())
 				err := suite.app.EvmKeeper.SetBalance(suite.ctx, suite.address, initBalance.BigInt())
 				suite.Require().NoError(err)
-				//balance := vmdb.GetBalance(suite.address)
 				balance := suite.app.EvmKeeper.GetBalance(suite.ctx, suite.address)
 				suite.Require().Equal(balance, initBalance.BigInt())
 			} else {
@@ -469,14 +461,11 @@ func (suite *KeeperTestSuite) TestVerifyFeeAndDeductTxCostsFromUserBalance() {
 					gasPrice = tc.gasPrice.BigInt()
 				}
 
-				//vmdb.AddBalance(suite.address, hundredInt.BigInt())
 				err := suite.app.EvmKeeper.SetBalance(suite.ctx, suite.address, hundredInt.BigInt())
 				suite.Require().NoError(err)
 				balance := suite.app.EvmKeeper.GetBalance(suite.ctx, suite.address)
 				suite.Require().Equal(balance, hundredInt.BigInt())
 			}
-			//err := vmdb.Commit()
-			//suite.Require().NoError(err, "Unexpected error while committing to vmdb: %d", err)
 
 			tx := evmtypes.NewTx(zeroInt.BigInt(), 1, &suite.address, amount, tc.gasLimit, gasPrice, gasFeeCap, gasTipCap, nil, tc.accessList)
 			tx.From = tc.from

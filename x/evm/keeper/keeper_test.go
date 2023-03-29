@@ -51,8 +51,6 @@ import (
 	"github.com/tendermint/tendermint/version"
 )
 
-var testTokens = sdkmath.NewIntWithDecimal(1000, 18)
-
 type KeeperTestSuite struct {
 	suite.Suite
 
@@ -251,10 +249,6 @@ func (suite *KeeperTestSuite) Commit() {
 	types.RegisterQueryServer(queryHelper, suite.app.EvmKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
-
-//func (suite *KeeperTestSuite) StateDB() *statedb.StateDB {
-//	return statedb.New(suite.ctx, suite.app.EvmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(suite.ctx.HeaderHash().Bytes())))
-//}
 
 // DeployTestContract deploy a test erc20 contract and returns the contract address
 func (suite *KeeperTestSuite) DeployTestContract(t require.TestingT, owner common.Address, supply *big.Int) common.Address {
@@ -461,8 +455,8 @@ func (suite *KeeperTestSuite) TestBaseFee() {
 			suite.enableLondonHF = tc.enableLondonHF
 			suite.SetupTest()
 			suite.app.EvmKeeper.BeginBlock(suite.ctx, abci.RequestBeginBlock{})
-			params := suite.app.EvmKeeper.GetParams(suite.ctx)
-			ethCfg := params.ChainConfig.EthereumConfig(suite.app.EvmKeeper.ChainID())
+			evmParams := suite.app.EvmKeeper.GetParams(suite.ctx)
+			ethCfg := evmParams.ChainConfig.EthereumConfig(suite.app.EvmKeeper.ChainID())
 			baseFee := suite.app.EvmKeeper.GetBaseFee(suite.ctx, ethCfg)
 			suite.Require().Equal(tc.expectBaseFee, baseFee)
 		})

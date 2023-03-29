@@ -14,10 +14,8 @@ import (
 
 	"github.com/SigmaGmbH/evm-module/crypto/ethsecp256k1"
 	"github.com/SigmaGmbH/evm-module/tests"
-	//"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/SigmaGmbH/evm-module/x/evm/types"
 	"github.com/ethereum/go-ethereum/common"
-	//"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
@@ -79,9 +77,6 @@ func (suite *KeeperTestSuite) TestSetNonce() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			//vmdb := suite.StateDB()
-			//vmdb.SetNonce(tc.address, tc.nonce)
-			//nonce := vmdb.GetNonce(tc.address)
 			suite.Require().NoError(
 				suite.app.EvmKeeper.SetNonce(suite.ctx, tc.address, tc.nonce),
 			)
@@ -127,10 +122,8 @@ func (suite *KeeperTestSuite) TestGetCodeHash() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			//vmdb := suite.StateDB()
 			tc.malleate()
 
-			//hash := vmdb.GetCodeHash(tc.address)
 			hash := suite.app.EvmKeeper.GetAccountOrEmpty(suite.ctx, tc.address).CodeHash
 			suite.Require().Equal(tc.expHash, common.BytesToHash(hash))
 		})
@@ -176,10 +169,6 @@ func (suite *KeeperTestSuite) TestSetCode() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			//vmdb := suite.StateDB()
-			//prev := vmdb.GetCode(tc.address)
-			//vmdb.SetCode(tc.address, tc.code)
-			//post := vmdb.GetCode(tc.address)
 			prev, err := suite.app.EvmKeeper.GetAccountCode(suite.ctx, tc.address)
 			suite.Require().NoError(err)
 
@@ -293,10 +282,7 @@ func (suite *KeeperTestSuite) TestState() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			//vmdb := suite.StateDB()
-			//vmdb.SetState(suite.address, tc.key, tc.value)
 			suite.app.EvmKeeper.SetState(suite.ctx, suite.address, tc.key, tc.value.Bytes())
-			//value := vmdb.GetState(suite.address, tc.key)
 			value := suite.app.EvmKeeper.GetState(suite.ctx, suite.address, tc.key)
 			suite.Require().Equal(tc.value, common.BytesToHash(value))
 		})
@@ -305,9 +291,6 @@ func (suite *KeeperTestSuite) TestState() {
 
 func (suite *KeeperTestSuite) TestSuicide() {
 	code := []byte("code")
-	//db := suite.StateDB()
-	// Add code to account
-	//db.SetCode(suite.address, code)
 	err := suite.app.EvmKeeper.SetAccountCode(suite.ctx, suite.address, code)
 	suite.Require().NoError(err)
 
@@ -319,9 +302,6 @@ func (suite *KeeperTestSuite) TestSuicide() {
 	for i := 0; i < 5; i++ {
 		suite.app.EvmKeeper.SetState(suite.ctx, suite.address, common.BytesToHash([]byte(fmt.Sprintf("key%d", i))), []byte(fmt.Sprintf("value%d", i)))
 	}
-
-	//suite.Require().NoError(db.Commit())
-	//db = suite.StateDB()
 
 	// Generate 2nd address
 	privkey, _ := ethsecp256k1.GenerateKey()
@@ -379,7 +359,6 @@ func (suite *KeeperTestSuite) TestExist() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			//vmdb := suite.StateDB()
 			tc.malleate()
 			exists := suite.app.EvmKeeper.GetAccount(suite.ctx, tc.address) != nil
 			suite.Require().Equal(tc.exists, exists)
@@ -409,7 +388,6 @@ func (suite *KeeperTestSuite) TestEmpty() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
-			//vmdb := suite.StateDB()
 			tc.malleate()
 			isEmpty := suite.app.EvmKeeper.GetAccount(suite.ctx, tc.address) == nil
 			suite.Require().Equal(tc.empty, isEmpty)
@@ -436,8 +414,7 @@ func (suite *KeeperTestSuite) CreateTestTx(msg *types.MsgHandleTx, priv cryptoty
 	return txBuilder.GetTx()
 }
 
-// FIXME skip for now
-func (suite *KeeperTestSuite) _TestForEachStorage() {
+func (suite *KeeperTestSuite) TestForEachStorage() {
 	var storage types.Storage
 
 	testCase := []struct {
@@ -487,7 +464,6 @@ func (suite *KeeperTestSuite) _TestForEachStorage() {
 	for _, tc := range testCase {
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset
-			//vmdb := suite.StateDB()
 			tc.malleate()
 
 			suite.app.EvmKeeper.ForEachStorage(suite.ctx, suite.address, tc.callback)
@@ -498,7 +474,6 @@ func (suite *KeeperTestSuite) _TestForEachStorage() {
 				vals[i] = common.HexToHash(storage[i].Value)
 			}
 
-			// TODO: not sure why Equals fails
 			suite.Require().ElementsMatch(tc.expValues, vals)
 		})
 		storage = types.Storage{}
