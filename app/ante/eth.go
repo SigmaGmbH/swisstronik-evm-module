@@ -31,7 +31,7 @@ import (
 	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 
 	"github.com/ethereum/go-ethereum/common"
-	ethcore "github.com/ethereum/go-ethereum/core"
+	// ethcore "github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 )
 
@@ -295,8 +295,12 @@ func (ctd CanTransferDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 			}
 		}
 
-		stateDB := statedb.New(ctx, ctd.evmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(ctx.HeaderHash().Bytes())))
-		canTransfer := ethcore.CanTransfer(stateDB, coreMsg.From(), coreMsg.Value())
+		// stateDB := statedb.New(ctx, ctd.evmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(ctx.HeaderHash().Bytes())))
+		// canTransfer := ethcore.CanTransfer(stateDB, coreMsg.From(), coreMsg.Value())
+
+		// check that caller has more funds, than he's trying to transfer
+		callerBalance := ctd.evmKeeper.GetBalance(ctx, coreMsg.From());
+		canTransfer := callerBalance.Cmp(coreMsg.Value()) >= 0;
 
 		// check that caller has enough balance to cover asset transfer for **topmost** call
 		// NOTE: here the gas consumed is from the context with the infinite gas meter

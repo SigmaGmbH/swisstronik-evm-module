@@ -46,6 +46,8 @@ type EVMKeeper interface {
 	ResetTransientGasUsed(ctx sdk.Context)
 	GetTxIndexTransient(ctx sdk.Context) uint64
 	GetParams(ctx sdk.Context) evmtypes.Params
+	SetAccountCode(ctx sdk.Context, addr common.Address, code []byte) error
+	SetBalance(ctx sdk.Context, addr common.Address, amount *big.Int) error
 }
 
 type protoTxProvider interface {
