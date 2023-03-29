@@ -243,3 +243,13 @@ func (k *Keeper) DeleteAccount(ctx sdk.Context, addr common.Address) error {
 
 	return nil
 }
+
+func (k *Keeper) SetNonce(ctx sdk.Context, addr common.Address, nonce uint64) error {
+	account := k.GetAccountOrEmpty(ctx, addr)
+	account.Nonce = nonce
+
+	if err := k.SetAccount(ctx, addr, account); err != nil {
+		return err
+	}
+	return nil
+}
