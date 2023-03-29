@@ -253,3 +253,13 @@ func (k *Keeper) SetNonce(ctx sdk.Context, addr common.Address, nonce uint64) er
 	}
 	return nil
 }
+
+func (k *Keeper) GetAccountCode(ctx sdk.Context, addr common.Address) ([]byte, error) {
+	account := k.GetAccount(ctx, addr)
+	if account == nil {
+		return nil, nil
+	}
+
+	code := k.GetCode(ctx, common.BytesToHash(account.CodeHash))
+	return code, nil
+}
