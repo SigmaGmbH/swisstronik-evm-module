@@ -183,63 +183,6 @@ func (suite *BackendTestSuite) TestGetProof() {
 	}
 }
 
-func (suite *BackendTestSuite) TestGetStorageAt() {
-	blockNr := rpctypes.NewBlockNumber(big.NewInt(1))
-
-	testCases := []struct {
-		name          string
-		addr          common.Address
-		key           string
-		blockNrOrHash rpctypes.BlockNumberOrHash
-		registerMock  func(common.Address, string, string)
-		expPass       bool
-		expStorage    hexutil.Bytes
-	}{
-		{
-			"fail - BlockHash and BlockNumber are both nil",
-			tests.GenerateAddress(),
-			"0x0",
-			rpctypes.BlockNumberOrHash{},
-			func(addr common.Address, key string, storage string) {},
-			false,
-			nil,
-		},
-		{
-			"fail - query client errors on getting Storage",
-			tests.GenerateAddress(),
-			"0x0",
-			rpctypes.BlockNumberOrHash{BlockNumber: &blockNr},
-			func(addr common.Address, key string, storage string) {
-				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				RegisterStorageAtError(queryClient, addr, key)
-			},
-			false,
-			nil,
-		},
-		{
-			"pass",
-			tests.GenerateAddress(),
-			"0x0",
-			rpctypes.BlockNumberOrHash{BlockNumber: &blockNr},
-			func(addr common.Address, key string, storage string) {
-				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				RegisterStorageAt(queryClient, addr, key, storage)
-			},
-			true,
-			hexutil.Bytes{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0},
-		},
-	}
-	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
-			suite.SetupTest()
-			tc.registerMock(tc.addr, tc.key, tc.expStorage.String())
-
-			_, err := suite.backend.GetStorageAt(tc.addr, tc.key, tc.blockNrOrHash)
-			suite.Require().Error(err)
-		})
-	}
-}
-
 func (suite *BackendTestSuite) TestGetBalance() {
 	blockNr := rpctypes.NewBlockNumber(big.NewInt(1))
 

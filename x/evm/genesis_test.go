@@ -1,15 +1,12 @@
 package evm_test
 
 import (
-	// "math/big"
-
 	"github.com/ethereum/go-ethereum/common"
 	"math/big"
 
 	"github.com/SigmaGmbH/evm-module/crypto/ethsecp256k1"
 	evmcommontypes "github.com/SigmaGmbH/evm-module/types"
 	"github.com/SigmaGmbH/evm-module/x/evm"
-	// "github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/SigmaGmbH/evm-module/x/evm/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -19,8 +16,6 @@ func (suite *EvmTestSuite) TestInitGenesis() {
 	suite.Require().NoError(err)
 
 	address := common.HexToAddress(privkey.PubKey().Address().String())
-
-	// var vmdb *statedb.StateDB
 
 	testCases := []struct {
 		name     string
@@ -37,8 +32,6 @@ func (suite *EvmTestSuite) TestInitGenesis() {
 		{
 			"valid account",
 			func() {
-				// vmdb.AddBalance(address, big.NewInt(1))
-				// TODO: set balance
 				err := suite.app.EvmKeeper.SetBalance(suite.ctx, address, big.NewInt(1))
 				suite.Require().NoError(err)
 			},
@@ -145,10 +138,8 @@ func (suite *EvmTestSuite) TestInitGenesis() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset values
-			// vmdb = suite.StateDB()
 
 			tc.malleate()
-			// vmdb.Commit()
 
 			if tc.expPanic {
 				suite.Require().Panics(

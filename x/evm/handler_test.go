@@ -38,7 +38,6 @@ import (
 	"github.com/SigmaGmbH/evm-module/tests"
 	evmcommontypes "github.com/SigmaGmbH/evm-module/types"
 	"github.com/SigmaGmbH/evm-module/x/evm"
-	// "github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/SigmaGmbH/evm-module/x/evm/types"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
@@ -180,10 +179,6 @@ func (suite *EvmTestSuite) SignTx(tx *types.MsgHandleTx) {
 	err := tx.Sign(suite.ethSigner, suite.signer)
 	suite.Require().NoError(err)
 }
-
-// func (suite *EvmTestSuite) StateDB() *statedb.StateDB {
-// 	return statedb.New(suite.ctx, suite.app.EvmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(suite.ctx.HeaderHash().Bytes())))
-// }
 
 func TestEvmTestSuite(t *testing.T) {
 	suite.Run(t, new(EvmTestSuite))
@@ -686,13 +681,9 @@ func (suite *EvmTestSuite) TestContractDeploymentRevert() {
 			)
 			suite.SignTx(tx)
 
-			// simulate nonce increment in ante handler
-			// TODO: set nonce
+
 			err = suite.app.EvmKeeper.SetNonce(suite.ctx, suite.from, nonce+1)
 			suite.Require().NoError(err)
-			// db := suite.StateDB()
-			// db.SetNonce(suite.from, nonce+1)
-			// suite.Require().NoError(db.Commit())
 
 			msgEthTx := &types.MsgHandleTx{
 				Data: tx.Data,
