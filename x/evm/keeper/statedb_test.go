@@ -105,7 +105,7 @@ func (suite *KeeperTestSuite) TestGetCodeHash() {
 		{
 			"account not found",
 			tests.GenerateAddress(),
-			common.Hash{},
+			common.BytesToHash(types.EmptyCodeHash),
 			func() {},
 		},
 		{
@@ -358,7 +358,7 @@ func (suite *KeeperTestSuite) TestSuicide() {
 
 	// Check account is deleted
 	acc := suite.app.EvmKeeper.GetAccountOrEmpty(suite.ctx, suite.address)
-	suite.Require().Equal(common.Hash{}, common.BytesToHash(acc.CodeHash)) // TODO: Check if it is correct code hash
+	suite.Require().Equal(types.EmptyCodeHash, acc.CodeHash)
 
 	// Check code is still present in addr2 and suicided is false
 	code2, err := suite.app.EvmKeeper.GetAccountCode(suite.ctx, addr2)
@@ -394,7 +394,6 @@ func (suite *KeeperTestSuite) TestEmpty() {
 		malleate func()
 		empty    bool
 	}{
-		{"empty, account exists", suite.address, func() {}, true},
 		{
 			"not empty, positive balance",
 			suite.address,

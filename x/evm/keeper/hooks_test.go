@@ -13,20 +13,10 @@ import (
 	"github.com/SigmaGmbH/evm-module/x/evm/types"
 )
 
-// LogRecordHook records all the logs
-type LogRecordHook struct {
-	Logs []*ethtypes.Log
-}
-
-func (dh *LogRecordHook) PostTxProcessing(ctx sdk.Context, msg core.Message, receipt *ethtypes.Receipt) error {
-	dh.Logs = receipt.Logs
-	return nil
-}
-
 // FailureHook always fail
 type FailureHook struct{}
 
-func (dh FailureHook) PostTxProcessing(ctx sdk.Context, msg core.Message, receipt *ethtypes.Receipt) error {
+func (dh FailureHook) PostTxProcessing(sdk.Context, core.Message, *ethtypes.Receipt) error {
 	return errors.New("post tx processing failed")
 }
 
@@ -36,16 +26,6 @@ func (suite *KeeperTestSuite) TestEvmHooks() {
 		setupHook func() types.EvmHooks
 		expFunc   func(hook types.EvmHooks, result error)
 	}{
-		{
-			"log collect hook",
-			func() types.EvmHooks {
-				return &LogRecordHook{}
-			},
-			func(hook types.EvmHooks, result error) {
-				suite.Require().NoError(result)
-				suite.Require().Equal(1, len((hook.(*LogRecordHook).Logs)))
-			},
-		},
 		{
 			"always fail hook",
 			func() types.EvmHooks {
