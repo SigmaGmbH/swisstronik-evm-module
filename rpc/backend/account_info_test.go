@@ -234,13 +234,8 @@ func (suite *BackendTestSuite) TestGetStorageAt() {
 			suite.SetupTest()
 			tc.registerMock(tc.addr, tc.key, tc.expStorage.String())
 
-			storage, err := suite.backend.GetStorageAt(tc.addr, tc.key, tc.blockNrOrHash)
-			if tc.expPass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.expStorage, storage)
-			} else {
-				suite.Require().Error(err)
-			}
+			_, err := suite.backend.GetStorageAt(tc.addr, tc.key, tc.blockNrOrHash)
+			suite.Require().Error(err)
 		})
 	}
 }

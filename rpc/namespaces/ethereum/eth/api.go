@@ -17,6 +17,7 @@ package eth
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 
@@ -255,7 +256,7 @@ func (e *PublicAPI) GetBalance(address common.Address, blockNrOrHash rpctypes.Bl
 // GetStorageAt returns the contract storage at the given address, block number, and key.
 func (e *PublicAPI) GetStorageAt(address common.Address, key string, blockNrOrHash rpctypes.BlockNumberOrHash) (hexutil.Bytes, error) {
 	e.logger.Debug("eth_getStorageAt", "address", address.Hex(), "key", key, "block number or hash", blockNrOrHash)
-	return e.backend.GetStorageAt(address, key, blockNrOrHash)
+	return nil, fmt.Errorf("This request was disabled!")
 }
 
 // GetCode returns the contract code at the given address and block number.
