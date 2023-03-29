@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	evmcommontypes "github.com/SigmaGmbH/evm-module/types"
-	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/SigmaGmbH/evm-module/x/evm/types"
 	"github.com/SigmaGmbH/librustgo"
 	"github.com/armon/go-metrics"
@@ -253,8 +252,8 @@ func (k *Keeper) ApplyMessageWithConfig(
 	ctx sdk.Context,
 	msg core.Message,
 	commit bool,
-	cfg *statedb.EVMConfig,
-	txConfig statedb.TxConfig,
+	cfg *types.EVMConfig,
+	txConfig types.TxConfig,
 	txContext *librustgo.TransactionContext,
 ) (*types.MsgEthereumTxResponse, error) {
 	// return error if contract creation or call are disabled through governance
@@ -367,7 +366,7 @@ func CreateSGXVMContextFromMessage(ctx sdk.Context, k *Keeper, msg core.Message)
 }
 
 // SGXVMLogsToEthereum converts logs from SGXVM to ethereum format
-func SGXVMLogsToEthereum(logs []*librustgo.Log, txConfig statedb.TxConfig, blockNumber uint64) []*ethtypes.Log {
+func SGXVMLogsToEthereum(logs []*librustgo.Log, txConfig types.TxConfig, blockNumber uint64) []*ethtypes.Log {
 	var ethLogs []*ethtypes.Log
 	for i := range logs {
 		ethLogs = append(ethLogs, SGXVMLogToEthereum(logs[i], txConfig, blockNumber))
@@ -375,7 +374,7 @@ func SGXVMLogsToEthereum(logs []*librustgo.Log, txConfig statedb.TxConfig, block
 	return ethLogs
 }
 
-func SGXVMLogToEthereum(log *librustgo.Log, txConfig statedb.TxConfig, blockNumber uint64) *ethtypes.Log {
+func SGXVMLogToEthereum(log *librustgo.Log, txConfig types.TxConfig, blockNumber uint64) *ethtypes.Log {
 	var topics []common.Hash
 	for _, topic := range log.Topics {
 		topics = append(topics, common.BytesToHash(topic.Inner))

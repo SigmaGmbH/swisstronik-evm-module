@@ -24,7 +24,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/params"
 
-	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 	feemarkettypes "github.com/SigmaGmbH/evm-module/x/feemarket/types"
 )
@@ -38,7 +37,7 @@ type DynamicFeeEVMKeeper interface {
 
 // EVMKeeper defines the expected keeper interface used on the Eth AnteHandler
 type EVMKeeper interface {
-	statedb.Keeper
+	//statedb.Keeper
 	DynamicFeeEVMKeeper
 
 	DeductTxCostsFromUserBalance(ctx sdk.Context, fees sdk.Coins, from common.Address) error
@@ -46,6 +45,9 @@ type EVMKeeper interface {
 	ResetTransientGasUsed(ctx sdk.Context)
 	GetTxIndexTransient(ctx sdk.Context) uint64
 	GetParams(ctx sdk.Context) evmtypes.Params
+	SetAccountCode(ctx sdk.Context, addr common.Address, code []byte) error
+	SetBalance(ctx sdk.Context, addr common.Address, amount *big.Int) error
+	GetAccount(ctx sdk.Context, addr common.Address) *evmtypes.Account
 }
 
 type protoTxProvider interface {

@@ -46,7 +46,7 @@ import (
 	ante "github.com/SigmaGmbH/evm-module/app/ante"
 	"github.com/SigmaGmbH/evm-module/encoding"
 	"github.com/SigmaGmbH/evm-module/tests"
-	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
+	// "github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 	feemarkettypes "github.com/SigmaGmbH/evm-module/x/feemarket/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -73,9 +73,9 @@ type AnteTestSuite struct {
 
 const TestGasLimit uint64 = 100000
 
-func (suite *AnteTestSuite) StateDB() *statedb.StateDB {
-	return statedb.New(suite.ctx, suite.app.EvmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(suite.ctx.HeaderHash().Bytes())))
-}
+// func (suite *AnteTestSuite) StateDB() *statedb.StateDB {
+// 	return statedb.New(suite.ctx, suite.app.EvmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(suite.ctx.HeaderHash().Bytes())))
+// }
 
 func (suite *AnteTestSuite) SetupTest() {
 	checkTx := false

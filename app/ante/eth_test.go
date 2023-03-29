@@ -10,7 +10,7 @@ import (
 	"github.com/SigmaGmbH/evm-module/server/config"
 	"github.com/SigmaGmbH/evm-module/tests"
 	ethermint "github.com/SigmaGmbH/evm-module/types"
-	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
+	// "github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -26,7 +26,7 @@ func (suite *AnteTestSuite) TestNewEthAccountVerificationDecorator() {
 	tx := evmtypes.NewTxContract(suite.app.EvmKeeper.ChainID(), 1, big.NewInt(10), 1000, big.NewInt(1), nil, nil, nil, nil)
 	tx.From = addr.Hex()
 
-	var vmdb *statedb.StateDB
+	// var vmdb *statedb.StateDB
 
 	testCases := []struct {
 		name     string
@@ -49,7 +49,9 @@ func (suite *AnteTestSuite) TestNewEthAccountVerificationDecorator() {
 			tx,
 			func() {
 				// set not as an EOA
-				vmdb.SetCode(addr, []byte("1"))
+				// TODO: Fix
+				// vmdb.SetCode(addr, []byte("1"))
+				suite.app.EvmKeeper.SetAccountCode(suite.ctx, addr, []byte("1"))
 			},
 			true,
 			false,
@@ -59,7 +61,9 @@ func (suite *AnteTestSuite) TestNewEthAccountVerificationDecorator() {
 			tx,
 			func() {
 				// reset back to EOA
-				vmdb.SetCode(addr, nil)
+				// TODO: Fix
+				// vmdb.SetCode(addr, nil)
+				suite.app.EvmKeeper.SetAccountCode(suite.ctx, addr, nil)
 			},
 			true,
 			false,
@@ -68,7 +72,9 @@ func (suite *AnteTestSuite) TestNewEthAccountVerificationDecorator() {
 			"success new account",
 			tx,
 			func() {
-				vmdb.AddBalance(addr, big.NewInt(1000000))
+				// vmdb.AddBalance(addr, big.NewInt(1000000))
+				suite.app.EvmKeeper.SetBalance(suite.ctx, addr, big.NewInt(1000000))
+				// TODO: Set balance
 			},
 			true,
 			true,
@@ -80,7 +86,9 @@ func (suite *AnteTestSuite) TestNewEthAccountVerificationDecorator() {
 				acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr.Bytes())
 				suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 
-				vmdb.AddBalance(addr, big.NewInt(1000000))
+				// TODO: Add balance
+				// vmdb.AddBalance(addr, big.NewInt(1000000))
+				suite.app.EvmKeeper.SetBalance(suite.ctx, addr, big.NewInt(1000000))
 			},
 			true,
 			true,
@@ -89,9 +97,9 @@ func (suite *AnteTestSuite) TestNewEthAccountVerificationDecorator() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			vmdb = suite.StateDB()
+			// vmdb = suite.StateDB()
 			tc.malleate()
-			suite.Require().NoError(vmdb.Commit())
+			// suite.Require().NoError(vmdb.Commit())
 
 			_, err := dec.AnteHandle(suite.ctx.WithIsCheckTx(tc.checkTx), tc.tx, false, NextFn)
 
@@ -192,7 +200,7 @@ func (suite *AnteTestSuite) TestEthGasConsumeDecorator() {
 	dynamicFeeTx.From = addr.Hex()
 	dynamicFeeTxPriority := int64(1)
 
-	var vmdb *statedb.StateDB
+	// var vmdb *statedb.StateDB
 
 	testCases := []struct {
 		name        string
@@ -241,7 +249,9 @@ func (suite *AnteTestSuite) TestEthGasConsumeDecorator() {
 			tx2,
 			0,
 			func() {
-				vmdb.AddBalance(addr, big.NewInt(1000000))
+				// TODO: fix
+				// vmdb.AddBalance(addr, big.NewInt(1000000))
+				
 			},
 			false, true,
 			0,
@@ -251,7 +261,8 @@ func (suite *AnteTestSuite) TestEthGasConsumeDecorator() {
 			tx2,
 			0,
 			func() {
-				vmdb.AddBalance(addr, big.NewInt(1000000))
+				// TODO: fix
+				// vmdb.AddBalance(addr, big.NewInt(1000000))
 				suite.ctx = suite.ctx.WithBlockGasMeter(sdk.NewGasMeter(1))
 			},
 			false, true,
@@ -262,7 +273,9 @@ func (suite *AnteTestSuite) TestEthGasConsumeDecorator() {
 			tx2,
 			tx2GasLimit, // it's capped
 			func() {
-				vmdb.AddBalance(addr, big.NewInt(1001000000000000))
+				// TODO: Fix
+				// vmdb.AddBalance(addr, big.NewInt(1001000000000000))
+				suite.app.EvmKeeper.SetBalance(suite.ctx, addr, big.NewInt(1001000000000000))
 				suite.ctx = suite.ctx.WithBlockGasMeter(sdk.NewGasMeter(10000000000000000000))
 			},
 			true, false,
@@ -273,7 +286,9 @@ func (suite *AnteTestSuite) TestEthGasConsumeDecorator() {
 			dynamicFeeTx,
 			tx2GasLimit, // it's capped
 			func() {
-				vmdb.AddBalance(addr, big.NewInt(1001000000000000))
+				// TODO: Fix
+				// vmdb.AddBalance(addr, big.NewInt(1001000000000000))
+				suite.app.EvmKeeper.SetBalance(suite.ctx, addr, big.NewInt(1001000000000000))
 				suite.ctx = suite.ctx.WithBlockGasMeter(sdk.NewGasMeter(10000000000000000000))
 			},
 			true, false,
@@ -284,7 +299,9 @@ func (suite *AnteTestSuite) TestEthGasConsumeDecorator() {
 			dynamicFeeTx,
 			0, // for reCheckTX mode, gas limit should be set to 0
 			func() {
-				vmdb.AddBalance(addr, big.NewInt(1001000000000000))
+				// TODO: Fix
+				// vmdb.AddBalance(addr, big.NewInt(1001000000000000))
+				suite.app.EvmKeeper.SetBalance(suite.ctx, addr, big.NewInt(1001000000000000))
 				suite.ctx = suite.ctx.WithIsReCheckTx(true)
 			},
 			true, false,
@@ -294,9 +311,9 @@ func (suite *AnteTestSuite) TestEthGasConsumeDecorator() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			vmdb = suite.StateDB()
+			// vmdb = suite.StateDB()
 			tc.malleate()
-			suite.Require().NoError(vmdb.Commit())
+			// suite.Require().NoError(vmdb.Commit())
 
 			if tc.expPanic {
 				suite.Require().Panics(func() {
@@ -352,7 +369,7 @@ func (suite *AnteTestSuite) TestCanTransferDecorator() {
 	err := tx.Sign(suite.ethSigner, tests.NewSigner(privKey))
 	suite.Require().NoError(err)
 
-	var vmdb *statedb.StateDB
+	// var vmdb *statedb.StateDB
 
 	testCases := []struct {
 		name     string
@@ -377,8 +394,9 @@ func (suite *AnteTestSuite) TestCanTransferDecorator() {
 			func() {
 				acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr.Bytes())
 				suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+				suite.app.EvmKeeper.SetBalance(suite.ctx, addr, big.NewInt(1000000))
 
-				vmdb.AddBalance(addr, big.NewInt(1000000))
+				// vmdb.AddBalance(addr, big.NewInt(1000000))
 			},
 			true,
 		},
@@ -386,9 +404,9 @@ func (suite *AnteTestSuite) TestCanTransferDecorator() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			vmdb = suite.StateDB()
+			// vmdb = suite.StateDB()
 			tc.malleate()
-			suite.Require().NoError(vmdb.Commit())
+			// suite.Require().NoError(vmdb.Commit())
 
 			_, err := dec.AnteHandle(suite.ctx.WithIsCheckTx(true), tc.tx, false, NextFn)
 

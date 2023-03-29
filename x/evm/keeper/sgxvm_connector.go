@@ -142,9 +142,8 @@ func (q Connector) InsertStorageCell(req *librustgo.CosmosRequest_InsertStorageC
 
 	ethAddress := common.BytesToAddress(req.InsertStorageCell.Address)
 	index := common.BytesToHash(req.InsertStorageCell.Index)
-	value := common.BytesToHash(req.InsertStorageCell.Value)
 
-	q.EVMKeeper.SetState(q.Context, ethAddress, index, value.Bytes())
+	q.EVMKeeper.SetState(q.Context, ethAddress, index, req.InsertStorageCell.Value)
 
 	return proto.Marshal(&librustgo.QueryInsertStorageCellResponse{})
 }
@@ -156,7 +155,7 @@ func (q Connector) GetStorageCell(req *librustgo.CosmosRequest_StorageCell) ([]b
 	index := common.BytesToHash(req.StorageCell.Index)
 	value := q.EVMKeeper.GetState(q.Context, ethAddress, index)
 
-	return proto.Marshal(&librustgo.QueryGetAccountStorageCellResponse{Value: value.Bytes()})
+	return proto.Marshal(&librustgo.QueryGetAccountStorageCellResponse{Value: value})
 }
 
 // GetAccountCode handles incoming protobuf-encoded request and returns bytecode associated

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/SigmaGmbH/evm-module/server/config"
 	"github.com/SigmaGmbH/evm-module/x/evm/keeper"
-	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/SigmaGmbH/evm-module/x/evm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -17,10 +16,10 @@ import (
 
 func (suite *KeeperTestSuite) TestNativeCurrencyTransfer() {
 	var (
-		err             error
-		msg             *types.MsgHandleTx
-		signer          ethtypes.Signer
-		vmdb            *statedb.StateDB
+		err    error
+		msg    *types.MsgHandleTx
+		signer ethtypes.Signer
+		//vmdb            *statedb.StateDB
 		chainCfg        *params.ChainConfig
 		expectedGasUsed uint64
 		transferAmount  int64
@@ -36,7 +35,8 @@ func (suite *KeeperTestSuite) TestNativeCurrencyTransfer() {
 			func() {
 				transferAmount = 1000
 				msg, _, err = newEthMsgTx(
-					vmdb.GetNonce(suite.address),
+					//vmdb.GetNonce(suite.address),
+					suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address),
 					suite.ctx.BlockHeight(),
 					suite.address,
 					chainCfg,
@@ -58,7 +58,8 @@ func (suite *KeeperTestSuite) TestNativeCurrencyTransfer() {
 				transferAmount = 1000
 				wrongAmount := int64(100000)
 				msg, _, err = newEthMsgTx(
-					vmdb.GetNonce(suite.address),
+					//vmdb.GetNonce(suite.address),
+					suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address),
 					suite.ctx.BlockHeight(),
 					suite.address,
 					chainCfg,
@@ -83,7 +84,7 @@ func (suite *KeeperTestSuite) TestNativeCurrencyTransfer() {
 			keeperParams := suite.app.EvmKeeper.GetParams(suite.ctx)
 			chainCfg = keeperParams.ChainConfig.EthereumConfig(suite.app.EvmKeeper.ChainID())
 			signer = ethtypes.LatestSignerForChainID(suite.app.EvmKeeper.ChainID())
-			vmdb = suite.StateDB()
+			//vmdb = suite.StateDB()
 
 			tc.malleate()
 
