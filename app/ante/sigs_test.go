@@ -4,7 +4,6 @@ import (
 	"math/big"
 
 	"github.com/SigmaGmbH/evm-module/tests"
-	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 )
 
@@ -15,7 +14,7 @@ func (suite AnteTestSuite) TestSignatures() {
 	addr, privKey := tests.NewAddrKey()
 	to := tests.GenerateAddress()
 
-	acc := statedb.NewEmptyAccount()
+	acc := evmtypes.NewEmptyAccount()
 	acc.Nonce = 1
 	acc.Balance = big.NewInt(10000000000)
 

@@ -31,7 +31,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	evmcommontypes "github.com/SigmaGmbH/evm-module/types"
-	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/SigmaGmbH/evm-module/x/evm/types"
 )
 
@@ -253,7 +252,7 @@ func (k *Keeper) PostTxProcessing(ctx sdk.Context, msg core.Message, receipt *et
 
 // GetAccountWithoutBalance load nonce and codehash without balance,
 // more efficient in cases where balance is not needed.
-func (k *Keeper) GetAccountWithoutBalance(ctx sdk.Context, addr common.Address) *statedb.Account {
+func (k *Keeper) GetAccountWithoutBalance(ctx sdk.Context, addr common.Address) *types.Account {
 	cosmosAddr := sdk.AccAddress(addr.Bytes())
 	acct := k.accountKeeper.GetAccount(ctx, cosmosAddr)
 	if acct == nil {
@@ -266,21 +265,21 @@ func (k *Keeper) GetAccountWithoutBalance(ctx sdk.Context, addr common.Address) 
 		codeHash = ethAcct.GetCodeHash().Bytes()
 	}
 
-	return &statedb.Account{
+	return &types.Account{
 		Nonce:    acct.GetSequence(),
 		CodeHash: codeHash,
 	}
 }
 
 // GetAccountOrEmpty returns empty account if not exist, returns error if it's not `EthAccount`
-func (k *Keeper) GetAccountOrEmpty(ctx sdk.Context, addr common.Address) statedb.Account {
+func (k *Keeper) GetAccountOrEmpty(ctx sdk.Context, addr common.Address) types.Account {
 	acct := k.GetAccount(ctx, addr)
 	if acct != nil {
 		return *acct
 	}
 
 	// empty account
-	return statedb.Account{
+	return types.Account{
 		Balance:  new(big.Int),
 		CodeHash: types.EmptyCodeHash,
 	}

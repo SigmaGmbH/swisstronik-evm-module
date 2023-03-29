@@ -34,7 +34,6 @@ import (
 	"github.com/SigmaGmbH/evm-module/server/config"
 	"github.com/SigmaGmbH/evm-module/tests"
 	evmcommontypes "github.com/SigmaGmbH/evm-module/types"
-	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/SigmaGmbH/evm-module/x/evm/types"
 	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 
@@ -510,7 +509,7 @@ func (suite *KeeperTestSuite) TestGetAccountStorage() {
 }
 
 func (suite *KeeperTestSuite) TestGetAccountOrEmpty() {
-	empty := statedb.Account{
+	empty := types.Account{
 		Balance:  new(big.Int),
 		CodeHash: types.EmptyCodeHash,
 	}

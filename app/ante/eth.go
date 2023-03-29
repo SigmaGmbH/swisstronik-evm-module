@@ -27,7 +27,6 @@ import (
 
 	evmcommontypes "github.com/SigmaGmbH/evm-module/types"
 	"github.com/SigmaGmbH/evm-module/x/evm/keeper"
-	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -89,7 +88,7 @@ func (avd EthAccountVerificationDecorator) AnteHandle(
 		if acct == nil {
 			acc := avd.ak.NewAccountWithAddress(ctx, from)
 			avd.ak.SetAccount(ctx, acc)
-			acct = statedb.NewEmptyAccount()
+			acct = evmtypes.NewEmptyAccount()
 		} else if acct.IsContract() {
 			return ctx, errorsmod.Wrapf(errortypes.ErrInvalidType,
 				"the sender is not EOA: address %s, codeHash <%s>", fromAddr, acct.CodeHash)
@@ -299,8 +298,8 @@ func (ctd CanTransferDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		// canTransfer := ethcore.CanTransfer(stateDB, coreMsg.From(), coreMsg.Value())
 
 		// check that caller has more funds, than he's trying to transfer
-		callerBalance := ctd.evmKeeper.GetBalance(ctx, coreMsg.From());
-		canTransfer := callerBalance.Cmp(coreMsg.Value()) >= 0;
+		callerBalance := ctd.evmKeeper.GetBalance(ctx, coreMsg.From())
+		canTransfer := callerBalance.Cmp(coreMsg.Value()) >= 0
 
 		// check that caller has enough balance to cover asset transfer for **topmost** call
 		// NOTE: here the gas consumed is from the context with the infinite gas meter
