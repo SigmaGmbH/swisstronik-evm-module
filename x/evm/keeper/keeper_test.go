@@ -252,9 +252,9 @@ func (suite *KeeperTestSuite) Commit() {
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
-func (suite *KeeperTestSuite) StateDB() *statedb.StateDB {
-	return statedb.New(suite.ctx, suite.app.EvmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(suite.ctx.HeaderHash().Bytes())))
-}
+//func (suite *KeeperTestSuite) StateDB() *statedb.StateDB {
+//	return statedb.New(suite.ctx, suite.app.EvmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(suite.ctx.HeaderHash().Bytes())))
+//}
 
 // DeployTestContract deploy a test erc20 contract and returns the contract address
 func (suite *KeeperTestSuite) DeployTestContract(t require.TestingT, owner common.Address, supply *big.Int) common.Address {

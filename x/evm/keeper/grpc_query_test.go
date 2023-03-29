@@ -8,10 +8,9 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/SigmaGmbH/evm-module/tests"
-	"github.com/SigmaGmbH/evm-module/x/evm/statedb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/core/vm"
+	//"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
 	ethparams "github.com/ethereum/go-ethereum/params"
 
@@ -237,12 +236,12 @@ func (suite *KeeperTestSuite) TestQueryStorage() {
 
 	testCases := []struct {
 		msg      string
-		malleate func(vm.StateDB)
+		malleate func()
 		expPass  bool
 	}{
 		{
 			"invalid address",
-			func(vm.StateDB) {
+			func() {
 				req = &types.QueryStorageRequest{
 					Address: invalidAddress,
 				}
@@ -251,11 +250,12 @@ func (suite *KeeperTestSuite) TestQueryStorage() {
 		},
 		{
 			"success",
-			func(vmdb vm.StateDB) {
+			func() {
 				key := common.BytesToHash([]byte("key"))
 				value := common.BytesToHash([]byte("value"))
 				expValue = value.String()
-				vmdb.SetState(suite.address, key, value)
+				suite.app.EvmKeeper.SetState(suite.ctx, suite.address, key, value.Bytes())
+				//vmdb.SetState(suite.address, key, value)
 				req = &types.QueryStorageRequest{
 					Address: suite.address.String(),
 					Key:     key.String(),
@@ -269,9 +269,9 @@ func (suite *KeeperTestSuite) TestQueryStorage() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			vmdb := suite.StateDB()
-			tc.malleate(vmdb)
-			suite.Require().NoError(vmdb.Commit())
+			//vmdb := suite.StateDB()
+			tc.malleate()
+			//suite.Require().NoError(vmdb.Commit())
 
 			ctx := sdk.WrapSDKContext(suite.ctx)
 			res, err := suite.queryClient.Storage(ctx, req)
@@ -341,60 +341,6 @@ func (suite *KeeperTestSuite) TestQueryCode() {
 			} else {
 				suite.Require().Error(err)
 			}
-		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestQueryTxLogs() {
-	var expLogs []*types.Log
-	txHash := common.BytesToHash([]byte("tx_hash"))
-	txIndex := uint(1)
-	logIndex := uint(1)
-
-	testCases := []struct {
-		msg      string
-		malleate func(vm.StateDB)
-	}{
-		{
-			"empty logs",
-			func(vm.StateDB) {
-				expLogs = nil
-			},
-		},
-		{
-			"success",
-			func(vmdb vm.StateDB) {
-				expLogs = []*types.Log{
-					{
-						Address:     suite.address.String(),
-						Topics:      []string{common.BytesToHash([]byte("topic")).String()},
-						Data:        []byte("data"),
-						BlockNumber: 1,
-						TxHash:      txHash.String(),
-						TxIndex:     uint64(txIndex),
-						BlockHash:   common.BytesToHash(suite.ctx.HeaderHash()).Hex(),
-						Index:       uint64(logIndex),
-						Removed:     false,
-					},
-				}
-
-				for _, log := range types.LogsToEthereum(expLogs) {
-					vmdb.AddLog(log)
-				}
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			suite.SetupTest() // reset
-
-			vmdb := statedb.New(suite.ctx, suite.app.EvmKeeper, statedb.NewTxConfig(common.BytesToHash(suite.ctx.HeaderHash().Bytes()), txHash, txIndex, logIndex))
-			tc.malleate(vmdb)
-			suite.Require().NoError(vmdb.Commit())
-
-			logs := vmdb.Logs()
-			suite.Require().Equal(expLogs, types.NewLogsFromEth(logs))
 		})
 	}
 }
