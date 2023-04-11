@@ -75,6 +75,9 @@ const (
 
 	// DefaultMaxOpenConnections represents the amount of open connections (unlimited = 0)
 	DefaultMaxOpenConnections = 0
+
+	// DefaultSeedExchangeServerAddress is the default address the seed exchange server binds to.
+	DefaultSeedExchangeServerAddress = "127.0.0.1:8999"
 )
 
 var evmTracers = []string{"json", "markdown", "struct", "access_list"}
