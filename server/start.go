@@ -223,6 +223,7 @@ which accepts a path for the resulting pprof file.
 
 	cmd.Flags().Bool(srvflags.SeedServiceEnable, true, "Define if seed exchange server should be enabled")
 	cmd.Flags().String(srvflags.SeedServiceAddress, config.DefaultSeedExchangeServerAddress, "the seed exchange server address to listen on")
+	cmd.Flags().Bool(srvflags.IsBootstrapNode, true, "Define if node is a bootstrap node")
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)

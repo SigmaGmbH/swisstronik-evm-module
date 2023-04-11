@@ -85,10 +85,11 @@ const (
 	TLSKeyPath  = "tls.key-path"
 )
 
-// Seed service flags
+// Attestation flags
 const (
-	SeedServiceEnable = "seed.enable"
-	SeedServiceAddress = "seed.address"
+	IsBootstrapNode = "attest.bootstrap"
+	SeedServiceEnable = "attest.enable"
+	SeedServiceAddress = "attest.address"
 )
 
 // AddTxFlags adds common flags for commands to post tx
