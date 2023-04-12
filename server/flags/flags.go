@@ -88,6 +88,7 @@ const (
 // Attestation flags
 const (
 	IsBootstrapNode = "attest.bootstrap"
+	ResetBootstrapSeed = "attest.bootstrap-seed"
 	SeedServiceEnable = "attest.enable"
 	SeedServiceAddress = "attest.address"
 )
