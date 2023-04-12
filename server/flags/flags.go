@@ -87,10 +87,10 @@ const (
 
 // Attestation flags
 const (
-	IsBootstrapNode = "attest.bootstrap"
-	ResetBootstrapSeed = "attest.bootstrap-seed"
-	SeedServiceEnable = "attest.enable"
-	SeedServiceAddress = "attest.address"
+	IsBootstrapNode = "enclave.bootstrap"
+	ResetBootstrapSeed = "enclave.bootstrap-reset"
+	SeedServiceEnable = "enclave.enable"
+	SeedServiceAddress = "enclave.address"
 )
 
 // AddTxFlags adds common flags for commands to post tx
