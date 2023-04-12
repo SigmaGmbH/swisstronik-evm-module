@@ -621,8 +621,11 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 		}()
 	}
 
-	// TODO: Add check for config if we should enable seed exchange server
-	
+	if config.Enclave.SeedServerEnable {
+		if err := librustgo.StartSeedServer(config.Enclave.Address); err != nil {
+			return err
+		}
+	}
 
 	// At this point it is safe to block the process if we're in query only mode as
 	// we do not need to start Rosetta or handle any Tendermint related processes.
