@@ -192,6 +192,7 @@ func AppConfig(denom string) (string, interface{}) {
 		EVM:     *DefaultEVMConfig(),
 		JSONRPC: *DefaultJSONRPCConfig(),
 		TLS:     *DefaultTLSConfig(),
+		Enclave: *DefaultEnclaveConfig(),
 	}
 
 	customAppTemplate := config.DefaultConfigTemplate + DefaultConfigTemplate
@@ -381,6 +382,12 @@ func GetConfig(v *viper.Viper) (Config, error) {
 		TLS: TLSConfig{
 			CertificatePath: v.GetString("tls.certificate-path"),
 			KeyPath:         v.GetString("tls.key-path"),
+		},
+		Enclave: EnclaveConfig{
+			SeedServerEnable: v.GetBool("enclave.enable"),
+			Address: v.GetString("enclave.address"),
+			IsBootstrapNode: v.GetBool("enclave.bootstrap"),
+			ResetBootstrapNode: v.GetBool("enclave.bootstrap-reset"),
 		},
 
 	}, nil
