@@ -17,6 +17,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -66,6 +67,7 @@ import (
 	"github.com/SigmaGmbH/evm-module/server/config"
 	srvflags "github.com/SigmaGmbH/evm-module/server/flags"
 	evmcommontypes "github.com/SigmaGmbH/evm-module/types"
+	"github.com/SigmaGmbH/librustgo"
 )
 
 // DBOpener is a function to open `application.db`, potentially with customized options.
@@ -133,6 +135,35 @@ which accepts a path for the resulting pprof file.
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
+			}
+
+			isBootstrapNode, _ := cmd.Flags().GetBool(srvflags.IsBootstrapNode)
+			if !isBootstrapNode {
+				// If we're running node in regular mode, this node should pass Remote Attestation process to obtain master key
+				serverCtx.Logger.Info("Trying to start regular node")
+				nodeInitialized, err := librustgo.IsNodeInitialized()
+				if err != nil {
+					return err
+				}
+
+				if !nodeInitialized {
+					return errors.New("sealed master key was not found. If you're trying to start regular full node, run `swisstronikd request_seed` command before")
+				}
+			} else {
+				// There is no requirement for already existing seed for bootstrap node
+				serverCtx.Logger.Info("Trying to start bootstrap node")
+				nodeInitialized, err := librustgo.IsNodeInitialized()
+				if err != nil {
+					return err
+				}
+
+				// If ResetBootstrapSeed flag is set or node was not initialized, initialize it with new master key			
+				shouldReset, _ := cmd.Flags().GetBool(srvflags.ResetBootstrapSeed)
+				if shouldReset || !nodeInitialized {
+					if err := librustgo.SetupSeedNode(); err != nil {
+						return err
+					}
+				}
 			}
 
 			withTM, _ := cmd.Flags().GetBool(srvflags.WithTendermint)
@@ -220,6 +251,11 @@ which accepts a path for the resulting pprof file.
 
 	cmd.Flags().Uint64(server.FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
 	cmd.Flags().Uint32(server.FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
+
+	cmd.Flags().Bool(srvflags.SeedServiceEnable, true, "Define if seed exchange server should be enabled")
+	cmd.Flags().String(srvflags.SeedServiceAddress, config.DefaultSeedExchangeServerAddress, "the seed exchange server address to listen on")
+	cmd.Flags().Bool(srvflags.IsBootstrapNode, true, "Define if node is a bootstrap node")
+	cmd.Flags().Bool(srvflags.ResetBootstrapSeed, false, "Define if bootstrap node should reset seed if exist")
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
@@ -583,6 +619,12 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 				}
 			}
 		}()
+	}
+
+	if config.Enclave.SeedServerEnable {
+		if err := librustgo.StartSeedServer(config.Enclave.Address); err != nil {
+			return err
+		}
 	}
 
 	// At this point it is safe to block the process if we're in query only mode as

@@ -75,6 +75,9 @@ const (
 
 	// DefaultMaxOpenConnections represents the amount of open connections (unlimited = 0)
 	DefaultMaxOpenConnections = 0
+
+	// DefaultSeedExchangeServerAddress is the default address the seed exchange server binds to.
+	DefaultSeedExchangeServerAddress = "127.0.0.1:8999"
 )
 
 var evmTracers = []string{"json", "markdown", "struct", "access_list"}
@@ -87,6 +90,7 @@ type Config struct {
 	EVM     EVMConfig     `mapstructure:"evm"`
 	JSONRPC JSONRPCConfig `mapstructure:"json-rpc"`
 	TLS     TLSConfig     `mapstructure:"tls"`
+	Enclave EnclaveConfig `mapstructure:"enclave"`
 }
 
 // EVMConfig defines the application configuration values for the EVM.
@@ -96,6 +100,18 @@ type EVMConfig struct {
 	Tracer string `mapstructure:"tracer"`
 	// MaxTxGasWanted defines the gas wanted for each eth tx returned in ante handler in check tx mode.
 	MaxTxGasWanted uint64 `mapstructure:"max-tx-gas-wanted"`
+}
+
+// EnclaveConfig defines configuration for seed exchange server and enclave configuration
+type EnclaveConfig struct {
+	// SeedServerEnable defines if seed exchange server should be enabled
+	SeedServerEnable bool `mapstructure:"enable"`
+	// Address defines the seed exchange server to listen on
+	Address string `mapstructure:"address"`
+	// IsBootstrapNode defines if node should be started in bootstrap mode
+	IsBootstrapNode bool `mapstructure:"bootstrap"`	
+	// ResetBootstrapNode defines if bootstrap node should reset master key on startup
+	ResetBootstrapNode bool `mapstructure:"bootstrap-reset"`
 }
 
 // JSONRPCConfig defines configuration for the EVM RPC server.
@@ -176,6 +192,7 @@ func AppConfig(denom string) (string, interface{}) {
 		EVM:     *DefaultEVMConfig(),
 		JSONRPC: *DefaultJSONRPCConfig(),
 		TLS:     *DefaultTLSConfig(),
+		Enclave: *DefaultEnclaveConfig(),
 	}
 
 	customAppTemplate := config.DefaultConfigTemplate + DefaultConfigTemplate
@@ -190,6 +207,7 @@ func DefaultConfig() *Config {
 		EVM:     *DefaultEVMConfig(),
 		JSONRPC: *DefaultJSONRPCConfig(),
 		TLS:     *DefaultTLSConfig(),
+		Enclave: *DefaultEnclaveConfig(),
 	}
 }
 
@@ -198,6 +216,15 @@ func DefaultEVMConfig() *EVMConfig {
 	return &EVMConfig{
 		Tracer:         DefaultEVMTracer,
 		MaxTxGasWanted: DefaultMaxTxGasWanted,
+	}
+}
+
+func DefaultEnclaveConfig() *EnclaveConfig {
+	return &EnclaveConfig{
+		SeedServerEnable: true,
+		Address: DefaultSeedExchangeServerAddress,
+		IsBootstrapNode: true,
+		ResetBootstrapNode: false,
 	}
 }
 
@@ -356,6 +383,13 @@ func GetConfig(v *viper.Viper) (Config, error) {
 			CertificatePath: v.GetString("tls.certificate-path"),
 			KeyPath:         v.GetString("tls.key-path"),
 		},
+		Enclave: EnclaveConfig{
+			SeedServerEnable: v.GetBool("enclave.enable"),
+			Address: v.GetString("enclave.address"),
+			IsBootstrapNode: v.GetBool("enclave.bootstrap"),
+			ResetBootstrapNode: v.GetBool("enclave.bootstrap-reset"),
+		},
+
 	}, nil
 }
 
