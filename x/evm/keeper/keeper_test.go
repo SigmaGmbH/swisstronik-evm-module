@@ -54,6 +54,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmversion "github.com/tendermint/tendermint/proto/tendermint/version"
 	"github.com/tendermint/tendermint/version"
+	"github.com/SigmaGmbH/librustgo"
 )
 
 type KeeperTestSuite struct {
@@ -106,7 +107,11 @@ func (suite *KeeperTestSuite) SetupTestWithT(t require.TestingT) {
 	suite.SetupAppWithT(checkTx, t)
 }
 
-func (suite *KeeperTestSuite) SetupApp(checkTx bool) {
+func (suite *KeeperTestSuite) SetupApp(checkTx bool) {	
+	// Initialize enclave
+	err := librustgo.InitializeMasterKey(true)
+	require.NoError(suite.T(), err)
+
 	suite.SetupAppWithT(checkTx, suite.T())
 }
 

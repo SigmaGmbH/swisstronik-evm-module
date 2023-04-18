@@ -45,6 +45,7 @@ import (
 	tmversion "github.com/tendermint/tendermint/proto/tendermint/version"
 
 	"github.com/tendermint/tendermint/version"
+	"github.com/SigmaGmbH/librustgo"
 )
 
 type EvmTestSuite struct {
@@ -168,6 +169,11 @@ func (suite *EvmTestSuite) DoSetupTest(t require.TestingT) {
 
 	suite.ethSigner = ethtypes.LatestSignerForChainID(suite.app.EvmKeeper.ChainID())
 	suite.handler = evm.NewHandler(suite.app.EvmKeeper)
+
+	// Initialize enclave
+	err = librustgo.InitializeMasterKey(true)
+	require.NoError(t, err)
+
 }
 
 func (suite *EvmTestSuite) SetupTest() {
