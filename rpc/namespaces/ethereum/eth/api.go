@@ -297,6 +297,12 @@ func (e *PublicAPI) Call(args evmtypes.TransactionArgs,
 	return (hexutil.Bytes)(data.Ret), nil
 }
 
+// GetNodePublicKey returns x25519 based public key
+func (e *PublicAPI) GetNodePublicKey(blockNrOrHash rpctypes.BlockNumberOrHash) (string, error) {
+	e.logger.Debug("eth_getNodePublicKey", "block number or hash", blockNrOrHash)
+	return e.backend.GetNodePublicKey(blockNrOrHash)
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 ///                           Event Logs													          ///
 ///////////////////////////////////////////////////////////////////////////////

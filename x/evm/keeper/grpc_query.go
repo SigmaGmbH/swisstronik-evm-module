@@ -651,6 +651,17 @@ func (k Keeper) BaseFee(c context.Context, _ *types.QueryBaseFeeRequest) (*types
 	return res, nil
 }
 
+// NodePublicKey implements the Query/NodePublicKey gRPC method
+func (k Keeper) NodePublicKey(_ context.Context, _ *types.QueryNodePublicKey) (*types.QueryNodePublicKeyResponse, error) {
+	nodePublicKey, err := k.GetNodePublicKey()
+	if err != nil {
+		return nil, err
+	}
+
+	res := &types.QueryNodePublicKeyResponse{NodePublicKey: nodePublicKey.Hex()}
+	return res, nil
+}
+
 // getChainID parse chainID from current context if not provided
 func getChainID(ctx sdk.Context, chainID int64) (*big.Int, error) {
 	if chainID == 0 {

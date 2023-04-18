@@ -331,6 +331,15 @@ func (k *Keeper) ApplyMessageWithConfig(
 	}, nil
 }
 
+func (k *Keeper) GetNodePublicKey() (common.Hash, error) {
+	response, err := librustgo.GetNodePublicKey()
+	if err != nil {
+		return common.Hash{}, err
+	}
+	publicKey := common.BytesToHash(response.PublicKey)
+	return publicKey, nil
+}
+
 func CreateSGXVMContext(ctx sdk.Context, k *Keeper, tx *ethtypes.Transaction) (*librustgo.TransactionContext, error) {
 	cfg, err := k.EVMConfig(ctx, ctx.BlockHeader().ProposerAddress, k.eip155ChainID)
 	if err != nil {

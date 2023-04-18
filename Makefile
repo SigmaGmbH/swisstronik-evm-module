@@ -1,3 +1,5 @@
+DOCKER := $(shell which docker)
+
 #### PROTOBUF ####
 
 # ------
