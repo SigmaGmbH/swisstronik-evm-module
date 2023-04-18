@@ -351,8 +351,3 @@ func (b *Backend) RPCMinGasPrice() int64 {
 
 	return amt
 }
-
-func (b *Backend) NodePublicKey() (common.UnprefixedHash, error) {
-	// TODO: Add actual implementation
-	return common.UnprefixedHash{}, nil
-}
