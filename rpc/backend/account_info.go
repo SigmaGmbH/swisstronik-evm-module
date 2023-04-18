@@ -209,3 +209,19 @@ func (b *Backend) GetTransactionCount(address common.Address, blockNum rpctypes.
 	n = hexutil.Uint64(nonce)
 	return &n, nil
 }
+
+// GetNodePublicKey returns x25519 based public key in hex
+func (b *Backend) GetNodePublicKey(blockNrOrHash rpctypes.BlockNumberOrHash) (string, error) {
+	blockNum, err := b.BlockNumberFromTendermint(blockNrOrHash)
+	if err != nil {
+		return "", err
+	}
+
+	req := &evmtypes.QueryNodePublicKey{}
+	res, err := b.queryClient.NodePublicKey(rpctypes.ContextWithHeight(blockNum.Int64()), req)
+	if err != nil {
+		return "", err
+	}
+
+	return res.NodePublicKey, nil
+}
