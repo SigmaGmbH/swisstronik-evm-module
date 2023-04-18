@@ -152,17 +152,11 @@ which accepts a path for the resulting pprof file.
 			} else {
 				// There is no requirement for already existing seed for bootstrap node
 				serverCtx.Logger.Info("Trying to start bootstrap node")
-				nodeInitialized, err := librustgo.IsNodeInitialized()
-				if err != nil {
-					return err
-				}
 
 				// If ResetBootstrapSeed flag is set or node was not initialized, initialize it with new master key			
 				shouldReset, _ := cmd.Flags().GetBool(srvflags.ResetBootstrapSeed)
-				if shouldReset || !nodeInitialized {
-					if err := librustgo.SetupSeedNode(); err != nil {
-						return err
-					}
+				if err := librustgo.InitializeMasterKey(shouldReset); err != nil {
+					return err
 				}
 			}
 
