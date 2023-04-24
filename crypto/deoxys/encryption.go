@@ -45,7 +45,16 @@ func EncryptECDH(privateKey, nodePublicKey, data []byte) ([]byte, error) {
 	// Derive encryption key
 	encryptionKey := DeriveEncryptionKey(sharedSecret[:], []byte("IOEncryptionKeyV1"))
 	// Encrypt data
-	return encryptDeoxys(encryptionKey, data)
+	encryptedData, err := encryptDeoxys(encryptionKey, data)
+	if err != nil {
+		return nil, err
+	}
+
+	// Prepend encrypted data with user public key
+	var sizedPrivateKey [32]byte
+	copy(sizedPrivateKey[:], privateKey[:32])
+	userPublicKey := GetCurve25519PublicKey(sizedPrivateKey)
+	return append(userPublicKey[:], encryptedData...), nil
 }
 
 func DecryptECDH(privateKey, nodePublicKey, encryptedData []byte) ([]byte, error) {
