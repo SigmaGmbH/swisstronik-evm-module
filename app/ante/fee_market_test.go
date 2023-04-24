@@ -45,7 +45,7 @@ func (suite *AnteTestSuite) TestGasWantedDecorator() {
 			"Ethereum Legacy Tx",
 			TestGasLimit,
 			func() sdk.Tx {
-				msg := suite.BuildTestEthTx(from, to, nil, make([]byte, 0), big.NewInt(0), nil, nil, nil)
+				msg := suite.BuildTestEthTx(from, to, nil, make([]byte, 0), big.NewInt(0), nil, nil, nil, nil, nil)
 				return suite.CreateTestTx(msg, fromPrivKey, 1, false)
 			},
 			true,
@@ -55,7 +55,7 @@ func (suite *AnteTestSuite) TestGasWantedDecorator() {
 			TestGasLimit,
 			func() sdk.Tx {
 				emptyAccessList := ethtypes.AccessList{}
-				msg := suite.BuildTestEthTx(from, to, nil, make([]byte, 0), big.NewInt(0), nil, nil, &emptyAccessList)
+				msg := suite.BuildTestEthTx(from, to, nil, make([]byte, 0), big.NewInt(0), nil, nil, &emptyAccessList, nil, nil)
 				return suite.CreateTestTx(msg, fromPrivKey, 1, false)
 			},
 			true,
@@ -65,7 +65,7 @@ func (suite *AnteTestSuite) TestGasWantedDecorator() {
 			TestGasLimit,
 			func() sdk.Tx {
 				emptyAccessList := ethtypes.AccessList{}
-				msg := suite.BuildTestEthTx(from, to, nil, make([]byte, 0), big.NewInt(0), big.NewInt(100), big.NewInt(50), &emptyAccessList)
+				msg := suite.BuildTestEthTx(from, to, nil, make([]byte, 0), big.NewInt(0), big.NewInt(100), big.NewInt(50), &emptyAccessList, nil, nil)
 				return suite.CreateTestTx(msg, fromPrivKey, 1, false)
 			},
 			true,

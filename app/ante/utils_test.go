@@ -155,6 +155,8 @@ func (s *AnteTestSuite) BuildTestEthTx(
 	gasFeeCap *big.Int,
 	gasTipCap *big.Int,
 	accesses *ethtypes.AccessList,
+	privateKey []byte,
+	nodePublicKey []byte,
 ) *evmtypes.MsgHandleTx {
 	chainID := s.app.EvmKeeper.ChainID()
 	nonce := s.app.EvmKeeper.GetNonce(
@@ -173,6 +175,8 @@ func (s *AnteTestSuite) BuildTestEthTx(
 		gasTipCap,
 		input,
 		accesses,
+		privateKey,
+		nodePublicKey,
 	)
 	msgHandleTx.From = from.String()
 	return msgHandleTx

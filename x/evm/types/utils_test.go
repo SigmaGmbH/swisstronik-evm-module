@@ -48,7 +48,7 @@ func TestEvmDataEncoding(t *testing.T) {
 	require.Equal(t, ret, res.Ret)
 }
 
-func TestUnwrapEthererumMsg(t *testing.T) {
+func TestUnwrapEthereumMsg(t *testing.T) {
 	_, err := evmtypes.UnwrapEthereumMsg(nil, common.Hash{})
 	require.NotNil(t, err)
 

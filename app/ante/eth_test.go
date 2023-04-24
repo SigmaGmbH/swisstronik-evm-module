@@ -26,8 +26,6 @@ func (suite *AnteTestSuite) TestNewEthAccountVerificationDecorator() {
 	tx := evmtypes.NewTxContract(suite.app.EvmKeeper.ChainID(), 1, big.NewInt(10), 1000, big.NewInt(1), nil, nil, nil, nil)
 	tx.From = addr.Hex()
 
-	// var vmdb *statedb.StateDB
-
 	testCases := []struct {
 		name     string
 		tx       sdk.Tx
