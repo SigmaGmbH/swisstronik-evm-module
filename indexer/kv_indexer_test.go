@@ -30,7 +30,7 @@ func TestKVIndexer(t *testing.T) {
 
 	to := common.BigToAddress(big.NewInt(1))
 	tx := types.NewTx(
-		nil, 0, &to, big.NewInt(1000), 21000, nil, nil, nil, nil, nil,
+		nil, 0, &to, big.NewInt(1000), 21000, nil, nil, nil, nil, nil, nil, nil,
 	)
 	tx.From = from.Hex()
 	require.NoError(t, tx.Sign(ethSigner, signer))

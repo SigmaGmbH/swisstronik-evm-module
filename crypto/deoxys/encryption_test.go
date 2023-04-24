@@ -47,7 +47,6 @@ func TestECDHEncryption(t *testing.T) {
 	var nodePrivateKey [32]byte
 	rand.Read(nodePrivateKey[:])
 
-	userPublicKey := GetCurve25519PublicKey(userPrivateKey)
 	nodePublicKey := GetCurve25519PublicKey(nodePrivateKey)
 
 	data := make([]byte, 32)
@@ -57,12 +56,15 @@ func TestECDHEncryption(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	decryptedDataOnNode, err := DecryptECDH(nodePrivateKey[:], userPublicKey[:], encryptedData)
+	// split encrypted data to user public key and ciphertext
+	recoveredUserPublicKey := encryptedData[:32]
+	encryptedTransactionData := encryptedData[32:]
+	decryptedDataOnNode, err := DecryptECDH(nodePrivateKey[:], recoveredUserPublicKey, encryptedTransactionData)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	decryptedDataOnUser, err := DecryptECDH(userPrivateKey[:], nodePublicKey[:], encryptedData)
+	decryptedDataOnUser, err := DecryptECDH(userPrivateKey[:], nodePublicKey[:], encryptedTransactionData)
 	if err != nil {
 		t.Fatal(err)
 	}
