@@ -230,7 +230,7 @@ func (suite *KeeperTestSuite) TestCheckSenderBalance() {
 				}
 			}
 
-			tx := evmtypes.NewTx(zeroInt.BigInt(), 1, &to, amount, tc.gasLimit, gasPrice, gasFeeCap, gasTipCap, nil, tc.accessList)
+			tx := evmtypes.NewTx(zeroInt.BigInt(), 1, &to, amount, tc.gasLimit, gasPrice, gasFeeCap, gasTipCap, nil, tc.accessList, nil, nil)
 			tx.From = tc.from
 
 			txData, _ := evmtypes.UnpackTxData(tx.Data)
@@ -467,7 +467,7 @@ func (suite *KeeperTestSuite) TestVerifyFeeAndDeductTxCostsFromUserBalance() {
 				suite.Require().Equal(balance, hundredInt.BigInt())
 			}
 
-			tx := evmtypes.NewTx(zeroInt.BigInt(), 1, &suite.address, amount, tc.gasLimit, gasPrice, gasFeeCap, gasTipCap, nil, tc.accessList)
+			tx := evmtypes.NewTx(zeroInt.BigInt(), 1, &suite.address, amount, tc.gasLimit, gasPrice, gasFeeCap, gasTipCap, nil, tc.accessList, nil, nil)
 			tx.From = tc.from
 
 			txData, _ := evmtypes.UnpackTxData(tx.Data)

@@ -19,7 +19,7 @@ func (suite AnteTestSuite) TestSignatures() {
 	acc.Balance = big.NewInt(10000000000)
 
 	suite.app.EvmKeeper.SetAccount(suite.ctx, addr, *acc)
-	msgHandleTx := evmtypes.NewTx(suite.app.EvmKeeper.ChainID(), 1, &to, big.NewInt(10), 100000, big.NewInt(1), nil, nil, nil, nil)
+	msgHandleTx := evmtypes.NewTx(suite.app.EvmKeeper.ChainID(), 1, &to, big.NewInt(10), 100000, big.NewInt(1), nil, nil, nil, nil, nil, nil)
 	msgHandleTx.From = addr.Hex()
 
 	// CreateTestTx will sign the msgEthereumTx but not sign the cosmos tx since we have signCosmosTx as false

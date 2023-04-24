@@ -37,6 +37,9 @@ type MsgsTestSuite struct {
 	hundredBigInt *big.Int
 
 	clientCtx client.Context
+
+	privateKey    []byte
+	nodePublicKey []byte
 }
 
 func TestMsgsTestSuite(t *testing.T) {
@@ -45,6 +48,9 @@ func TestMsgsTestSuite(t *testing.T) {
 
 func (suite *MsgsTestSuite) SetupTest() {
 	from, privFrom := tests.NewAddrKey()
+
+	suite.privateKey = privFrom.Bytes()
+	suite.nodePublicKey = privFrom.Bytes()
 
 	suite.signer = tests.NewSigner(privFrom)
 	suite.from = from
@@ -57,7 +63,7 @@ func (suite *MsgsTestSuite) SetupTest() {
 }
 
 func (suite *MsgsTestSuite) TestMsgHandleTx_Constructor() {
-	msg := types.NewTx(nil, 0, &suite.to, nil, 100000, nil, nil, nil, []byte("test"), nil)
+	msg := types.NewTx(nil, 0, &suite.to, nil, 100000, nil, nil, nil, []byte("test"), nil, suite.privateKey, suite.nodePublicKey)
 
 	// suite.Require().Equal(msg.Data.To, suite.to.Hex())
 	suite.Require().Equal(msg.Route(), types.RouterKey)
@@ -81,12 +87,12 @@ func (suite *MsgsTestSuite) TestMsgHandleTx_BuildTx() {
 	}{
 		{
 			"build tx - pass",
-			types.NewTx(nil, 0, &suite.to, nil, 100000, big.NewInt(1), big.NewInt(1), big.NewInt(0), []byte("test"), nil),
+			types.NewTx(nil, 0, &suite.to, nil, 100000, big.NewInt(1), big.NewInt(1), big.NewInt(0), []byte("test"), nil, suite.privateKey, suite.nodePublicKey),
 			false,
 		},
 		{
 			"build tx - fail: nil data",
-			types.NewTx(nil, 0, &suite.to, nil, 100000, big.NewInt(1), big.NewInt(1), big.NewInt(0), []byte("test"), nil),
+			types.NewTx(nil, 0, &suite.to, nil, 100000, big.NewInt(1), big.NewInt(1), big.NewInt(0), []byte("test"), nil, suite.privateKey, suite.nodePublicKey),
 			true,
 		},
 	}
@@ -377,7 +383,7 @@ func (suite *MsgsTestSuite) TestMsgHandleTx_ValidateBasic() {
 		suite.Run(tc.msg, func() {
 			to := common.HexToAddress(tc.from)
 
-			tx := types.NewTx(tc.chainID, 1, &to, tc.amount, tc.gasLimit, tc.gasPrice, tc.gasFeeCap, tc.gasTipCap, nil, tc.accessList)
+			tx := types.NewTx(tc.chainID, 1, &to, tc.amount, tc.gasLimit, tc.gasPrice, tc.gasFeeCap, tc.gasTipCap, nil, tc.accessList, suite.privateKey, suite.nodePublicKey)
 			tx.From = tc.from
 
 			// apply nil assignment here to test ValidateBasic function instead of NewTx
@@ -446,42 +452,42 @@ func (suite *MsgsTestSuite) TestMsgHandleTx_Sign() {
 	}{
 		{
 			"pass - EIP2930 signer",
-			types.NewTx(suite.chainID, 0, &suite.to, nil, 100000, nil, nil, nil, []byte("test"), &ethtypes.AccessList{}),
+			types.NewTx(suite.chainID, 0, &suite.to, nil, 100000, nil, nil, nil, []byte("test"), &ethtypes.AccessList{}, suite.privateKey, suite.nodePublicKey),
 			ethtypes.NewEIP2930Signer(suite.chainID),
 			func(tx *types.MsgHandleTx) { tx.From = suite.from.Hex() },
 			true,
 		},
 		{
 			"pass - EIP155 signer",
-			types.NewTx(suite.chainID, 0, &suite.to, nil, 100000, nil, nil, nil, []byte("test"), nil),
+			types.NewTx(suite.chainID, 0, &suite.to, nil, 100000, nil, nil, nil, []byte("test"), nil, suite.privateKey, suite.nodePublicKey),
 			ethtypes.NewEIP155Signer(suite.chainID),
 			func(tx *types.MsgHandleTx) { tx.From = suite.from.Hex() },
 			true,
 		},
 		{
 			"pass - Homestead signer",
-			types.NewTx(suite.chainID, 0, &suite.to, nil, 100000, nil, nil, nil, []byte("test"), nil),
+			types.NewTx(suite.chainID, 0, &suite.to, nil, 100000, nil, nil, nil, []byte("test"), nil, suite.privateKey, suite.nodePublicKey),
 			ethtypes.HomesteadSigner{},
 			func(tx *types.MsgHandleTx) { tx.From = suite.from.Hex() },
 			true,
 		},
 		{
 			"pass - Frontier signer",
-			types.NewTx(suite.chainID, 0, &suite.to, nil, 100000, nil, nil, nil, []byte("test"), nil),
+			types.NewTx(suite.chainID, 0, &suite.to, nil, 100000, nil, nil, nil, []byte("test"), nil, suite.privateKey, suite.nodePublicKey),
 			ethtypes.FrontierSigner{},
 			func(tx *types.MsgHandleTx) { tx.From = suite.from.Hex() },
 			true,
 		},
 		{
 			"no from address ",
-			types.NewTx(suite.chainID, 0, &suite.to, nil, 100000, nil, nil, nil, []byte("test"), &ethtypes.AccessList{}),
+			types.NewTx(suite.chainID, 0, &suite.to, nil, 100000, nil, nil, nil, []byte("test"), &ethtypes.AccessList{}, suite.privateKey, suite.nodePublicKey),
 			ethtypes.NewEIP2930Signer(suite.chainID),
 			func(tx *types.MsgHandleTx) { tx.From = "" },
 			false,
 		},
 		{
 			"from address ≠ signer address",
-			types.NewTx(suite.chainID, 0, &suite.to, nil, 100000, nil, nil, nil, []byte("test"), &ethtypes.AccessList{}),
+			types.NewTx(suite.chainID, 0, &suite.to, nil, 100000, nil, nil, nil, []byte("test"), &ethtypes.AccessList{}, suite.privateKey, suite.nodePublicKey),
 			ethtypes.NewEIP2930Signer(suite.chainID),
 			func(tx *types.MsgHandleTx) { tx.From = suite.to.Hex() },
 			false,
@@ -513,37 +519,37 @@ func (suite *MsgsTestSuite) TestMsgHandleTx_Getters() {
 	}{
 		{
 			"get fee - pass",
-			types.NewTx(suite.chainID, 0, &suite.to, nil, 50, suite.hundredBigInt, nil, nil, nil, &ethtypes.AccessList{}),
+			types.NewTx(suite.chainID, 0, &suite.to, nil, 50, suite.hundredBigInt, nil, nil, nil, &ethtypes.AccessList{}, nil, nil),
 			ethtypes.NewEIP2930Signer(suite.chainID),
 			big.NewInt(5000),
 		},
 		{
 			"get fee - fail: nil data",
-			types.NewTx(suite.chainID, 0, &suite.to, nil, 50, suite.hundredBigInt, nil, nil, nil, &ethtypes.AccessList{}),
+			types.NewTx(suite.chainID, 0, &suite.to, nil, 50, suite.hundredBigInt, nil, nil, nil, &ethtypes.AccessList{}, nil, nil),
 			ethtypes.NewEIP2930Signer(suite.chainID),
 			nil,
 		},
 		{
 			"get effective fee - pass",
-			types.NewTx(suite.chainID, 0, &suite.to, nil, 50, suite.hundredBigInt, nil, nil, nil, &ethtypes.AccessList{}),
+			types.NewTx(suite.chainID, 0, &suite.to, nil, 50, suite.hundredBigInt, nil, nil, nil, &ethtypes.AccessList{}, nil, nil),
 			ethtypes.NewEIP2930Signer(suite.chainID),
 			big.NewInt(5000),
 		},
 		{
 			"get effective fee - fail: nil data",
-			types.NewTx(suite.chainID, 0, &suite.to, nil, 50, suite.hundredBigInt, nil, nil, nil, &ethtypes.AccessList{}),
+			types.NewTx(suite.chainID, 0, &suite.to, nil, 50, suite.hundredBigInt, nil, nil, nil, &ethtypes.AccessList{}, nil, nil),
 			ethtypes.NewEIP2930Signer(suite.chainID),
 			nil,
 		},
 		{
 			"get gas - pass",
-			types.NewTx(suite.chainID, 0, &suite.to, nil, 50, suite.hundredBigInt, nil, nil, nil, &ethtypes.AccessList{}),
+			types.NewTx(suite.chainID, 0, &suite.to, nil, 50, suite.hundredBigInt, nil, nil, nil, &ethtypes.AccessList{}, nil, nil),
 			ethtypes.NewEIP2930Signer(suite.chainID),
 			big.NewInt(50),
 		},
 		{
 			"get gas - fail: nil data",
-			types.NewTx(suite.chainID, 0, &suite.to, nil, 50, suite.hundredBigInt, nil, nil, nil, &ethtypes.AccessList{}),
+			types.NewTx(suite.chainID, 0, &suite.to, nil, 50, suite.hundredBigInt, nil, nil, nil, &ethtypes.AccessList{}, nil, nil),
 			ethtypes.NewEIP2930Signer(suite.chainID),
 			big.NewInt(0),
 		},

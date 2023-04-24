@@ -87,7 +87,7 @@ func BenchmarkTokenTransfer(b *testing.B) {
 		input, err := types.ERC20Contract.ABI.Pack("transfer", common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), big.NewInt(1000))
 		require.NoError(b, err)
 		nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
-		return types.NewTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 410000, big.NewInt(1), nil, nil, input, nil)
+		return types.NewTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 410000, big.NewInt(1), nil, nil, input, nil, suite.privateKey, suite.nodePublicKey)
 	})
 }
 
@@ -96,7 +96,7 @@ func BenchmarkEmitLogs(b *testing.B) {
 		input, err := types.ERC20Contract.ABI.Pack("benchmarkLogs", big.NewInt(1000))
 		require.NoError(b, err)
 		nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
-		return types.NewTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 4100000, big.NewInt(1), nil, nil, input, nil)
+		return types.NewTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 4100000, big.NewInt(1), nil, nil, input, nil, suite.privateKey, suite.nodePublicKey)
 	})
 }
 
@@ -105,7 +105,7 @@ func BenchmarkTokenTransferFrom(b *testing.B) {
 		input, err := types.ERC20Contract.ABI.Pack("transferFrom", suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), big.NewInt(0))
 		require.NoError(b, err)
 		nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
-		return types.NewTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 410000, big.NewInt(1), nil, nil, input, nil)
+		return types.NewTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 410000, big.NewInt(1), nil, nil, input, nil, suite.privateKey, suite.nodePublicKey)
 	})
 }
 
@@ -114,7 +114,7 @@ func BenchmarkTokenMint(b *testing.B) {
 		input, err := types.ERC20Contract.ABI.Pack("mint", common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), big.NewInt(1000))
 		require.NoError(b, err)
 		nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
-		return types.NewTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 410000, big.NewInt(1), nil, nil, input, nil)
+		return types.NewTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 410000, big.NewInt(1), nil, nil, input, nil, suite.privateKey, suite.nodePublicKey)
 	})
 }
 
@@ -124,7 +124,7 @@ func BenchmarkMessageCall(b *testing.B) {
 	input, err := types.TestMessageCall.ABI.Pack("benchmarkMessageCall", big.NewInt(10000))
 	require.NoError(b, err)
 	nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
-	msg := types.NewTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 25000000, big.NewInt(1), nil, nil, input, nil)
+	msg := types.NewTx(suite.app.EvmKeeper.ChainID(), nonce, &contract, big.NewInt(0), 25000000, big.NewInt(1), nil, nil, input, nil, suite.privateKey, suite.nodePublicKey)
 
 	msg.From = suite.address.Hex()
 	err = msg.Sign(ethtypes.LatestSignerForChainID(suite.app.EvmKeeper.ChainID()), suite.signer)
