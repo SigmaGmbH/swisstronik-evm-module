@@ -44,8 +44,8 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmversion "github.com/tendermint/tendermint/proto/tendermint/version"
 
-	"github.com/tendermint/tendermint/version"
 	"github.com/SigmaGmbH/librustgo"
+	"github.com/tendermint/tendermint/version"
 )
 
 type EvmTestSuite struct {
@@ -62,7 +62,8 @@ type EvmTestSuite struct {
 	from      common.Address
 	to        sdk.AccAddress
 
-	dynamicTxFee bool
+	dynamicTxFee  bool
+	nodePublicKey []byte
 }
 
 // DoSetupTest setup test environment, it uses`require.TestingT` to support both `testing.T` and `testing.B`.
@@ -174,6 +175,10 @@ func (suite *EvmTestSuite) DoSetupTest(t require.TestingT) {
 	err = librustgo.InitializeMasterKey(true)
 	require.NoError(t, err)
 
+	// Obtain node public key
+	res, err := librustgo.GetNodePublicKey()
+	require.NoError(t, err)
+	suite.nodePublicKey = res.PublicKey
 }
 
 func (suite *EvmTestSuite) SetupTest() {
@@ -686,7 +691,6 @@ func (suite *EvmTestSuite) TestContractDeploymentRevert() {
 				nil,
 			)
 			suite.SignTx(tx)
-
 
 			err = suite.app.EvmKeeper.SetNonce(suite.ctx, suite.from, nonce+1)
 			suite.Require().NoError(err)
