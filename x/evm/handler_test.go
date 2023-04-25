@@ -545,7 +545,7 @@ func (suite *EvmTestSuite) deployERC20Contract() common.Address {
 // - when transaction reverted, gas refund works.
 // - when transaction reverted, nonce is still increased.
 func (suite *EvmTestSuite) TestERC20TransferReverted() {
-	intrinsicGas := uint64(21572)
+	intrinsicGas := uint64(23160)
 	// test different hooks scenarios
 	testCases := []struct {
 		msg      string
