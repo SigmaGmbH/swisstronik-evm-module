@@ -74,7 +74,7 @@ func newMsgHandleTx(
 
 	if to != nil {
 		toAddr = to.Hex()
-		if input != nil {
+		if input != nil && len(input) > 0 {
 			encryptedInput, err := deoxys.EncryptECDH(privateKey, nodePublicKey, input)
 			if err != nil {
 				panic(err)
