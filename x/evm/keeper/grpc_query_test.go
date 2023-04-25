@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/SigmaGmbH/evm-module/crypto/deoxys"
 	"math/big"
 
 	sdkmath "cosmossdk.io/math"
@@ -526,7 +527,9 @@ func (suite *KeeperTestSuite) TestEstimateGas() {
 				suite.Commit()
 				transferData, err := types.ERC20Contract.ABI.Pack("transfer", common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), big.NewInt(1000))
 				suite.Require().NoError(err)
-				args = types.TransactionArgs{To: &contractAddr, From: &suite.address, Data: (*hexutil.Bytes)(&transferData)}
+				encryptedTransferData, err := deoxys.EncryptECDH(suite.privateKey, suite.nodePublicKey, transferData)
+				suite.Require().NoError(err)
+				args = types.TransactionArgs{To: &contractAddr, From: &suite.address, Data: (*hexutil.Bytes)(&encryptedTransferData)}
 			},
 			true,
 			51880,
@@ -601,7 +604,9 @@ func (suite *KeeperTestSuite) TestEstimateGas() {
 				suite.Commit()
 				transferData, err := types.ERC20Contract.ABI.Pack("transfer", common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), big.NewInt(1000))
 				suite.Require().NoError(err)
-				args = types.TransactionArgs{To: &contractAddr, From: &suite.address, Data: (*hexutil.Bytes)(&transferData)}
+				encryptedTransferData, err := deoxys.EncryptECDH(suite.privateKey, suite.nodePublicKey, transferData)
+				suite.Require().NoError(err)
+				args = types.TransactionArgs{To: &contractAddr, From: &suite.address, Data: (*hexutil.Bytes)(&encryptedTransferData)}
 			},
 			true,
 			51880,
