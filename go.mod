@@ -1,6 +1,6 @@
 module github.com/SigmaGmbH/evm-module
 
-go 1.18
+go 1.19
 
 require (
 	cosmossdk.io/errors v1.0.0-beta.7
@@ -37,8 +37,8 @@ require (
 	github.com/tendermint/tendermint v0.34.26
 	github.com/tendermint/tm-db v0.6.7
 	github.com/tyler-smith/go-bip39 v1.1.0
-	golang.org/x/crypto v0.8.0
-	golang.org/x/net v0.9.0
+	golang.org/x/crypto v0.5.0
+	golang.org/x/net v0.7.0
 	golang.org/x/text v0.9.0
 	google.golang.org/genproto v0.0.0-20221227171554-f9683d7f8bef
 	google.golang.org/grpc v1.52.0
