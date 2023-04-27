@@ -48,7 +48,7 @@ func TestEvmDataEncoding(t *testing.T) {
 	require.Equal(t, ret, res.Ret)
 }
 
-func TestUnwrapEthererumMsg(t *testing.T) {
+func TestUnwrapEthereumMsg(t *testing.T) {
 	_, err := evmtypes.UnwrapEthereumMsg(nil, common.Hash{})
 	require.NotNil(t, err)
 
@@ -60,7 +60,7 @@ func TestUnwrapEthererumMsg(t *testing.T) {
 	_, err = evmtypes.UnwrapEthereumMsg(&tx, common.Hash{})
 	require.NotNil(t, err)
 
-	msg := evmtypes.NewTx(big.NewInt(1), 0, &common.Address{}, big.NewInt(0), 0, big.NewInt(0), nil, nil, []byte{}, nil)
+	msg := evmtypes.NewTx(big.NewInt(1), 0, &common.Address{}, big.NewInt(0), 0, big.NewInt(0), nil, nil, make([]byte, 0), nil, nil, nil)
 	err = builder.SetMsgs(msg)
 
 	tx = builder.GetTx().(sdk.Tx)

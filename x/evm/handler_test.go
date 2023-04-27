@@ -1,12 +1,10 @@
 package evm_test
 
 import (
-	"errors"
+	"github.com/SigmaGmbH/evm-module/x/evm/keeper"
 	"math/big"
 	"testing"
 	"time"
-
-	"github.com/SigmaGmbH/evm-module/x/evm/keeper"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/gogo/protobuf/proto"
@@ -20,6 +18,7 @@ import (
 
 	feemarkettypes "github.com/SigmaGmbH/evm-module/x/feemarket/types"
 
+	"errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
@@ -44,8 +43,8 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmversion "github.com/tendermint/tendermint/proto/tendermint/version"
 
-	"github.com/tendermint/tendermint/version"
 	"github.com/SigmaGmbH/librustgo"
+	"github.com/tendermint/tendermint/version"
 )
 
 type EvmTestSuite struct {
@@ -62,7 +61,9 @@ type EvmTestSuite struct {
 	from      common.Address
 	to        sdk.AccAddress
 
-	dynamicTxFee bool
+	dynamicTxFee  bool
+	nodePublicKey []byte
+	privateKey    []byte
 }
 
 // DoSetupTest setup test environment, it uses`require.TestingT` to support both `testing.T` and `testing.B`.
@@ -72,6 +73,7 @@ func (suite *EvmTestSuite) DoSetupTest(t require.TestingT) {
 	// account key
 	priv, err := ethsecp256k1.GenerateKey()
 	require.NoError(t, err)
+	suite.privateKey = priv.Key
 	address := common.BytesToAddress(priv.PubKey().Address().Bytes())
 	suite.signer = tests.NewSigner(priv)
 	suite.from = address
@@ -174,6 +176,10 @@ func (suite *EvmTestSuite) DoSetupTest(t require.TestingT) {
 	err = librustgo.InitializeMasterKey(true)
 	require.NoError(t, err)
 
+	// Obtain node public key
+	res, err := librustgo.GetNodePublicKey()
+	require.NoError(t, err)
+	suite.nodePublicKey = res.PublicKey
 }
 
 func (suite *EvmTestSuite) SetupTest() {
@@ -202,7 +208,7 @@ func (suite *EvmTestSuite) TestHandleMsgEthereumTx() {
 			"passed",
 			func() {
 				to := common.BytesToAddress(suite.to)
-				tx = types.NewTx(suite.chainID, 0, &to, big.NewInt(100), 10_000_000, big.NewInt(10000), nil, nil, nil, nil)
+				tx = types.NewTx(suite.chainID, 0, &to, big.NewInt(100), 10_000_000, big.NewInt(10000), nil, nil, nil, nil, nil, nil)
 				suite.SignTx(tx)
 			},
 			true,
@@ -281,7 +287,7 @@ func (suite *EvmTestSuite) TestHandlerLogs() {
 	gasPrice := big.NewInt(1000000)
 
 	bytecode := common.FromHex("0x6080604052348015600f57600080fd5b5060117f775a94827b8fd9b519d36cd827093c664f93347070a554f65e4a6f56cd73889860405160405180910390a2603580604b6000396000f3fe6080604052600080fdfea165627a7a723058206cab665f0f557620554bb45adf266708d2bd349b8a4314bdff205ee8440e3c240029")
-	tx := types.NewTx(suite.chainID, 1, nil, big.NewInt(0), gasLimit, gasPrice, nil, nil, bytecode, nil)
+	tx := types.NewTx(suite.chainID, 1, nil, big.NewInt(0), gasLimit, gasPrice, nil, nil, bytecode, nil, nil, nil)
 	suite.SignTx(tx)
 
 	result, err := suite.handler(suite.ctx, tx)
@@ -356,7 +362,7 @@ func (suite *EvmTestSuite) TestDeployAndCallContract() {
 	gasPrice := big.NewInt(10000)
 
 	bytecode := common.FromHex("0x608060405234801561001057600080fd5b50336000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16600073ffffffffffffffffffffffffffffffffffffffff167f342827c97908e5e2f71151c08502a66d44b6f758e3ac2f1de95f02eb95f0a73560405160405180910390a36102c4806100dc6000396000f3fe608060405234801561001057600080fd5b5060043610610053576000357c010000000000000000000000000000000000000000000000000000000090048063893d20e814610058578063a6f9dae1146100a2575b600080fd5b6100606100e6565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b6100e4600480360360208110156100b857600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919050505061010f565b005b60008060009054906101000a900473ffffffffffffffffffffffffffffffffffffffff16905090565b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16146101d1576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260138152602001807f43616c6c6572206973206e6f74206f776e65720000000000000000000000000081525060200191505060405180910390fd5b8073ffffffffffffffffffffffffffffffffffffffff166000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff167f342827c97908e5e2f71151c08502a66d44b6f758e3ac2f1de95f02eb95f0a73560405160405180910390a3806000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055505056fea265627a7a72315820f397f2733a89198bc7fed0764083694c5b828791f39ebcbc9e414bccef14b48064736f6c63430005100032")
-	tx := types.NewTx(suite.chainID, 1, nil, big.NewInt(0), gasLimit, gasPrice, nil, nil, bytecode, nil)
+	tx := types.NewTx(suite.chainID, 1, nil, big.NewInt(0), gasLimit, gasPrice, nil, nil, bytecode, nil, nil, nil)
 	suite.SignTx(tx)
 
 	result, err := suite.handler(suite.ctx, tx)
@@ -375,7 +381,7 @@ func (suite *EvmTestSuite) TestDeployAndCallContract() {
 
 	storeAddr := "0xa6f9dae10000000000000000000000006a82e4a67715c8412a9114fbd2cbaefbc8181424"
 	bytecode = common.FromHex(storeAddr)
-	tx = types.NewTx(suite.chainID, 2, &receiver, big.NewInt(0), gasLimit, gasPrice, nil, nil, bytecode, nil)
+	tx = types.NewTx(suite.chainID, 2, &receiver, big.NewInt(0), gasLimit, gasPrice, nil, nil, bytecode, nil, suite.privateKey, suite.nodePublicKey)
 	suite.SignTx(tx)
 
 	result, err = suite.handler(suite.ctx, tx)
@@ -387,7 +393,7 @@ func (suite *EvmTestSuite) TestDeployAndCallContract() {
 
 	// query - getOwner
 	bytecode = common.FromHex("0x893d20e8")
-	tx = types.NewTx(suite.chainID, 2, &receiver, big.NewInt(0), gasLimit, gasPrice, nil, nil, bytecode, nil)
+	tx = types.NewTx(suite.chainID, 2, &receiver, big.NewInt(0), gasLimit, gasPrice, nil, nil, bytecode, nil, suite.privateKey, suite.nodePublicKey)
 	suite.SignTx(tx)
 
 	result, err = suite.handler(suite.ctx, tx)
@@ -396,10 +402,6 @@ func (suite *EvmTestSuite) TestDeployAndCallContract() {
 	err = proto.Unmarshal(result.Data, &res)
 	suite.Require().NoError(err, "failed to decode result data")
 	suite.Require().Equal(res.VmError, "", "failed to handle eth tx msg")
-
-	// FIXME: correct owner?
-	// getAddr := strings.ToLower(hexutils.BytesToHex(res.Ret))
-	// suite.Require().Equal(true, strings.HasSuffix(storeAddr, getAddr), "Fail to query the address")
 }
 
 func (suite *EvmTestSuite) TestSendTransaction() {
@@ -407,7 +409,7 @@ func (suite *EvmTestSuite) TestSendTransaction() {
 	gasPrice := big.NewInt(0x55ae82600)
 
 	// send simple value transfer with gasLimit=21000
-	tx := types.NewTx(suite.chainID, 1, &common.Address{0x1}, big.NewInt(1), gasLimit, gasPrice, nil, nil, nil, nil)
+	tx := types.NewTx(suite.chainID, 1, &common.Address{0x1}, big.NewInt(1), gasLimit, gasPrice, nil, nil, nil, nil, nil, nil)
 	suite.SignTx(tx)
 
 	result, err := suite.handler(suite.ctx, tx)
@@ -476,7 +478,7 @@ func (suite *EvmTestSuite) TestOutOfGasWhenDeployContract() {
 	gasPrice := big.NewInt(10000)
 
 	bytecode := common.FromHex("0x608060405234801561001057600080fd5b50336000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16600073ffffffffffffffffffffffffffffffffffffffff167f342827c97908e5e2f71151c08502a66d44b6f758e3ac2f1de95f02eb95f0a73560405160405180910390a36102c4806100dc6000396000f3fe608060405234801561001057600080fd5b5060043610610053576000357c010000000000000000000000000000000000000000000000000000000090048063893d20e814610058578063a6f9dae1146100a2575b600080fd5b6100606100e6565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b6100e4600480360360208110156100b857600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919050505061010f565b005b60008060009054906101000a900473ffffffffffffffffffffffffffffffffffffffff16905090565b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16146101d1576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260138152602001807f43616c6c6572206973206e6f74206f776e65720000000000000000000000000081525060200191505060405180910390fd5b8073ffffffffffffffffffffffffffffffffffffffff166000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff167f342827c97908e5e2f71151c08502a66d44b6f758e3ac2f1de95f02eb95f0a73560405160405180910390a3806000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055505056fea265627a7a72315820f397f2733a89198bc7fed0764083694c5b828791f39ebcbc9e414bccef14b48064736f6c63430005100032")
-	tx := types.NewTx(suite.chainID, 1, nil, big.NewInt(0), gasLimit, gasPrice, nil, nil, bytecode, nil)
+	tx := types.NewTx(suite.chainID, 1, nil, big.NewInt(0), gasLimit, gasPrice, nil, nil, bytecode, nil, nil, nil)
 	suite.SignTx(tx)
 
 	defer func() {
@@ -497,7 +499,7 @@ func (suite *EvmTestSuite) TestErrorWhenDeployContract() {
 
 	bytecode := common.FromHex("0xa6f9dae10000000000000000000000006a82e4a67715c8412a9114fbd2cbaefbc8181424")
 
-	tx := types.NewTx(suite.chainID, 1, nil, big.NewInt(0), gasLimit, gasPrice, nil, nil, bytecode, nil)
+	tx := types.NewTx(suite.chainID, 1, nil, big.NewInt(0), gasLimit, gasPrice, nil, nil, bytecode, nil, nil, nil)
 	suite.SignTx(tx)
 
 	result, _ := suite.handler(suite.ctx, tx)
@@ -543,7 +545,7 @@ func (suite *EvmTestSuite) deployERC20Contract() common.Address {
 // - when transaction reverted, gas refund works.
 // - when transaction reverted, nonce is still increased.
 func (suite *EvmTestSuite) TestERC20TransferReverted() {
-	intrinsicGas := uint64(21572)
+	intrinsicGas := uint64(23160)
 	// test different hooks scenarios
 	testCases := []struct {
 		msg      string
@@ -598,6 +600,8 @@ func (suite *EvmTestSuite) TestERC20TransferReverted() {
 				nil,
 				data,
 				nil,
+				suite.privateKey,
+				suite.nodePublicKey,
 			)
 			suite.SignTx(tx)
 
@@ -684,9 +688,10 @@ func (suite *EvmTestSuite) TestContractDeploymentRevert() {
 				nil, nil, nil,
 				append(types.ERC20Contract.Bin, ctorArgs...),
 				nil,
+				nil,
+				nil,
 			)
 			suite.SignTx(tx)
-
 
 			err = suite.app.EvmKeeper.SetNonce(suite.ctx, suite.from, nonce+1)
 			suite.Require().NoError(err)

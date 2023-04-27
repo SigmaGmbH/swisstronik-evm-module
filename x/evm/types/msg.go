@@ -45,8 +45,9 @@ const (
 func NewTx(
 	chainID *big.Int, nonce uint64, to *common.Address, amount *big.Int,
 	gasLimit uint64, gasPrice, gasFeeCap, gasTipCap *big.Int, input []byte, accesses *ethtypes.AccessList,
+	privateKey, nodePublicKey []byte,
 ) *MsgHandleTx {
-	return newMsgHandleTx(chainID, nonce, to, amount, gasLimit, gasPrice, gasFeeCap, gasTipCap, input, accesses)
+	return newMsgHandleTx(chainID, nonce, to, amount, gasLimit, gasPrice, gasFeeCap, gasTipCap, input, accesses, privateKey, nodePublicKey)
 }
 
 // NewTxContract returns a reference to a new Ethereum transaction
@@ -60,7 +61,7 @@ func NewTxContract(
 	input []byte,
 	accesses *ethtypes.AccessList,
 ) *MsgHandleTx {
-	return newMsgHandleTx(chainID, nonce, nil, amount, gasLimit, gasPrice, gasFeeCap, gasTipCap, input, accesses)
+	return newMsgHandleTx(chainID, nonce, nil, amount, gasLimit, gasPrice, gasFeeCap, gasTipCap, input, accesses, nil, nil)
 }
 
 // GetSigners returns the expected signers for a MsgUpdateParams message.

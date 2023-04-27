@@ -19,6 +19,7 @@ import (
 
 	"github.com/SigmaGmbH/evm-module/types"
 
+	"github.com/SigmaGmbH/evm-module/crypto/deoxys"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -41,8 +42,9 @@ const (
 func NewSGXVMTx(
 	chainID *big.Int, nonce uint64, to *common.Address, amount *big.Int,
 	gasLimit uint64, gasPrice, gasFeeCap, gasTipCap *big.Int, input []byte, accesses *ethtypes.AccessList,
+	privateKey, nodePublicKey []byte,
 ) *MsgHandleTx {
-	return newMsgHandleTx(chainID, nonce, to, amount, gasLimit, gasPrice, gasFeeCap, gasTipCap, input, accesses)
+	return newMsgHandleTx(chainID, nonce, to, amount, gasLimit, gasPrice, gasFeeCap, gasTipCap, input, accesses, privateKey, nodePublicKey)
 }
 
 // NewSGXVMTxContract returns a reference to a new Ethereum transaction
@@ -56,12 +58,13 @@ func NewSGXVMTxContract(
 	input []byte,
 	accesses *ethtypes.AccessList,
 ) *MsgHandleTx {
-	return newMsgHandleTx(chainID, nonce, nil, amount, gasLimit, gasPrice, gasFeeCap, gasTipCap, input, accesses)
+	return newMsgHandleTx(chainID, nonce, nil, amount, gasLimit, gasPrice, gasFeeCap, gasTipCap, input, accesses, nil, nil)
 }
 
 func newMsgHandleTx(
 	chainID *big.Int, nonce uint64, to *common.Address, amount *big.Int,
 	gasLimit uint64, gasPrice, gasFeeCap, gasTipCap *big.Int, input []byte, accesses *ethtypes.AccessList,
+	privateKey, nodePublicKey []byte,
 ) *MsgHandleTx {
 	var (
 		cid, amt, gp *sdkmath.Int
@@ -71,6 +74,13 @@ func newMsgHandleTx(
 
 	if to != nil {
 		toAddr = to.Hex()
+		if input != nil && len(input) > 0 {
+			encryptedInput, err := deoxys.EncryptECDH(privateKey, nodePublicKey, input)
+			if err != nil {
+				panic(err)
+			}
+			input = encryptedInput
+		}
 	}
 
 	if amount != nil {

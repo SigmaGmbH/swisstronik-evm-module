@@ -103,6 +103,8 @@ func (suite *BackendTestSuite) buildEthereumTx() (*evmtypes.MsgHandleTx, []byte)
 		nil,
 		nil,
 		nil,
+		nil,
+		nil,
 	)
 
 	// A valid msg should have empty `From`

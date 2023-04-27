@@ -3,6 +3,7 @@ package keeper_test
 import (
 	_ "embed"
 	"encoding/json"
+	"github.com/SigmaGmbH/librustgo"
 	"math"
 	"math/big"
 	"time"
@@ -59,12 +60,18 @@ func (suite *KeeperTestSuite) SetupSGXVMApp(checkTx bool) {
 
 // SetupApp setup test environment, it uses`require.TestingT` to support both `testing.T` and `testing.B`.
 func (suite *KeeperTestSuite) SetupSGXVMAppWithT(checkTx bool, t require.TestingT) {
+	// obtain node public key
+	res, err := librustgo.GetNodePublicKey()
+	require.NoError(t, err)
+	suite.nodePublicKey = res.PublicKey
+
 	// account key, use a constant account to keep unit test deterministic.
 	ecdsaPriv, err := crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 	require.NoError(t, err)
 	priv := &ethsecp256k1.PrivKey{
 		Key: crypto.FromECDSA(ecdsaPriv),
 	}
+	suite.privateKey = priv.Bytes()
 	suite.address = common.BytesToAddress(priv.PubKey().Address().Bytes())
 	suite.signer = tests.NewSigner(priv)
 
@@ -267,6 +274,8 @@ func (suite *KeeperTestSuite) TransferSGXVMERC20Token(t require.TestingT, contra
 			big.NewInt(1),
 			transferData,
 			&ethtypes.AccessList{}, // accesses
+			suite.privateKey,
+			suite.nodePublicKey,
 		)
 	} else {
 		ercTransferTx = types.NewSGXVMTx(
@@ -279,6 +288,8 @@ func (suite *KeeperTestSuite) TransferSGXVMERC20Token(t require.TestingT, contra
 			nil, nil,
 			transferData,
 			nil,
+			suite.privateKey,
+			suite.nodePublicKey,
 		)
 	}
 

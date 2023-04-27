@@ -49,12 +49,12 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
 
+	"github.com/SigmaGmbH/librustgo"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmversion "github.com/tendermint/tendermint/proto/tendermint/version"
 	"github.com/tendermint/tendermint/version"
-	"github.com/SigmaGmbH/librustgo"
 )
 
 type KeeperTestSuite struct {
@@ -77,6 +77,9 @@ type KeeperTestSuite struct {
 	enableLondonHF   bool
 	mintFeeCollector bool
 	denom            string
+
+	privateKey    []byte
+	nodePublicKey []byte
 }
 
 var s *KeeperTestSuite
@@ -107,7 +110,7 @@ func (suite *KeeperTestSuite) SetupTestWithT(t require.TestingT) {
 	suite.SetupAppWithT(checkTx, t)
 }
 
-func (suite *KeeperTestSuite) SetupApp(checkTx bool) {	
+func (suite *KeeperTestSuite) SetupApp(checkTx bool) {
 	// Initialize enclave
 	err := librustgo.InitializeMasterKey(true)
 	require.NoError(suite.T(), err)
@@ -117,12 +120,19 @@ func (suite *KeeperTestSuite) SetupApp(checkTx bool) {
 
 // SetupApp setup test environment, it uses`require.TestingT` to support both `testing.T` and `testing.B`.
 func (suite *KeeperTestSuite) SetupAppWithT(checkTx bool, t require.TestingT) {
+	// obtain node public key
+	res, err := librustgo.GetNodePublicKey()
+	suite.Require().NoError(err)
+	suite.nodePublicKey = res.PublicKey
+
 	// account key, use a constant account to keep unit test deterministic.
 	ecdsaPriv, err := crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 	require.NoError(t, err)
 	priv := &ethsecp256k1.PrivKey{
 		Key: crypto.FromECDSA(ecdsaPriv),
 	}
+
+	suite.privateKey = priv.Bytes()
 	suite.address = common.BytesToAddress(priv.PubKey().Address().Bytes())
 	suite.signer = tests.NewSigner(priv)
 
@@ -354,6 +364,8 @@ func (suite *KeeperTestSuite) TransferERC20Token(t require.TestingT, contractAdd
 			big.NewInt(1),
 			transferData,
 			&ethtypes.AccessList{}, // accesses
+			suite.privateKey,
+			suite.nodePublicKey,
 		)
 	} else {
 		ercTransferTx = types.NewTx(
@@ -366,6 +378,8 @@ func (suite *KeeperTestSuite) TransferERC20Token(t require.TestingT, contractAdd
 			nil, nil,
 			transferData,
 			nil,
+			suite.privateKey,
+			suite.nodePublicKey,
 		)
 	}
 
