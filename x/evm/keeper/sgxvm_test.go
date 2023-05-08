@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	"encoding/json"
+	"math/big"
+
 	"github.com/SigmaGmbH/evm-module/server/config"
 	"github.com/SigmaGmbH/evm-module/x/evm/keeper"
 	"github.com/SigmaGmbH/evm-module/x/evm/types"
@@ -11,14 +13,13 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
-	"math/big"
 )
 
 func (suite *KeeperTestSuite) TestNativeCurrencyTransfer() {
 	var (
-		err    error
-		msg    *types.MsgHandleTx
-		signer ethtypes.Signer
+		err             error
+		msg             *types.MsgHandleTx
+		signer          ethtypes.Signer
 		chainCfg        *params.ChainConfig
 		expectedGasUsed uint64
 		transferAmount  int64
@@ -334,4 +335,53 @@ func (suite *KeeperTestSuite) TestMultipleContractDeployments() {
 		suite.Require().Equal(new(big.Int), contractAcc.Balance)
 		suite.Require().True(contractAcc.IsContract())
 	}
+}
+
+func (suite *KeeperTestSuite) TestEmptyDataWithPublicKey() {
+	transferAmount := big.NewInt(1000)
+	suite.SetupSGXVMTest()
+
+	ctx := sdk.WrapSDKContext(suite.ctx)
+	chainID := suite.app.EvmKeeper.ChainID()
+
+	err := suite.app.EvmKeeper.SetBalance(suite.ctx, suite.address, transferAmount)
+	suite.Require().NoError(err)
+
+	nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
+
+	// 4 byte function selector + 32 byte public key
+	data := make([]byte, 36)
+	args, err := json.Marshal(&types.TransactionArgs{
+		From: &suite.address,
+		Data: (*hexutil.Bytes)(&data),
+	})
+	suite.Require().NoError(err)
+	gasRes, err := suite.queryClient.EstimateGas(ctx, &types.EthCallRequest{
+		Args:            args,
+		GasCap:          uint64(config.DefaultGasCap),
+		ProposerAddress: suite.ctx.BlockHeader().ProposerAddress,
+	})
+	suite.Require().NoError(err)
+
+	tx := types.NewSGXVMTx(
+		chainID,
+		nonce,
+		&suite.address,
+		transferAmount, // amount
+		gasRes.Gas, // gasLimit
+		nil,        // gasPrice
+		nil, nil,
+		data, // input
+		nil,  // accesses,
+		nil, nil, // node private and public key
+	)
+
+	tx.From = suite.address.Hex()
+	err = tx.Sign(ethtypes.LatestSignerForChainID(chainID), suite.signer)
+	suite.Require().NoError(err)
+
+	rsp, err := suite.app.EvmKeeper.HandleTx(ctx, tx)
+	suite.Require().NoError(err)
+	suite.Require().Empty(rsp.VmError)
+	suite.Require().True(len(rsp.Ret) != 0)
 }
