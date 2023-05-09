@@ -13,40 +13,27 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with the Ethermint library. If not, see https://github.com/evmos/ethermint/blob/main/LICENSE
-package main
+package root
 
 import (
-	"os"
+	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/server"
-	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/spf13/cobra"
 
-	"github.com/SigmaGmbH/evm-module/app"
-	cmdcfg "github.com/SigmaGmbH/evm-module/cmd/config"
+	"github.com/SigmaGmbH/evm-module/version"
 )
 
-func main() {
-	setupConfig()
-	cmdcfg.RegisterDenoms()
+const flagLong = "long"
 
-	rootCmd, _ := NewRootCmd()
-
-	if err := svrcmd.Execute(rootCmd, EnvPrefix, app.DefaultNodeHome); err != nil {
-		switch e := err.(type) {
-		case server.ErrorCode:
-			os.Exit(e.Code)
-
-		default:
-			os.Exit(1)
-		}
-	}
+func init() {
+	infoCmd.Flags().Bool(flagLong, false, "Print full information")
 }
 
-func setupConfig() {
-	// set the address prefixes
-	config := sdk.GetConfig()
-	cmdcfg.SetBech32Prefixes(config)
-	cmdcfg.SetBip44CoinType(config)
-	config.Seal()
+var infoCmd = &cobra.Command{
+	Use:   "info",
+	Short: "Print version info",
+	RunE: func(_ *cobra.Command, _ []string) error {
+		fmt.Println(version.Version())
+		return nil
+	},
 }
