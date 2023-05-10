@@ -62,7 +62,7 @@ func (gwd GasWantedDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	if gasWanted > blockGasLimit {
 		return ctx, errorsmod.Wrapf(
 			errortypes.ErrOutOfGas,
-			"tx gas (%d) exceeds block gas limit (%d)",
+			"feemarket: tx gas (%d) exceeds block gas limit (%d)",
 			gasWanted,
 			blockGasLimit,
 		)
