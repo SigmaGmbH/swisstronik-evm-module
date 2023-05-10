@@ -222,7 +222,7 @@ func (egcd EthGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	if gasWanted > blockGasLimit {
 		return ctx, errorsmod.Wrapf(
 			errortypes.ErrOutOfGas,
-			"tx gas (%d) exceeds block gas limit (%d)",
+			"eth: tx gas (%d) exceeds block gas limit (%d)",
 			gasWanted,
 			blockGasLimit,
 		)

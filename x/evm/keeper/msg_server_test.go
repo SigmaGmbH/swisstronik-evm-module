@@ -15,7 +15,6 @@ func (suite *KeeperTestSuite) TestEthereumTx() {
 		err    error
 		msg    *types.MsgHandleTx
 		signer ethtypes.Signer
-		//vmdb            *statedb.StateDB
 		chainCfg        *params.ChainConfig
 		expectedGasUsed uint64
 	)
@@ -29,7 +28,6 @@ func (suite *KeeperTestSuite) TestEthereumTx() {
 			"Deploy contract tx",
 			func() {
 				msg, err = suite.createContractMsgTx(
-					//vmdb.GetNonce(suite.address),
 					suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address),
 					signer,
 					chainCfg,
@@ -44,7 +42,6 @@ func (suite *KeeperTestSuite) TestEthereumTx() {
 			"Transfer funds tx",
 			func() {
 				msg, _, err = newEthMsgTx(
-					//vmdb.GetNonce(suite.address),
 					suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address),
 					suite.ctx.BlockHeight(),
 					suite.address,
@@ -69,7 +66,6 @@ func (suite *KeeperTestSuite) TestEthereumTx() {
 			keeperParams := suite.app.EvmKeeper.GetParams(suite.ctx)
 			chainCfg = keeperParams.ChainConfig.EthereumConfig(suite.app.EvmKeeper.ChainID())
 			signer = ethtypes.LatestSignerForChainID(suite.app.EvmKeeper.ChainID())
-			//vmdb = suite.StateDB()
 
 			tc.malleate()
 			res, err := suite.app.EvmKeeper.HandleTx(suite.ctx, msg)

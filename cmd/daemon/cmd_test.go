@@ -1,4 +1,4 @@
-package main_test
+package root_test
 
 import (
 	"fmt"
@@ -11,16 +11,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
 	"github.com/SigmaGmbH/evm-module/app"
-	ethermintd "github.com/SigmaGmbH/evm-module/cmd/ethermintd"
+	daemon "github.com/SigmaGmbH/evm-module/cmd/daemon"
 )
 
 func TestInitCmd(t *testing.T) {
-	rootCmd, _ := ethermintd.NewRootCmd()
+	rootCmd, _ := daemon.NewRootCmd()
 	rootCmd.SetArgs([]string{
 		"init",          // Test the init cmd
-		"etherminttest", // Moniker
+		"daemon",        // Moniker
 		fmt.Sprintf("--%s=%s", cli.FlagOverwrite, "true"), // Overwrite genesis.json, in case it already exists
-		fmt.Sprintf("--%s=%s", flags.FlagChainID, "ethermint_9000-1"),
+		fmt.Sprintf("--%s=%s", flags.FlagChainID, "daemon_1000-1"),
 	})
 
 	err := svrcmd.Execute(rootCmd, "", app.DefaultNodeHome)
