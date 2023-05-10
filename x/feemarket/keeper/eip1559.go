@@ -16,6 +16,7 @@
 package keeper
 
 import (
+	"fmt"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -55,6 +56,8 @@ func (k Keeper) CalculateBaseFee(ctx sdk.Context) *big.Int {
 	}
 
 	parentGasUsed := k.GetBlockGasWanted(ctx)
+	fmt.Println("FeeMarket: Parent block base fee: ", parentBaseFee.String())
+	fmt.Println("FeeMarket: Parent block gas used: ", parentGasUsed)
 
 	gasLimit := new(big.Int).SetUint64(math.MaxUint64)
 
@@ -62,6 +65,9 @@ func (k Keeper) CalculateBaseFee(ctx sdk.Context) *big.Int {
 	if consParams != nil && consParams.Block.MaxGas > -1 {
 		gasLimit = big.NewInt(consParams.Block.MaxGas)
 	}
+
+	fmt.Println("FeeMarket: Gas limit: ", gasLimit.String())
+	fmt.Println("FeeMarket: Parent block usage: ", float64(parentGasUsed*100)/float64(gasLimit.Uint64()), "%")
 
 	// CONTRACT: ElasticityMultiplier cannot be 0 as it's checked in the params
 	// validation
