@@ -80,7 +80,7 @@ func (k Keeper) GetBaseFee(ctx sdk.Context) *big.Int {
 func (k Keeper) SetBaseFee(ctx sdk.Context, baseFee *big.Int) {
 	params := k.GetParams(ctx)
 
-	println("FeeMarket: Base fee was changed", params.BaseFee.String(), " -> ", baseFee.String())
+	ctx.Logger().Info("FeeMarket: baseFee was changed", "oldBaseFee", params.BaseFee.String(), "newBaseFee", baseFee.String())
 	params.BaseFee = sdk.NewIntFromBigInt(baseFee)
 	err := k.SetParams(ctx, params)
 	if err != nil {
