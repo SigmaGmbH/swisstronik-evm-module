@@ -16,7 +16,6 @@
 package keeper
 
 import (
-	"fmt"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -55,15 +54,13 @@ func (k Keeper) CalculateBaseFee(ctx sdk.Context) *big.Int {
 		return nil
 	}
 
-	parentGasUsed := k.GetBlockGasWanted(ctx)
-	fmt.Println("Parent gas wanted: ", parentGasUsed)
+	parentGasWanted := k.GetBlockGasWanted(ctx)
 	gasLimit := new(big.Int).SetUint64(math.MaxUint64)
 
 	// NOTE: a MaxGas equal to -1 means that block gas is unlimited
 	if consParams != nil && consParams.Block.MaxGas > -1 {
 		gasLimit = big.NewInt(consParams.Block.MaxGas)
 	}
-	fmt.Println("Gas limit: ", gasLimit.String())
 
 	// CONTRACT: ElasticityMultiplier cannot be 0 as it's checked in the params
 	// validation
@@ -73,11 +70,10 @@ func (k Keeper) CalculateBaseFee(ctx sdk.Context) *big.Int {
 	}
 
 	parentGasTarget := parentGasTargetBig.Uint64()
-	fmt.Println("Parent gas target: ", parentGasTarget)
 	baseFeeChangeDenominator := new(big.Int).SetUint64(uint64(params.BaseFeeChangeDenominator))
 
 	// If gas used == gas target, base fee remains unchanged
-	if parentGasUsed == parentGasTarget {
+	if parentGasWanted == parentGasTarget {
 		return parentBaseFee
 	}
 
@@ -87,10 +83,10 @@ func (k Keeper) CalculateBaseFee(ctx sdk.Context) *big.Int {
 	)
 
 	// If gas used > gas target, base fee increases
-	if parentGasUsed > parentGasTarget {
+	if parentGasWanted > parentGasTarget {
 		// If the parent block used more gas than its target, the baseFee should increase.
 		// max(1, parentBaseFee * gasUsedDelta / parentGasTarget / baseFeeChangeDenominator)
-		num.SetUint64(parentGasUsed - parentGasTarget)
+		num.SetUint64(parentGasWanted - parentGasTarget)
 		num.Mul(num, parentBaseFee)
 		num.Div(num, denom.SetUint64(parentGasTarget))
 		num.Div(num, baseFeeChangeDenominator)
@@ -100,10 +96,10 @@ func (k Keeper) CalculateBaseFee(ctx sdk.Context) *big.Int {
 	}
 
 	// If gas used < gas target, base fee decreases
-	if parentGasUsed < parentGasTarget {
+	if parentGasWanted < parentGasTarget {
 		// Otherwise if the parent block used less gas than its target, the baseFee should decrease.
 		// max(0, parentBaseFee * gasUsedDelta / parentGasTarget / baseFeeChangeDenominator)
-		num.SetUint64(parentGasTarget - parentGasUsed)
+		num.SetUint64(parentGasTarget - parentGasWanted)
 		num.Mul(num, parentBaseFee)
 		num.Div(num, denom.SetUint64(parentGasTarget))
 		num.Div(num, baseFeeChangeDenominator)
