@@ -16,7 +16,6 @@
 package keeper
 
 import (
-	"fmt"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -56,18 +55,12 @@ func (k Keeper) CalculateBaseFee(ctx sdk.Context) *big.Int {
 	}
 
 	parentGasUsed := k.GetBlockGasWanted(ctx)
-	fmt.Println("FeeMarket: Parent block base fee: ", parentBaseFee.String())
-	fmt.Println("FeeMarket: Parent block gas used: ", parentGasUsed)
-
 	gasLimit := new(big.Int).SetUint64(math.MaxUint64)
 
 	// NOTE: a MaxGas equal to -1 means that block gas is unlimited
 	if consParams != nil && consParams.Block.MaxGas > -1 {
 		gasLimit = big.NewInt(consParams.Block.MaxGas)
 	}
-
-	fmt.Println("FeeMarket: Gas limit: ", gasLimit.String())
-	fmt.Println("FeeMarket: Parent block usage: ", float64(parentGasUsed*100)/float64(gasLimit.Uint64()), "%")
 
 	// CONTRACT: ElasticityMultiplier cannot be 0 as it's checked in the params
 	// validation
@@ -79,35 +72,41 @@ func (k Keeper) CalculateBaseFee(ctx sdk.Context) *big.Int {
 	parentGasTarget := parentGasTargetBig.Uint64()
 	baseFeeChangeDenominator := new(big.Int).SetUint64(uint64(params.BaseFeeChangeDenominator))
 
-	// If the parent gasUsed is the same as the target, the baseFee remains
-	// unchanged.
+	// If gas used == gas target, base fee remains unchanged
 	if parentGasUsed == parentGasTarget {
-		return new(big.Int).Set(parentBaseFee)
+		return parentBaseFee
 	}
 
+	var (
+		num   = new(big.Int)
+		denom = new(big.Int)
+	)
+
+	// If gas used > gas target, base fee increases
 	if parentGasUsed > parentGasTarget {
-		// If the parent block used more gas than its target, the baseFee should
-		// increase.
-		gasUsedDelta := new(big.Int).SetUint64(parentGasUsed - parentGasTarget)
-		x := new(big.Int).Mul(parentBaseFee, gasUsedDelta)
-		y := x.Div(x, parentGasTargetBig)
-		baseFeeDelta := math.BigMax(
-			x.Div(y, baseFeeChangeDenominator),
-			common.Big1,
-		)
+		// If the parent block used more gas than its target, the baseFee should increase.
+		// max(1, parentBaseFee * gasUsedDelta / parentGasTarget / baseFeeChangeDenominator)
+		num.SetUint64(parentGasUsed - parentGasTarget)
+		num.Mul(num, parentBaseFee)
+		num.Div(num, denom.SetUint64(parentGasTarget))
+		num.Div(num, baseFeeChangeDenominator)
+		baseFeeDelta := math.BigMax(num, common.Big1)
 
-		return x.Add(parentBaseFee, baseFeeDelta)
+		return num.Add(parentBaseFee, baseFeeDelta)
 	}
 
-	// Otherwise if the parent block used less gas than its target, the baseFee
-	// should decrease.
-	gasUsedDelta := new(big.Int).SetUint64(parentGasTarget - parentGasUsed)
-	x := new(big.Int).Mul(parentBaseFee, gasUsedDelta)
-	y := x.Div(x, parentGasTargetBig)
-	baseFeeDelta := x.Div(y, baseFeeChangeDenominator)
+	// If gas used < gas target, base fee decreases
+	if parentGasUsed < parentGasTarget {
+		// Otherwise if the parent block used less gas than its target, the baseFee should decrease.
+		// max(0, parentBaseFee * gasUsedDelta / parentGasTarget / baseFeeChangeDenominator)
+		num.SetUint64(parentGasTarget - parentGasUsed)
+		num.Mul(num, parentBaseFee)
+		num.Div(num, denom.SetUint64(parentGasTarget))
+		num.Div(num, baseFeeChangeDenominator)
+		baseFee := num.Sub(parentBaseFee, num)
 
-	// Set global min gas price as lower bound of the base fee, transactions below
-	// the min gas price don't even reach the mempool.
-	minGasPrice := params.MinGasPrice.TruncateInt().BigInt()
-	return math.BigMax(x.Sub(parentBaseFee, baseFeeDelta), minGasPrice)
+		return math.BigMax(baseFee, params.MinGasPrice.TruncateInt().BigInt())
+	}
+
+	return nil
 }
