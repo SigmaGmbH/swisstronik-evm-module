@@ -1,4 +1,5 @@
 DOCKER := $(shell which docker)
+CHAIN_HOME ?= $(HOME)/.swisstronik
 
 #### PROTOBUF ####
 
