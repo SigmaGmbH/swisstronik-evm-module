@@ -1,5 +1,5 @@
 DOCKER := $(shell which docker)
-CHAIN_HOME ?= $(HOME)/.swisstronik-enclave
+ENCLAVE_HOME ?= $(HOME)/.swisstronik-enclave
 
 #### PROTOBUF ####
 
