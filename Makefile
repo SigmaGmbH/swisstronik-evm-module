@@ -1,4 +1,5 @@
 DOCKER := $(shell which docker)
+ENCLAVE_HOME ?= $(HOME)/.swisstronik-enclave
 
 #### PROTOBUF ####
 
