@@ -35,7 +35,7 @@ func InitGenesis(
 		panic(errorsmod.Wrap(err, "could not set parameters at genesis"))
 	}
 
-	k.SetBlockGasWanted(ctx, data.BlockGas)
+	k.SetBlockGasWanted(ctx, data.LastBlockGas)
 
 	return []abci.ValidatorUpdate{}
 }
@@ -43,7 +43,7 @@ func InitGenesis(
 // ExportGenesis exports genesis state of the fee market module
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	return &types.GenesisState{
-		Params:   k.GetParams(ctx),
-		BlockGas: k.GetBlockGasWanted(ctx),
+		Params:       k.GetParams(ctx),
+		LastBlockGas: k.GetBlockGasWanted(ctx),
 	}
 }

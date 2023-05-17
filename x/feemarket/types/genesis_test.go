@@ -44,8 +44,8 @@ func (suite *GenesisTestSuite) TestValidateGenesis() {
 		{
 			"empty genesis",
 			&GenesisState{
-				Params:   Params{},
-				BlockGas: 0,
+				Params:       Params{},
+				LastBlockGas: 0,
 			},
 			false,
 		},
