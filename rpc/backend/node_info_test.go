@@ -2,8 +2,9 @@ package backend
 
 import (
 	"fmt"
-	"google.golang.org/grpc/metadata"
 	"math/big"
+
+	"google.golang.org/grpc/metadata"
 
 	"github.com/SigmaGmbH/evm-module/crypto/ethsecp256k1"
 	"github.com/SigmaGmbH/evm-module/rpc/backend/mocks"
@@ -254,7 +255,7 @@ func (suite *BackendTestSuite) TestSetEtherbase() {
 				RegisterStatus(client)
 				RegisterValidatorAccount(queryClient, suite.acc)
 				RegisterParams(queryClient, &header, 1)
-				c := sdk.NewDecCoin("swtr", sdk.NewIntFromBigInt(big.NewInt(1)))
+				c := sdk.NewDecCoin("uswtr", sdk.NewIntFromBigInt(big.NewInt(1)))
 				suite.backend.cfg.SetMinGasPrices(sdk.DecCoins{c})
 				delAddr, _ := suite.backend.GetCoinbase()
 				// account, _ := suite.backend.clientCtx.AccountRetriever.GetAccount(suite.backend.clientCtx, delAddr)

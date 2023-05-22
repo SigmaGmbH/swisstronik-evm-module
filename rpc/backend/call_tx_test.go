@@ -286,7 +286,7 @@ func (suite *BackendTestSuite) TestResend() {
 func (suite *BackendTestSuite) TestSendRawTransaction() {
 	ethTx, bz := suite.buildEthereumTx()
 	rlpEncodedBz, _ := rlp.EncodeToBytes(ethTx.AsTransaction())
-	cosmosTx, _ := ethTx.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "swtr")
+	cosmosTx, _ := ethTx.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "uswtr")
 	txBytes, _ := suite.backend.clientCtx.TxConfig.TxEncoder()(cosmosTx)
 
 	testCases := []struct {
