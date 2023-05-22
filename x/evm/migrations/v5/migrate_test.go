@@ -29,7 +29,7 @@ func TestMigrate(t *testing.T) {
 	chainConfigBz := cdc.MustMarshal(&chainConfig)
 
 	// Set the params in the store
-	kvStore.Set(types.ParamStoreKeyEVMDenom, []byte("swtr"))
+	kvStore.Set(types.ParamStoreKeyEVMDenom, []byte("uswtr"))
 	kvStore.Set(types.ParamStoreKeyEnableCreate, []byte{0x01})
 	kvStore.Set(types.ParamStoreKeyEnableCall, []byte{0x01})
 	kvStore.Set(types.ParamStoreKeyAllowUnprotectedTxs, []byte{0x01})
@@ -44,7 +44,7 @@ func TestMigrate(t *testing.T) {
 	cdc.MustUnmarshal(paramsBz, &params)
 
 	// test that the params have been migrated correctly
-	require.Equal(t, "swtr", params.EvmDenom)
+	require.Equal(t, "uswtr", params.EvmDenom)
 	require.True(t, params.EnableCreate)
 	require.True(t, params.EnableCall)
 	require.True(t, params.AllowUnprotectedTxs)

@@ -128,29 +128,29 @@ def test_native_tx_priority(ethermint):
         {
             "from": eth_to_bech32(ADDRS["community"]),
             "to": eth_to_bech32(ADDRS["validator"]),
-            "amount": "1000swtr",
-            "gas_prices": f"{base_fee + PRIORITY_REDUCTION * 600000}swtr",
+            "amount": "1000uswtr",
+            "gas_prices": f"{base_fee + PRIORITY_REDUCTION * 600000}uswtr",
             "max_priority_price": 0,
         },
         {
             "from": eth_to_bech32(ADDRS["signer1"]),
             "to": eth_to_bech32(ADDRS["signer2"]),
-            "amount": "1000swtr",
-            "gas_prices": f"{base_fee + PRIORITY_REDUCTION * 600000}swtr",
+            "amount": "1000uswtr",
+            "gas_prices": f"{base_fee + PRIORITY_REDUCTION * 600000}uswtr",
             "max_priority_price": PRIORITY_REDUCTION * 200000,
         },
         {
             "from": eth_to_bech32(ADDRS["signer2"]),
             "to": eth_to_bech32(ADDRS["signer1"]),
-            "amount": "1000swtr",
-            "gas_prices": f"{base_fee + PRIORITY_REDUCTION * 400000}swtr",
+            "amount": "1000uswtr",
+            "gas_prices": f"{base_fee + PRIORITY_REDUCTION * 400000}uswtr",
             "max_priority_price": PRIORITY_REDUCTION * 400000,
         },
         {
             "from": eth_to_bech32(ADDRS["validator"]),
             "to": eth_to_bech32(ADDRS["community"]),
-            "amount": "1000swtr",
-            "gas_prices": f"{base_fee + PRIORITY_REDUCTION * 600000}swtr",
+            "amount": "1000uswtr",
+            "gas_prices": f"{base_fee + PRIORITY_REDUCTION * 600000}uswtr",
             "max_priority_price": None,  # no extension, maximum tipFeeCap
         },
     ]
@@ -169,7 +169,7 @@ def test_native_tx_priority(ethermint):
                 tx, tc["from"], max_priority_price=tc.get("max_priority_price")
             )
         )
-        gas_price = int(tc["gas_prices"].removesuffix("swtr"))
+        gas_price = int(tc["gas_prices"].removesuffix("uswtr"))
         expect_priorities.append(
             min(
                 get_max_priority_price(tc.get("max_priority_price")),

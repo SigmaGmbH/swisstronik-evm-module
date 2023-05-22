@@ -16,17 +16,17 @@ make build-ethermint
 # Set moniker and chain-id for Ethermint (Moniker can be anything, chain-id must be an integer)
 "$PWD"/build/ethermintd init $MONIKER --chain-id $CHAINID
 
-# Change parameter token denominations to swtr
+# Change parameter token denominations to uswtr
 cat $HOME/.ethermint/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="stake"' > $HOME/.ethermint/config/tmp_genesis.json && mv $HOME/.ethermint/config/tmp_genesis.json $HOME/.ethermint/config/genesis.json
-cat $HOME/.ethermint/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="swtr"' > $HOME/.ethermint/config/tmp_genesis.json && mv $HOME/.ethermint/config/tmp_genesis.json $HOME/.ethermint/config/genesis.json
-cat $HOME/.ethermint/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="swtr"' > $HOME/.ethermint/config/tmp_genesis.json && mv $HOME/.ethermint/config/tmp_genesis.json $HOME/.ethermint/config/genesis.json
-cat $HOME/.ethermint/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="swtr"' > $HOME/.ethermint/config/tmp_genesis.json && mv $HOME/.ethermint/config/tmp_genesis.json $HOME/.ethermint/config/genesis.json
+cat $HOME/.ethermint/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="uswtr"' > $HOME/.ethermint/config/tmp_genesis.json && mv $HOME/.ethermint/config/tmp_genesis.json $HOME/.ethermint/config/genesis.json
+cat $HOME/.ethermint/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="uswtr"' > $HOME/.ethermint/config/tmp_genesis.json && mv $HOME/.ethermint/config/tmp_genesis.json $HOME/.ethermint/config/genesis.json
+cat $HOME/.ethermint/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="uswtr"' > $HOME/.ethermint/config/tmp_genesis.json && mv $HOME/.ethermint/config/tmp_genesis.json $HOME/.ethermint/config/genesis.json
 
 # Allocate genesis accounts (cosmos formatted addresses)
-"$PWD"/build/ethermintd add-genesis-account "$("$PWD"/build/ethermintd keys show "$KEY" -a --keyring-backend test)" 100000000000000000000swtr,10000000000000000000stake --keyring-backend test
+"$PWD"/build/ethermintd add-genesis-account "$("$PWD"/build/ethermintd keys show "$KEY" -a --keyring-backend test)" 100000000000000000000uswtr,10000000000000000000stake --keyring-backend test
 
 # Sign genesis transaction
-"$PWD"/build/ethermintd gentx $KEY 10000000000000000000stake --amount=100000000000000000000swtr --keyring-backend test --chain-id $CHAINID
+"$PWD"/build/ethermintd gentx $KEY 10000000000000000000stake --amount=100000000000000000000uswtr --keyring-backend test --chain-id $CHAINID
 
 # Collect genesis tx
 "$PWD"/build/ethermintd collect-gentxs

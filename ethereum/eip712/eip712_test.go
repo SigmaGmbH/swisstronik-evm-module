@@ -110,7 +110,7 @@ func (suite *EIP712TestSuite) TestEIP712SignatureVerification() {
 		{
 			title: "Succeeds - Standard MsgSend",
 			fee: txtypes.Fee{
-				Amount:   suite.makeCoins("swtr", math.NewInt(2000)),
+				Amount:   suite.makeCoins("uswtr", math.NewInt(2000)),
 				GasLimit: 20000,
 			},
 			memo: "",
@@ -128,7 +128,7 @@ func (suite *EIP712TestSuite) TestEIP712SignatureVerification() {
 		{
 			title: "Succeeds - Standard MsgVote",
 			fee: txtypes.Fee{
-				Amount:   suite.makeCoins("swtr", math.NewInt(2000)),
+				Amount:   suite.makeCoins("uswtr", math.NewInt(2000)),
 				GasLimit: 20000,
 			},
 			memo: "",
@@ -146,7 +146,7 @@ func (suite *EIP712TestSuite) TestEIP712SignatureVerification() {
 		{
 			title: "Succeeds - Standard MsgDelegate",
 			fee: txtypes.Fee{
-				Amount:   suite.makeCoins("swtr", math.NewInt(2000)),
+				Amount:   suite.makeCoins("uswtr", math.NewInt(2000)),
 				GasLimit: 20000,
 			},
 			memo: "",
@@ -164,7 +164,7 @@ func (suite *EIP712TestSuite) TestEIP712SignatureVerification() {
 		{
 			title: "Succeeds - Standard MsgWithdrawDelegationReward",
 			fee: txtypes.Fee{
-				Amount:   suite.makeCoins("swtr", math.NewInt(2000)),
+				Amount:   suite.makeCoins("uswtr", math.NewInt(2000)),
 				GasLimit: 20000,
 			},
 			memo: "",
@@ -181,7 +181,7 @@ func (suite *EIP712TestSuite) TestEIP712SignatureVerification() {
 		{
 			title: "Succeeds - Two Single-Signer MsgDelegate",
 			fee: txtypes.Fee{
-				Amount:   suite.makeCoins("swtr", math.NewInt(2000)),
+				Amount:   suite.makeCoins("uswtr", math.NewInt(2000)),
 				GasLimit: 20000,
 			},
 			memo: "",
@@ -204,7 +204,7 @@ func (suite *EIP712TestSuite) TestEIP712SignatureVerification() {
 		{
 			title: "Fails - Two MsgVotes with Different Signers",
 			fee: txtypes.Fee{
-				Amount:   suite.makeCoins("swtr", math.NewInt(2000)),
+				Amount:   suite.makeCoins("uswtr", math.NewInt(2000)),
 				GasLimit: 20000,
 			},
 			memo: "",
@@ -227,7 +227,7 @@ func (suite *EIP712TestSuite) TestEIP712SignatureVerification() {
 		{
 			title: "Fails - Empty transaction",
 			fee: txtypes.Fee{
-				Amount:   suite.makeCoins("swtr", math.NewInt(2000)),
+				Amount:   suite.makeCoins("uswtr", math.NewInt(2000)),
 				GasLimit: 20000,
 			},
 			memo:          "",
@@ -239,7 +239,7 @@ func (suite *EIP712TestSuite) TestEIP712SignatureVerification() {
 		{
 			title: "Fails - Single-Signer MsgSend + MsgVote",
 			fee: txtypes.Fee{
-				Amount:   suite.makeCoins("swtr", math.NewInt(2000)),
+				Amount:   suite.makeCoins("uswtr", math.NewInt(2000)),
 				GasLimit: 20000,
 			},
 			memo: "",
@@ -263,7 +263,7 @@ func (suite *EIP712TestSuite) TestEIP712SignatureVerification() {
 			title:   "Fails - Invalid ChainID",
 			chainId: "invalidchainid",
 			fee: txtypes.Fee{
-				Amount:   suite.makeCoins("swtr", math.NewInt(2000)),
+				Amount:   suite.makeCoins("uswtr", math.NewInt(2000)),
 				GasLimit: 20000,
 			},
 			memo: "",
@@ -281,7 +281,7 @@ func (suite *EIP712TestSuite) TestEIP712SignatureVerification() {
 		{
 			title: "Fails - Includes TimeoutHeight",
 			fee: txtypes.Fee{
-				Amount:   suite.makeCoins("swtr", math.NewInt(2000)),
+				Amount:   suite.makeCoins("uswtr", math.NewInt(2000)),
 				GasLimit: 20000,
 			},
 			memo: "",
@@ -300,7 +300,7 @@ func (suite *EIP712TestSuite) TestEIP712SignatureVerification() {
 		{
 			title: "Fails - Single Message / Multi-Signer",
 			fee: txtypes.Fee{
-				Amount:   suite.makeCoins("swtr", math.NewInt(2000)),
+				Amount:   suite.makeCoins("uswtr", math.NewInt(2000)),
 				GasLimit: 20000,
 			},
 			memo: "",
