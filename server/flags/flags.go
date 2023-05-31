@@ -87,8 +87,6 @@ const (
 
 // Attestation flags
 const (
-	IsBootstrapNode    = "enclave.bootstrap"
-	ResetBootstrapSeed = "enclave.bootstrap-reset"
 	SeedServiceEnable  = "enclave.enable"
 	SeedServiceAddress = "enclave.address"
 )
