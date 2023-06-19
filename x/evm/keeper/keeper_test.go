@@ -112,7 +112,7 @@ func (suite *KeeperTestSuite) SetupTestWithT(t require.TestingT) {
 
 func (suite *KeeperTestSuite) SetupApp(checkTx bool) {
 	// Initialize enclave
-	err := librustgo.InitializeMasterKey(true)
+	err := librustgo.InitializeMasterKey(false)
 	require.NoError(suite.T(), err)
 
 	suite.SetupAppWithT(checkTx, suite.T())
