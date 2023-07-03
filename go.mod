@@ -208,5 +208,5 @@ replace (
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	// tendermint migrated to cometbft for comsmos sdk 0.46.13
-	github.com/tendermint/tendermint => ../cometbft
+	github.com/tendermint/tendermint => github.com/SigmaGmbH/cometbft v0.34.28
 )
