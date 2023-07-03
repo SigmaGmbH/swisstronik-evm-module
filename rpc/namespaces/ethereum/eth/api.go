@@ -17,7 +17,6 @@ package eth
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 
