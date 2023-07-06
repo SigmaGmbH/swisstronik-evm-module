@@ -48,7 +48,7 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
 	"github.com/SigmaGmbH/evm-module/app"
-	ethermintclient "github.com/SigmaGmbH/evm-module/client"
+	evmclient "github.com/SigmaGmbH/evm-module/client"
 	"github.com/SigmaGmbH/evm-module/client/debug"
 	"github.com/SigmaGmbH/evm-module/crypto/hd"
 	"github.com/SigmaGmbH/evm-module/encoding"
@@ -56,10 +56,10 @@ import (
 	"github.com/SigmaGmbH/evm-module/server"
 	servercfg "github.com/SigmaGmbH/evm-module/server/config"
 	srvflags "github.com/SigmaGmbH/evm-module/server/flags"
-	ethermint "github.com/SigmaGmbH/evm-module/types"
+	evmmoduletypes "github.com/SigmaGmbH/evm-module/types"
 )
 
-const EnvPrefix = "ETHERMINT"
+const EnvPrefix = "SWTR"
 
 // NewRootCmd creates a new root command for simd. It is called once in the
 // main function.
@@ -80,8 +80,8 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	eip712.SetEncodingConfig(encodingConfig)
 
 	rootCmd := &cobra.Command{
-		Use:   "ethermintd",
-		Short: "Ethermint Daemon",
+		Use:   "swisstronikd",
+		Short: "Swisstronik Daemon",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			// set the default command outputs
 			cmd.SetOut(cmd.OutOrStdout())
@@ -101,8 +101,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 				return err
 			}
 
-			// FIXME: replace AttoPhoton with bond denom
-			customAppTemplate, customAppConfig := servercfg.AppConfig(ethermint.AttoPhoton)
+			customAppTemplate, customAppConfig := servercfg.AppConfig(evmmoduletypes.SwtrDenom)
 
 			return sdkserver.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, tmcfg.DefaultConfig())
 		},
@@ -115,7 +114,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	cfg.Seal()
 
 	rootCmd.AddCommand(
-		ethermintclient.ValidateChainID(
+		evmclient.ValidateChainID(
 			genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
 		),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
@@ -124,7 +123,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
-		ethermintclient.NewTestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		evmclient.NewTestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		config.Cmd(),
 	)
@@ -137,7 +136,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		ethermintclient.KeyCommands(app.DefaultNodeHome),
+		evmclient.KeyCommands(app.DefaultNodeHome),
 	)
 
 	rootCmd, err := srvflags.AddTxFlags(rootCmd)
