@@ -171,8 +171,8 @@ Example:
 	cmd.Flags().String(flagNodeDirPrefix, "node", "Prefix the directory name for each node with (node results in node0, node1, ...)")
 	cmd.Flags().String(flagNodeDaemonHome, "swisstronikd", "Home directory of the node's daemon configuration")
 	cmd.Flags().String(flagStartingIPAddress,
-		"192.168.0.1",
-		"Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
+		"192.167.10.1",
+		"Starting IP address (192.167.10.1 results in persistent peers list ID0@192.167.10.1:46656, ID1@192.167.10.1:46656, ...)")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 
 	return cmd
@@ -230,7 +230,7 @@ func initTestnetFiles(
 	args initArgs,
 ) error {
 	if args.chainID == "" {
-		args.chainID = fmt.Sprintf("ethermint_%d-1", tmrand.Int63n(9999999999999)+1)
+		args.chainID = fmt.Sprintf("swisstronikd_%d-1", tmrand.Int63n(9999999999999)+1)
 	}
 
 	nodeIDs := make([]string, args.numValidators)
@@ -238,6 +238,8 @@ func initTestnetFiles(
 
 	appConfig := config.DefaultConfig()
 	appConfig.MinGasPrices = args.minGasPrices
+	appConfig.JSONRPC.Address = "0.0.0.0:8545"
+	appConfig.JSONRPC.WsAddress = "0.0.0.0:8546"
 	appConfig.API.Enable = true
 	appConfig.Telemetry.Enabled = true
 	appConfig.Telemetry.PrometheusRetentionTime = 60
