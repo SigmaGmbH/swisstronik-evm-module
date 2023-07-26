@@ -60,6 +60,9 @@ import (
 	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 
 	"github.com/SigmaGmbH/evm-module/testutil/network"
+	cmtproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtypes "github.com/tendermint/tendermint/types"
+	"time"
 )
 
 var (
@@ -506,7 +509,7 @@ func collectGenFiles(
 		genFile := nodeConfig.GenesisFile()
 
 		// overwrite each validator's genesis file to have a canonical genesis time
-		if err := genutil.ExportGenesisFileWithTime(genFile, chainID, nil, appState, genTime); err != nil {
+		if err := ExportGenesisFileWithTime(genFile, chainID, nil, appState, genTime); err != nil {
 			return err
 		}
 	}
@@ -583,4 +586,41 @@ func startTestnet(cmd *cobra.Command, args startArgs) error {
 	testnet.Cleanup()
 
 	return nil
+}
+
+// ExportGenesisFileWithTime creates and writes the genesis configuration to disk.
+// An error is returned if building or writing the configuration to file fails.
+func ExportGenesisFileWithTime(
+	genFile, chainID string, validators []tmtypes.GenesisValidator,
+	appState json.RawMessage, genTime time.Time,
+) error {
+	consensusParams := &cmtproto.ConsensusParams{
+		Block: cmtproto.BlockParams{
+			MaxBytes: 22020096,
+			MaxGas: 20000000,
+			TimeIotaMs: 1000,
+		},
+		Evidence: cmtproto.EvidenceParams{
+			MaxAgeNumBlocks: 100000,
+			MaxAgeDuration: 172800000000000,
+			MaxBytes: 1048576,
+		},
+		Validator: cmtproto.ValidatorParams{
+			PubKeyTypes: []string{"ed25519"},
+		},
+	} 
+
+	genDoc := tmtypes.GenesisDoc{
+		GenesisTime: genTime,
+		ChainID:     chainID,
+		Validators:  validators,
+		AppState:    appState,
+		ConsensusParams: consensusParams,
+	}
+
+	if err := genDoc.ValidateAndComplete(); err != nil {
+		return err
+	}
+
+	return genDoc.SaveAs(genFile)
 }
