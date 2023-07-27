@@ -291,6 +291,7 @@ func (k *Keeper) ApplyMessageWithConfig(
 			msg.Value().Bytes(),
 			msg.AccessList(),
 			leftoverGas,
+			msg.Nonce(),
 			txContext,
 			commit,
 		)
@@ -303,6 +304,7 @@ func (k *Keeper) ApplyMessageWithConfig(
 			msg.Value().Bytes(),
 			msg.AccessList(),
 			leftoverGas,
+			msg.Nonce(),
 			txContext,
 			commit,
 		)
