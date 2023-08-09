@@ -2,7 +2,8 @@ package ante
 
 import (
 	"fmt"
-
+	errorsmod "cosmossdk.io/errors"
+	sdkerror "github.com/cosmos/cosmos-sdk/types/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
@@ -31,7 +32,7 @@ func (rnmd RejectNestedMessageDecorator) AnteHandle(
 ) (newCtx sdk.Context, err error) {
 	// Check for authz messages
 	if err := rnmd.checkAuthzMessages(tx.GetMsgs(), 0, false); err != nil {
-		return ctx, err
+		return ctx, errorsmod.Wrapf(sdkerror.ErrUnauthorized, err.Error())
 	}
 
 	return next(ctx, tx, simulate)

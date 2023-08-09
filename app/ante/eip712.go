@@ -38,6 +38,7 @@ import (
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 
 	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var ethermintCodec codec.ProtoCodecMarshaler
@@ -55,6 +56,7 @@ func NewLegacyCosmosAnteHandlerEip712(options HandlerOptions) sdk.AnteHandler {
 		RejectMessagesDecorator{}, // reject MsgHandleTxs
 		NewRejectNestedMessageDecorator(
 			sdk.MsgTypeURL(&evmtypes.MsgHandleTx{}),
+			sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}),
 		),
 		authante.NewSetUpContextDecorator(),
 		authante.NewValidateBasicDecorator(),
