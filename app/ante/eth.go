@@ -30,7 +30,6 @@ import (
 	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 
 	"github.com/ethereum/go-ethereum/common"
-	// ethcore "github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 )
 

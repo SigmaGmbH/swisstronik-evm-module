@@ -84,6 +84,9 @@ func NewEthAnteHandler(options HandlerOptions) sdk.AnteHandler {
 func NewCosmosAnteHandler(options HandlerOptions) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		RejectMessagesDecorator{}, // reject MsgEthereumTxs
+		NewRejectNestedMessageDecorator(
+			sdk.MsgTypeURL(&evmtypes.MsgHandleTx{}),
+		),
 		ante.NewSetUpContextDecorator(),
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		ante.NewValidateBasicDecorator(),

@@ -53,6 +53,9 @@ func init() {
 func NewLegacyCosmosAnteHandlerEip712(options HandlerOptions) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		RejectMessagesDecorator{}, // reject MsgHandleTxs
+		NewRejectNestedMessageDecorator(
+			sdk.MsgTypeURL(&evmtypes.MsgHandleTx{}),
+		),
 		authante.NewSetUpContextDecorator(),
 		authante.NewValidateBasicDecorator(),
 		authante.NewTxTimeoutHeightDecorator(),
