@@ -70,16 +70,16 @@ type AnteTestSuite struct {
 	enableFeemarket bool
 	enableLondonHF  bool
 	evmParamsOption func(*evmtypes.Params)
+	priv 			*ethsecp256k1.PrivKey
 }
 
 const TestGasLimit uint64 = 100000
 
-// func (suite *AnteTestSuite) StateDB() *statedb.StateDB {
-// 	return statedb.New(suite.ctx, suite.app.EvmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(suite.ctx.HeaderHash().Bytes())))
-// }
-
 func (suite *AnteTestSuite) SetupTest() {
 	checkTx := false
+	priv, err := ethsecp256k1.GenerateKey()
+	suite.Require().NoError(err)
+	suite.priv = priv
 
 	suite.app = app.Setup(checkTx, func(app *app.EthermintApp, genesis simapp.GenesisState) simapp.GenesisState {
 		if suite.enableFeemarket {
@@ -87,6 +87,7 @@ func (suite *AnteTestSuite) SetupTest() {
 			feemarketGenesis := feemarkettypes.DefaultGenesisState()
 			feemarketGenesis.Params.EnableHeight = 1
 			feemarketGenesis.Params.NoBaseFee = false
+			feemarketGenesis.Params.MinGasPrice = sdk.NewDec(0)
 			// Verify feeMarket genesis
 			err := feemarketGenesis.Validate()
 			suite.Require().NoError(err)
@@ -725,6 +726,97 @@ func (suite *AnteTestSuite) CreateTestSingleSignedTx(privKey cryptotypes.PrivKey
 	txBuilder.SetSignatures(sigData)
 
 	return txBuilder
+}
+
+func generatePrivKeyAddressPairs(accCount int) ([]*ethsecp256k1.PrivKey, []sdk.AccAddress, error) {
+	var (
+		err           error
+		testPrivKeys  = make([]*ethsecp256k1.PrivKey, accCount)
+		testAddresses = make([]sdk.AccAddress, accCount)
+	)
+
+	for i := range testPrivKeys {
+		testPrivKeys[i], err = ethsecp256k1.GenerateKey()
+		if err != nil {
+			return nil, nil, err
+		}
+		testAddresses[i] = testPrivKeys[i].PubKey().Address().Bytes()
+	}
+	return testPrivKeys, testAddresses, nil
+}
+
+func newMsgGrant(granter sdk.AccAddress, grantee sdk.AccAddress, a authz.Authorization, expiration *time.Time) *authz.MsgGrant {
+	msg, err := authz.NewMsgGrant(granter, grantee, a, expiration)
+	if err != nil {
+		panic(err)
+	}
+	return msg
+}
+
+func newMsgExec(grantee sdk.AccAddress, msgs []sdk.Msg) *authz.MsgExec {
+	msg := authz.NewMsgExec(grantee, msgs)
+	return &msg
+}
+
+func createNestedMsgExec(a sdk.AccAddress, nestedLvl int, lastLvlMsgs []sdk.Msg) *authz.MsgExec {
+	msgs := make([]*authz.MsgExec, nestedLvl)
+	for i := range msgs {
+		if i == 0 {
+			msgs[i] = newMsgExec(a, lastLvlMsgs)
+			continue
+		}
+		msgs[i] = newMsgExec(a, []sdk.Msg{msgs[i-1]})
+	}
+	return msgs[nestedLvl-1]
+}
+
+func createTx(priv cryptotypes.PrivKey, msgs ...sdk.Msg) (sdk.Tx, error) {
+	encodingConfig := encoding.MakeConfig(app.ModuleBasics)
+	txBuilder := encodingConfig.TxConfig.NewTxBuilder()
+
+	txBuilder.SetGasLimit(1000000)
+	if err := txBuilder.SetMsgs(msgs...); err != nil {
+		return nil, err
+	}
+
+	// First round: we gather all the signer infos. We use the "set empty
+	// signature" hack to do that.
+	sigV2 := signing.SignatureV2{
+		PubKey: priv.PubKey(),
+		Data: &signing.SingleSignatureData{
+			SignMode:  encodingConfig.TxConfig.SignModeHandler().DefaultMode(),
+			Signature: nil,
+		},
+		Sequence: 0,
+	}
+
+	sigsV2 := []signing.SignatureV2{sigV2}
+
+	if err := txBuilder.SetSignatures(sigsV2...); err != nil {
+		return nil, err
+	}
+
+	signerData := authsigning.SignerData{
+		ChainID:       ChainID,
+		AccountNumber: 0,
+		Sequence:      0,
+	}
+	sigV2, err := tx.SignWithPrivKey(
+		encodingConfig.TxConfig.SignModeHandler().DefaultMode(), signerData,
+		txBuilder, priv, encodingConfig.TxConfig,
+		0,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	sigsV2 = []signing.SignatureV2{sigV2}
+	err = txBuilder.SetSignatures(sigsV2...)
+	if err != nil {
+		return nil, err
+	}
+
+	return txBuilder.GetTx(), nil
 }
 
 func NextFn(ctx sdk.Context, _ sdk.Tx, _ bool) (sdk.Context, error) {
