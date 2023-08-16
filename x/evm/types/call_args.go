@@ -44,8 +44,7 @@ type CallArgs struct {
 
 // String return the struct in a string format
 func (args *CallArgs) String() string {
-	return fmt.Sprintf("TransactionArgs{From:%v, To:%v, Gas:%v, Nonce:%v, Data:%v, Input:%v, AccessList:%v}",
-		args.From,
+	return fmt.Sprintf("CallArgs{To:%v, Gas:%v, Nonce:%v, Data:%v, Input:%v, AccessList:%v}",
 		args.To,
 		args.Gas,
 		args.Nonce,
