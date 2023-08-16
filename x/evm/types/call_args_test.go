@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/SigmaGmbH/evm-module/crypto/ethsecp256k1"
 	"github.com/ethereum/go-ethereum/common"
-	//"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 )
 
@@ -247,6 +248,44 @@ func (suite *TxDataTestSuite) TestCallArgsGetFrom() {
 		retrievedAddress := tc.callArgs.GetFrom()
 		suite.Require().Equal(retrievedAddress, tc.expAddress)
 	}
+}
+
+func (suite *TxDataTestSuite) TestCallArgsGetFromSignature() {
+	// TODO: Restore test
+	chainId := big.NewInt(suite.hexBigInt.ToInt().Int64())
+	signer := ethtypes.LatestSignerForChainID(chainId)
+
+	privateKey, err := ethsecp256k1.GenerateKey()
+	suite.Require().NoError(err)
+	ecdsaKey, err := privateKey.ToECDSA()
+	suite.Require().NoError(err)
+	originalSender := common.HexToAddress(privateKey.PubKey().Address().String())
+
+	args := CallArgs{
+		ChainID: &suite.hexBigInt,
+		To: &suite.addr,
+		Value: &suite.hexBigInt,
+	}
+	argsAsTx := args.ToTransaction().AsTransaction()
+	signedTx, err := ethtypes.SignTx(argsAsTx, signer, ecdsaKey)
+	suite.Require().NoError(err)
+
+	v, r, s := signedTx.RawSignatureValues()
+	vBig := hexutil.Big(*v)
+	rBig := hexutil.Big(*r)
+	sBig := hexutil.Big(*s)
+
+	signedArgs := CallArgs{
+		ChainID: &suite.hexBigInt,
+		To: &suite.addr,
+		Value: &suite.hexBigInt,
+		V: &vBig,
+		R: &rBig,
+		S: &sBig,
+	}
+
+	restoredSender := signedArgs.GetFrom()
+	suite.Require().Equal(originalSender, restoredSender)
 }
 
 func (suite *TxDataTestSuite) TestCallArgsGetData() {
