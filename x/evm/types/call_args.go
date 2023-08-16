@@ -59,8 +59,8 @@ func (args *CallArgs) ToTransaction() *MsgHandleTx {
 	var (
 		chainID, value, gasPrice, maxFeePerGas, maxPriorityFeePerGas sdkmath.Int
 		gas, nonce                                                   uint64
-		to		                                                     string
-		v, r, s														 []byte
+		to                                                           string
+		v, r, s                                                      []byte
 	)
 
 	// Set sender address or use zero address if none specified.
@@ -96,7 +96,16 @@ func (args *CallArgs) ToTransaction() *MsgHandleTx {
 		to = args.To.Hex()
 	}
 
-
+	// Extract signature values
+	if args.V != nil {
+		v = args.V.ToInt().Bytes()
+	}
+	if args.S != nil {
+		s = args.S.ToInt().Bytes()
+	}
+	if args.R != nil {
+		r = args.R.ToInt().Bytes()
+	}
 
 	var data TxData
 	switch {
@@ -116,7 +125,7 @@ func (args *CallArgs) ToTransaction() *MsgHandleTx {
 			Amount:    &value,
 			Data:      args.GetData(),
 			Accesses:  al,
-			V: 		   v,
+			V:         v,
 			R:         r,
 			S:         s,
 		}
@@ -130,7 +139,7 @@ func (args *CallArgs) ToTransaction() *MsgHandleTx {
 			Amount:   &value,
 			Data:     args.GetData(),
 			Accesses: NewAccessList(args.AccessList),
-			V: 		  v,
+			V:        v,
 			R:        r,
 			S:        s,
 		}
@@ -142,7 +151,7 @@ func (args *CallArgs) ToTransaction() *MsgHandleTx {
 			GasPrice: &gasPrice,
 			Amount:   &value,
 			Data:     args.GetData(),
-			V: 		  v,
+			V:        v,
 			R:        r,
 			S:        s,
 		}
@@ -157,12 +166,12 @@ func (args *CallArgs) ToTransaction() *MsgHandleTx {
 		Data: any,
 	}
 	msg.Hash = msg.AsTransaction().Hash().Hex()
-	
+
 	// If there is no provided signature or chain id, we use zeroed From address
-	if args.ChainID == nil || args.V == nil || args.R == nil || args.S == nil {
+	if args.ChainID == nil || v == nil || r == nil || s == nil {
 		msg.From = common.Address{}.Hex()
 	} else {
-		// Otherwise recover `msg.sender` from provided signature 
+		// Otherwise recover `msg.sender` from provided signature
 		signer := ethtypes.LatestSignerForChainID(args.ChainID.ToInt())
 		sender, err := signer.Sender(msg.AsTransaction())
 		if err != nil {

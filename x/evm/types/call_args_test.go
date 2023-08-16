@@ -251,7 +251,6 @@ func (suite *TxDataTestSuite) TestCallArgsGetFrom() {
 }
 
 func (suite *TxDataTestSuite) TestCallArgsGetFromSignature() {
-	// TODO: Restore test
 	chainId := big.NewInt(suite.hexBigInt.ToInt().Int64())
 	signer := ethtypes.LatestSignerForChainID(chainId)
 
@@ -263,8 +262,8 @@ func (suite *TxDataTestSuite) TestCallArgsGetFromSignature() {
 
 	args := CallArgs{
 		ChainID: &suite.hexBigInt,
-		To: &suite.addr,
-		Value: &suite.hexBigInt,
+		To:      &suite.addr,
+		Value:   &suite.hexBigInt,
 	}
 	argsAsTx := args.ToTransaction().AsTransaction()
 	signedTx, err := ethtypes.SignTx(argsAsTx, signer, ecdsaKey)
@@ -277,11 +276,11 @@ func (suite *TxDataTestSuite) TestCallArgsGetFromSignature() {
 
 	signedArgs := CallArgs{
 		ChainID: &suite.hexBigInt,
-		To: &suite.addr,
-		Value: &suite.hexBigInt,
-		V: &vBig,
-		R: &rBig,
-		S: &sBig,
+		To:      &suite.addr,
+		Value:   &suite.hexBigInt,
+		V:       &vBig,
+		R:       &rBig,
+		S:       &sBig,
 	}
 
 	restoredSender := signedArgs.GetFrom()
