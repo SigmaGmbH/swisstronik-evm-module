@@ -84,7 +84,7 @@ type EthereumAPI interface {
 	//
 	// Allows developers to read data from the blockchain which includes executing
 	// smart contracts. However, no data is published to the Ethereum network.
-	Call(args evmtypes.TransactionArgs, blockNrOrHash rpctypes.BlockNumberOrHash, _ *rpctypes.StateOverride) (hexutil.Bytes, error)
+	Call(args evmtypes.CallArgs, blockNrOrHash rpctypes.BlockNumberOrHash, _ *rpctypes.StateOverride) (hexutil.Bytes, error)
 
 	// Chain Information
 	//
@@ -278,7 +278,7 @@ func (e *PublicAPI) GetProof(address common.Address,
 ///////////////////////////////////////////////////////////////////////////////
 
 // Call performs a raw contract call.
-func (e *PublicAPI) Call(args evmtypes.TransactionArgs,
+func (e *PublicAPI) Call(args evmtypes.CallArgs,
 	blockNrOrHash rpctypes.BlockNumberOrHash,
 	_ *rpctypes.StateOverride,
 ) (hexutil.Bytes, error) {

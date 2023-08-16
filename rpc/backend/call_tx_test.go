@@ -379,7 +379,7 @@ func (suite *BackendTestSuite) TestDoCall() {
 	gasPrice := (*hexutil.Big)(big.NewInt(1))
 	toAddr := tests.GenerateAddress()
 	chainID := (*hexutil.Big)(suite.backend.chainID)
-	callArgs := evmtypes.TransactionArgs{
+	callArgs := evmtypes.CallArgs{
 		From:                 nil,
 		To:                   &toAddr,
 		Gas:                  nil,
@@ -399,7 +399,7 @@ func (suite *BackendTestSuite) TestDoCall() {
 		name         string
 		registerMock func()
 		blockNum     rpctypes.BlockNumber
-		callArgs     evmtypes.TransactionArgs
+		callArgs     evmtypes.CallArgs
 		expEthTx     *evmtypes.MsgEthereumTxResponse
 		expPass      bool
 	}{
