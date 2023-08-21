@@ -32,6 +32,7 @@ import (
 	"github.com/SigmaGmbH/evm-module/rpc/namespaces/ethereum/personal"
 	"github.com/SigmaGmbH/evm-module/rpc/namespaces/ethereum/txpool"
 	"github.com/SigmaGmbH/evm-module/rpc/namespaces/ethereum/web3"
+	"github.com/SigmaGmbH/evm-module/rpc/namespaces/utils"
 	ethermint "github.com/SigmaGmbH/evm-module/types"
 
 	rpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
@@ -52,6 +53,7 @@ const (
 	TxPoolNamespace   = "txpool"
 	DebugNamespace    = "debug"
 	MinerNamespace    = "miner"
+	UtilsNamespace    = "utils"
 
 	apiVersion = "1.0"
 )
@@ -167,6 +169,21 @@ func init() {
 					Version:   apiVersion,
 					Service:   miner.NewPrivateAPI(ctx, evmBackend),
 					Public:    false,
+				},
+			}
+		},
+		UtilsNamespace: func(_ *server.Context, 
+			_ client.Context, 
+			_ *rpcclient.WSClient, 
+			_ bool, 
+			_ ethermint.EVMTxIndexer,
+		) []rpc.API {
+			return []rpc.API{
+				{
+					Namespace: UtilsNamespace,
+					Version:   apiVersion,
+					Service:   utils.NewAPI(),
+					Public:    true,
 				},
 			}
 		},
