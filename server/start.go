@@ -144,7 +144,7 @@ which accepts a path for the resulting pprof file.
 			}
 
 			if !nodeInitialized {
-				return errors.New("sealed master key was not found. Request it by using `swisstronikd request-master-key` or generate a new one by using `swisstronikd create-master-key`")
+				return errors.New("sealed master key was not found. Request it by using `swisstronikd enclave request-master-key` or generate a new one by using `swisstronikd enclave create-master-key`")
 			}
 
 			withTM, _ := cmd.Flags().GetBool(srvflags.WithTendermint)
