@@ -232,7 +232,7 @@ func (k Keeper) EthCall(c context.Context, req *types.EthCallRequest) (*types.Ms
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	var args types.TransactionArgs
+	var args types.CallArgs
 	err := json.Unmarshal(req.Args, &args)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())

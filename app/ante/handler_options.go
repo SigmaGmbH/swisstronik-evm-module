@@ -28,6 +28,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
 
 	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // HandlerOptions extend the SDK's AnteHandler options by requiring the IBC
@@ -84,6 +85,10 @@ func NewEthAnteHandler(options HandlerOptions) sdk.AnteHandler {
 func NewCosmosAnteHandler(options HandlerOptions) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		RejectMessagesDecorator{}, // reject MsgEthereumTxs
+		NewRejectNestedMessageDecorator(
+			sdk.MsgTypeURL(&evmtypes.MsgHandleTx{}),
+			sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}),
+		),
 		ante.NewSetUpContextDecorator(),
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		ante.NewValidateBasicDecorator(),

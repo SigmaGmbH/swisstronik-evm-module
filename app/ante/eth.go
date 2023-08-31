@@ -30,7 +30,6 @@ import (
 	evmtypes "github.com/SigmaGmbH/evm-module/x/evm/types"
 
 	"github.com/ethereum/go-ethereum/common"
-	// ethcore "github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 )
 
@@ -343,7 +342,6 @@ func (issd EthIncrementSenderSequenceDecorator) AnteHandle(ctx sdk.Context, tx s
 			return ctx, errorsmod.Wrap(err, "failed to unpack tx data")
 		}
 
-		// increase sequence of sender
 		acc := issd.ak.GetAccount(ctx, msgEthTx.GetFrom())
 		if acc == nil {
 			return ctx, errorsmod.Wrapf(
@@ -352,7 +350,7 @@ func (issd EthIncrementSenderSequenceDecorator) AnteHandle(ctx sdk.Context, tx s
 			)
 		}
 		nonce := acc.GetSequence()
-
+		
 		// we merged the nonce verification to nonce increment, so when tx includes multiple messages
 		// with same sender, they'll be accepted.
 		if txData.GetNonce() != nonce {
@@ -361,6 +359,13 @@ func (issd EthIncrementSenderSequenceDecorator) AnteHandle(ctx sdk.Context, tx s
 				"invalid nonce; got %d, expected %d", txData.GetNonce(), nonce,
 			)
 		}
+		
+		// increase sequence of sender
+		if err := acc.SetSequence(nonce + 1); err != nil {
+			return ctx, errorsmod.Wrapf(err, "failed to set sequence to %d", acc.GetSequence()+1)
+		}
+
+		issd.ak.SetAccount(ctx, acc)
 	}
 
 	return next(ctx, tx, simulate)

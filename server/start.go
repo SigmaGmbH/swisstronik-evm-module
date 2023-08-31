@@ -144,7 +144,7 @@ which accepts a path for the resulting pprof file.
 			}
 
 			if !nodeInitialized {
-				return errors.New("sealed master key was not found. Request it by using `swisstronikd request-master-key` or generate a new one by using `swisstronikd create-master-key`")
+				return errors.New("sealed master key was not found. Request it by using `swisstronikd enclave request-master-key` or generate a new one by using `swisstronikd enclave create-master-key`")
 			}
 
 			withTM, _ := cmd.Flags().GetBool(srvflags.WithTendermint)
@@ -232,9 +232,6 @@ which accepts a path for the resulting pprof file.
 
 	cmd.Flags().Uint64(server.FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
 	cmd.Flags().Uint32(server.FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
-
-	cmd.Flags().Bool(srvflags.SeedServiceEnable, true, "Define if seed exchange server should be enabled")
-	cmd.Flags().String(srvflags.SeedServiceAddress, config.DefaultSeedExchangeServerAddress, "the seed exchange server address to listen on")
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
@@ -598,12 +595,6 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 				}
 			}
 		}()
-	}
-
-	if config.Enclave.SeedServerEnable {
-		if err := librustgo.StartSeedServer(config.Enclave.Address); err != nil {
-			return err
-		}
 	}
 
 	// At this point it is safe to block the process if we're in query only mode as
